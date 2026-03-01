@@ -1,0 +1,36 @@
+{
+  "ACB": {"name": "African Caribbean in Barbados", "region": "Caribbean"},
+  "ASW": {"name": "African Ancestry in SW USA", "region": "North America"},
+  "BEB": {"name": "Bengali in Bangladesh", "region": "South Asia"},
+  "CDX": {"name": "Chinese Dai in Xishuangbanna", "region": "East Asia"},
+  "CEU": {"name": "Utah Residents (N/W European Ancestry)", "region": "North America / Europe"},
+  "CHB": {"name": "Han Chinese in Beijing", "region": "East Asia"},
+  "CHS": {"name": "Han Chinese South", "region": "East Asia"},
+  "CLM": {"name": "Colombian in Medellín", "region": "South America"},
+  "ESN": {"name": "Esan in Nigeria", "region": "West Africa"},
+  "FIN": {"name": "Finnish in Finland", "region": "Northern Europe"},
+  "GBR": {"name": "British from England and Scotland", "region": "Western Europe"},
+  "GIH": {"name": "Gujarati Indians in Houston", "region": "South Asia"},
+  "GWD": {"name": "Gambian in Western Division", "region": "West Africa"},
+  "IBS": {"name": "Iberian Populations in Spain", "region": "Southern Europe"},
+  "ITU": {"name": "Indian Telugu in the UK", "region": "South Asia"},
+  "JPT": {"name": "Japanese in Tokyo", "region": "East Asia"},
+  "KHV": {"name": "Kinh in Ho Chi Minh City", "region": "Southeast Asia"},
+  "LWK": {"name": "Luhya in Webuye, Kenya", "region": "East Africa"},
+  "MSL": {"name": "Mende in Sierra Leone", "region": "West Africa"},
+  "MXL": {"name": "Mexican Ancestry in Los Angeles", "region": "North America"},
+  "PEL": {"name": "Peruvian in Lima", "region": "South America"},
+  "PJL": {"name": "Punjabi in Lahore", "region": "South Asia"},
+  "PUR": {"name": "Puerto Rican in Puerto Rico", "region": "Caribbean"},
+  "STU": {"name": "Sri Lankan Tamil in the UK", "region": "South Asia"},
+  "TSI": {"name": "Toscani in Italia", "region": "Southern Europe"},
+  "YRI": {"name": "Yoruba in Ibadan, Nigeria", "region": "West Africa"},
+
+  "_superpopulations": {
+    "AFR": {"name": "African", "color": "#10b981"},
+    "EUR": {"name": "European", "color": "#f59e0b"},
+    "EAS": {"name": "East Asian", "color": "#8b5cf6"},
+    "SAS": {"name": "South Asian", "color": "#f43f5e"},
+    "AMR": {"name": "Americas / Latino", "color": "#0ea5e9"}
+  }
+}

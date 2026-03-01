@@ -1,0 +1,525 @@
+{
+  "version": "1.0.0",
+  "description": "Carrier screening panel for autosomal recessive and co-dominant conditions detectable from consumer SNP arrays.",
+  "genes": [
+    {
+      "gene": "HFE",
+      "condition": "Hereditary Hemochromatosis",
+      "inheritance": "autosomal_recessive",
+      "severity": "treatable",
+      "condition_description": "Iron overload disorder causing progressive iron deposition in liver, pancreas, heart, and joints. Highly treatable with early detection via regular phlebotomy.",
+      "carrier_frequencies": {
+        "EUR": "1 in 11 (C282Y) / 1 in 7 (H63D)",
+        "AFR": "Rare",
+        "EAS": "Rare",
+        "SAS": "Rare"
+      },
+      "treatment_summary": "Regular phlebotomy (blood removal) is simple, cheap, and highly effective. Serum ferritin monitoring. Chelation therapy rarely needed.",
+      "penetrance_note": "C282Y homozygosity has highly incomplete penetrance \u2014 only ~28% of males and ~1% of females develop clinical hemochromatosis. A positive result does NOT mean disease will develop.",
+      "key_pmids": [
+        11700271,
+        34285390
+      ],
+      "limitations": "HFE testing is highly reliable from SNP arrays. C282Y and H63D cover the vast majority of clinical disease. Rare non-HFE hemochromatosis (types 2-4) caused by other genes is not screened.",
+      "variants": [
+        {
+          "rsid": "rs1800562",
+          "name": "C282Y",
+          "gene": "HFE",
+          "chrom": "6",
+          "position": 26093141,
+          "ref_allele": "G",
+          "pathogenic_allele": "A",
+          "classification": "pathogenic",
+          "consequence": "missense_variant",
+          "hgvs_p": "p.Cys282Tyr",
+          "population_frequency": 0.06,
+          "position_grch38": 26092913
+        },
+        {
+          "rsid": "rs1799945",
+          "name": "H63D",
+          "gene": "HFE",
+          "chrom": "6",
+          "position": 26091179,
+          "ref_allele": "C",
+          "pathogenic_allele": "G",
+          "classification": "risk_factor",
+          "consequence": "missense_variant",
+          "hgvs_p": "p.His63Asp",
+          "population_frequency": 0.14,
+          "position_grch38": 26090951
+        }
+      ]
+    },
+    {
+      "gene": "SERPINA1",
+      "condition": "Alpha-1 Antitrypsin Deficiency",
+      "inheritance": "autosomal_codominant",
+      "severity": "variable",
+      "condition_description": "AAT protein deficiency leading to uncontrolled elastase activity in lungs (emphysema/COPD, typically age 30-50) and liver disease. Smoking dramatically accelerates lung destruction.",
+      "carrier_frequencies": {
+        "EUR": "1 in 50 (Pi*Z) / 1 in 17 (Pi*S)",
+        "AFR": "Rare",
+        "EAS": "Rare",
+        "SAS": "Rare"
+      },
+      "treatment_summary": "AAT augmentation therapy (IV infusions), smoking cessation (critical), lung transplant for end-stage disease. Early detection allows preventive measures.",
+      "penetrance_note": "Pi*ZZ: ~15% of normal AAT \u2014 high risk. Pi*SZ: ~35% \u2014 mild-moderate risk especially with smoking. Pi*MZ carriers: minimal clinical risk though slightly reduced AAT.",
+      "key_pmids": [
+        20301692,
+        34285390
+      ],
+      "limitations": "Two variants (Pi*Z, Pi*S) are well-represented on all major SNP arrays and cover the majority of clinical disease.",
+      "variants": [
+        {
+          "rsid": "rs28929474",
+          "name": "Pi*Z (E342K)",
+          "gene": "SERPINA1",
+          "chrom": "14",
+          "position": 94844947,
+          "ref_allele": "C",
+          "pathogenic_allele": "T",
+          "classification": "pathogenic",
+          "consequence": "missense_variant",
+          "hgvs_p": "p.Glu342Lys",
+          "population_frequency": 0.02,
+          "position_grch38": 94378610
+        },
+        {
+          "rsid": "rs17580",
+          "name": "Pi*S (E264V)",
+          "gene": "SERPINA1",
+          "chrom": "14",
+          "position": 94847262,
+          "ref_allele": "T",
+          "pathogenic_allele": "A",
+          "classification": "pathogenic",
+          "consequence": "missense_variant",
+          "hgvs_p": "p.Glu264Val",
+          "population_frequency": 0.03,
+          "position_grch38": 94380925
+        }
+      ]
+    },
+    {
+      "gene": "HBB",
+      "condition": "Hemoglobinopathies (Sickle Cell / HbC)",
+      "inheritance": "autosomal_recessive",
+      "severity": "severe",
+      "condition_description": "Structural hemoglobin variants causing red blood cell disorders. Sickle cell disease (HbSS): vaso-occlusive crises, chronic anemia, organ damage. HbSC disease: milder but significant. Sickle cell trait (HbAS) carriers have malaria resistance.",
+      "carrier_frequencies": {
+        "EUR": "Rare",
+        "AFR": "1 in 12 (HbS)",
+        "EAS": "Rare",
+        "SAS": "Varies"
+      },
+      "treatment_summary": "Hydroxyurea, voxelotor, crizanlizumab, blood transfusions, hematopoietic stem cell transplant (curative), gene therapy (Casgevy \u2014 CRISPR-based, FDA approved 2023).",
+      "penetrance_note": "Homozygous HbSS causes sickle cell disease with near-complete penetrance. Carriers (HbAS) are generally healthy but have malaria protection and rare risk of exertional sickling.",
+      "key_pmids": [
+        28178413,
+        34285390
+      ],
+      "limitations": "SNP arrays reliably detect structural hemoglobin variants (HbS, HbC, HbE) but CANNOT detect most beta-thalassemia mutations, which require sequencing.",
+      "variants": [
+        {
+          "rsid": "rs334",
+          "name": "HbS (E6V)",
+          "gene": "HBB",
+          "chrom": "11",
+          "position": 5248232,
+          "ref_allele": "T",
+          "pathogenic_allele": "A",
+          "classification": "pathogenic",
+          "consequence": "missense_variant",
+          "hgvs_p": "p.Glu6Val",
+          "population_frequency": 0.08,
+          "position_grch38": 5227002
+        },
+        {
+          "rsid": "rs33930165",
+          "name": "HbC (E6K)",
+          "gene": "HBB",
+          "chrom": "11",
+          "position": 5248233,
+          "ref_allele": "C",
+          "pathogenic_allele": "T",
+          "classification": "pathogenic",
+          "consequence": "missense_variant",
+          "hgvs_p": "p.Glu6Lys",
+          "population_frequency": 0.02,
+          "position_grch38": 5227003
+        }
+      ]
+    },
+    {
+      "gene": "MEFV",
+      "condition": "Familial Mediterranean Fever",
+      "inheritance": "autosomal_recessive",
+      "severity": "treatable",
+      "condition_description": "Most common autoinflammatory disease worldwide. Causes recurrent self-limited episodes of fever, peritonitis, pleuritis, and arthritis lasting 1-3 days. Major complication is AA amyloidosis (renal failure) if untreated.",
+      "carrier_frequencies": {
+        "EUR": "Rare",
+        "AFR": "Rare",
+        "EAS": "Rare",
+        "SAS": "Rare",
+        "MENA": "1 in 5 (Turkish, Armenian, Arab, Sephardic Jewish)"
+      },
+      "treatment_summary": "Colchicine is highly effective \u2014 prevents attacks and amyloidosis in >90% of patients. IL-1 inhibitors (anakinra, canakinumab) for colchicine-resistant cases.",
+      "penetrance_note": "M694V associated with severe disease and amyloidosis risk. V726A tends to be milder. E148Q (not included) has debated pathogenicity.",
+      "key_pmids": [
+        11528510,
+        18006045,
+        34285390
+      ],
+      "limitations": "Three variants cover ~65% of disease alleles in classically affected (Middle Eastern/Mediterranean) populations. Detection rate much lower in other ancestries.",
+      "variants": [
+        {
+          "rsid": "rs61752717",
+          "name": "M694V",
+          "gene": "MEFV",
+          "chrom": "16",
+          "position": 3293407,
+          "ref_allele": "T",
+          "pathogenic_allele": "C",
+          "classification": "pathogenic",
+          "consequence": "missense_variant",
+          "hgvs_p": "p.Met694Val",
+          "population_frequency": 0.005,
+          "position_grch38": 3243407
+        },
+        {
+          "rsid": "rs28940578",
+          "name": "M680I",
+          "gene": "MEFV",
+          "chrom": "16",
+          "position": 3293405,
+          "ref_allele": "C",
+          "pathogenic_allele": "T",
+          "classification": "pathogenic",
+          "consequence": "missense_variant",
+          "hgvs_p": "p.Met680Ile",
+          "population_frequency": 0.003,
+          "position_grch38": 3243405
+        },
+        {
+          "rsid": "rs28940579",
+          "name": "V726A",
+          "gene": "MEFV",
+          "chrom": "16",
+          "position": 3293310,
+          "ref_allele": "A",
+          "pathogenic_allele": "G",
+          "classification": "pathogenic",
+          "consequence": "missense_variant",
+          "hgvs_p": "p.Val726Ala",
+          "population_frequency": 0.003,
+          "position_grch38": 3243310
+        }
+      ]
+    },
+    {
+      "gene": "GBA1",
+      "condition": "Gaucher Disease",
+      "inheritance": "autosomal_recessive",
+      "severity": "variable",
+      "condition_description": "Lysosomal storage disorder caused by glucocerebrosidase deficiency. Type 1 (non-neuronopathic): hepatosplenomegaly, bone disease, anemia, thrombocytopenia. Most common lysosomal storage disorder. IMPORTANT: GBA1 is also the strongest common genetic risk factor for Parkinson's disease.",
+      "carrier_frequencies": {
+        "EUR": "1 in 100",
+        "AJ": "1 in 18 (Ashkenazi Jewish)"
+      },
+      "treatment_summary": "Enzyme replacement therapy (imiglucerase, velaglucerase), substrate reduction therapy (eliglustat, miglustat). Highly effective for Type 1.",
+      "penetrance_note": "N370S protects against neurological involvement (Type 1 only). L444P homozygosity causes neuronopathic disease (Types 2/3). GBA1 carriers have ~5x risk of Parkinson's disease (cumulative ~2.2% by age 65, ~10.9% by age 85).",
+      "key_pmids": [
+        23117106,
+        19846850,
+        34285390,
+        37795975
+      ],
+      "limitations": "N370S and L444P cover ~96% of disease alleles in Ashkenazi Jewish patients but lower coverage in other populations. GBA1/GBAP1 pseudogene homology can complicate genotyping.",
+      "variants": [
+        {
+          "rsid": "rs76763715",
+          "name": "N370S (p.Asn409Ser)",
+          "gene": "GBA1",
+          "chrom": "1",
+          "position": 155205634,
+          "ref_allele": "T",
+          "pathogenic_allele": "G",
+          "classification": "pathogenic",
+          "consequence": "missense_variant",
+          "hgvs_p": "p.Asn409Ser",
+          "population_frequency": 0.004,
+          "position_grch38": 155235843
+        },
+        {
+          "rsid": "rs421016",
+          "name": "L444P (p.Leu483Pro)",
+          "gene": "GBA1",
+          "chrom": "1",
+          "position": 155205043,
+          "ref_allele": "A",
+          "pathogenic_allele": "G",
+          "classification": "pathogenic",
+          "consequence": "missense_variant",
+          "hgvs_p": "p.Leu483Pro",
+          "population_frequency": 0.001,
+          "position_grch38": 155235252
+        }
+      ]
+    },
+    {
+      "gene": "CFTR",
+      "condition": "Cystic Fibrosis",
+      "inheritance": "autosomal_recessive",
+      "severity": "severe",
+      "condition_description": "Progressive lung disease with thick mucus, pancreatic insufficiency, and elevated sweat chloride. Most common life-shortening autosomal recessive disease in Europeans. Median survival now into the 50s with modern CFTR modulators.",
+      "carrier_frequencies": {
+        "EUR": "1 in 27",
+        "AFR": "1 in 65",
+        "EAS": "1 in 90",
+        "Hispanic": "1 in 46"
+      },
+      "treatment_summary": "CFTR modulators (elexacaftor/tezacaftor/ivacaftor \u2014 Trikafta) effective for ~90% of patients. Pancreatic enzyme replacement, airway clearance therapy, inhaled antibiotics.",
+      "penetrance_note": "Homozygous pathogenic CFTR variants cause CF with near-complete penetrance. Some variants (e.g., R117H) cause milder CFTR-related disorders.",
+      "key_pmids": [
+        34285390,
+        37436173,
+        32404922
+      ],
+      "limitations": "F508del (rs113993960) is a 3-nucleotide deletion \u2014 DTC arrays usually include it but it is technically an indel. Only 4 of >2000 known CFTR variants are tested here. Detection rate is ~65% for Europeans, lower for other ancestries.",
+      "variants": [
+        {
+          "rsid": "rs113993960",
+          "name": "F508del (c.1521_1523del)",
+          "gene": "CFTR",
+          "chrom": "7",
+          "position": 117199646,
+          "ref_allele": "ATCT",
+          "pathogenic_allele": "A",
+          "classification": "pathogenic",
+          "consequence": "inframe_deletion",
+          "hgvs_p": "p.Phe508del",
+          "population_frequency": 0.02,
+          "position_grch38": 117559591
+        },
+        {
+          "rsid": "rs75527207",
+          "name": "G551D",
+          "gene": "CFTR",
+          "chrom": "7",
+          "position": 117227860,
+          "ref_allele": "G",
+          "pathogenic_allele": "A",
+          "classification": "pathogenic",
+          "consequence": "missense_variant",
+          "hgvs_p": "p.Gly551Asp",
+          "population_frequency": 0.002,
+          "position_grch38": 117587806
+        },
+{
+          "rsid": "rs78655421",
+          "name": "W1282X",
+          "gene": "CFTR",
+          "chrom": "7",
+          "position": 117171029,
+          "ref_allele": "G",
+          "pathogenic_allele": "A",
+          "classification": "pathogenic",
+          "consequence": "stop_gained",
+          "hgvs_p": "p.Trp1282Ter",
+          "population_frequency": 0.001,
+          "position_grch38": 117530975
+        },
+        {
+          "rsid": "rs121908752",
+          "name": "N1303K",
+          "gene": "CFTR",
+          "chrom": "7",
+          "position": 117175339,
+          "ref_allele": "T",
+          "pathogenic_allele": "G",
+          "classification": "pathogenic",
+          "consequence": "missense_variant",
+          "hgvs_p": "p.Asn1303Lys",
+          "population_frequency": 0.001,
+          "position_grch38": 117535285
+        }
+      ]
+    },
+    {
+      "gene": "GJB2",
+      "condition": "Hereditary Hearing Loss (DFNB1)",
+      "inheritance": "autosomal_recessive",
+      "severity": "non_lethal",
+      "condition_description": "Non-syndromic sensorineural hearing loss, typically congenital, severe-to-profound, non-progressive. GJB2 mutations account for 30-50% of genetic prelingual deafness. Connexin 26 gap junction protein.",
+      "carrier_frequencies": {
+        "EUR": "1 in 30 (35delG)",
+        "AJ": "1 in 25 (167delT)",
+        "EAS": "1 in 100 (235delC)"
+      },
+      "treatment_summary": "Cochlear implants (highly effective), hearing aids, early intervention services. No pharmacological treatment.",
+      "penetrance_note": "Biallelic pathogenic GJB2 variants cause hearing loss with high penetrance. Severity ranges from mild to profound depending on the specific variants.",
+      "key_pmids": [
+        11883354,
+        34285390
+      ],
+      "limitations": "Key GJB2 mutations (35delG, 235delC) are single-nucleotide deletions \u2014 technically indels. DTC platforms may or may not include probes for these. 167delT (rs80338942, Ashkenazi Jewish founder mutation) is not included due to unreliable array detection. GJB6 deletions (compound het with GJB2) are NOT detectable.",
+      "variants": [
+        {
+          "rsid": "rs80338939",
+          "name": "35delG (c.35del)",
+          "gene": "GJB2",
+          "chrom": "13",
+          "position": 20763686,
+          "ref_allele": "TG",
+          "pathogenic_allele": "T",
+          "classification": "pathogenic",
+          "consequence": "frameshift_variant",
+          "hgvs_p": "p.Gly12fs",
+          "population_frequency": 0.02,
+          "position_grch38": 20189547
+        },
+{
+          "rsid": "rs80338943",
+          "name": "235delC (c.235del)",
+          "gene": "GJB2",
+          "chrom": "13",
+          "position": 20763486,
+          "ref_allele": "TC",
+          "pathogenic_allele": "T",
+          "classification": "pathogenic",
+          "consequence": "frameshift_variant",
+          "hgvs_p": "p.Leu79fs",
+          "population_frequency": 0.01,
+          "position_grch38": 20189347
+        }
+      ]
+    },
+    {
+      "gene": "HEXA",
+      "condition": "Tay-Sachs Disease",
+      "inheritance": "autosomal_recessive",
+      "severity": "fatal",
+      "condition_description": "Progressive neurodegenerative disease caused by hexosaminidase A deficiency. Infantile form: developmental regression, seizures, blindness, death by age 3-5. Late-onset forms exist with milder presentation.",
+      "carrier_frequencies": {
+        "EUR": "1 in 250",
+        "AJ": "1 in 29 (Ashkenazi Jewish)",
+        "French_Canadian": "1 in 50"
+      },
+      "treatment_summary": "No effective treatment for infantile Tay-Sachs. Supportive care only. Substrate reduction therapy and gene therapy are in clinical trials.",
+      "penetrance_note": "Biallelic pathogenic HEXA variants cause Tay-Sachs with complete penetrance for the infantile form.",
+      "key_pmids": [
+        31293106,
+        34285390
+      ],
+      "limitations": "VERY LIMITED DETECTION. The most common Tay-Sachs mutation (1278insTATC) is a 4-nucleotide insertion \u2014 SNP array detection is unreliable. The gold standard is hexosaminidase A enzyme assay combined with molecular testing. A negative result from SNP arrays does NOT meaningfully reduce carrier risk.",
+      "variants": [
+        {
+          "rsid": "rs387906309",
+          "name": "1278insTATC (c.1274_1277dup)",
+          "gene": "HEXA",
+          "chrom": "15",
+          "position": 72638921,
+          "ref_allele": "GATA",
+          "pathogenic_allele": "GATAGATA",
+          "classification": "pathogenic",
+          "consequence": "frameshift_variant",
+          "hgvs_p": "p.Tyr427fs",
+          "population_frequency": 0.003,
+          "position_grch38": 72346580
+        }
+      ]
+    },
+    {
+      "gene": "PAH",
+      "condition": "Phenylketonuria (PKU)",
+      "inheritance": "autosomal_recessive",
+      "severity": "treatable",
+      "condition_description": "Phenylalanine hydroxylase deficiency causing toxic phenylalanine accumulation. Untreated: severe intellectual disability, seizures, eczema. Detected by newborn screening; dietary treatment from birth prevents intellectual disability.",
+      "carrier_frequencies": {
+        "EUR": "1 in 50 (Northern European/Irish/Turkish)",
+        "EAS": "1 in 70"
+      },
+      "treatment_summary": "Low-phenylalanine diet (lifelong), sapropterin (Kuvan) for BH4-responsive patients, pegvaliase (Palynziq) enzyme substitution for adults.",
+      "penetrance_note": "Biallelic pathogenic PAH variants cause PKU with high penetrance, though severity varies by genotype.",
+      "key_pmids": [
+        32625607,
+        34285390
+      ],
+      "limitations": "VERY LIMITED DETECTION. PAH has >1000 known pathogenic variants with extreme allelic heterogeneity. Only 1 common European variant (R408W) is tested here. A negative result does NOT meaningfully reduce carrier risk.",
+      "variants": [
+        {
+          "rsid": "rs5030858",
+          "name": "R408W",
+          "gene": "PAH",
+          "chrom": "12",
+          "position": 103234271,
+          "ref_allele": "G",
+          "pathogenic_allele": "A",
+          "classification": "pathogenic",
+          "consequence": "missense_variant",
+          "hgvs_p": "p.Arg408Trp",
+          "population_frequency": 0.01,
+          "position_grch38": 102840493
+        }
+      ]
+    },
+    {
+      "gene": "ATP7B",
+      "condition": "Wilson Disease",
+      "inheritance": "autosomal_recessive",
+      "severity": "treatable",
+      "condition_description": "Copper transport disorder causing hepatic copper accumulation leading to liver disease and neuropsychiatric manifestations (tremor, dystonia, psychiatric symptoms). Kayser-Fleischer rings in cornea. Onset typically ages 5-35.",
+      "carrier_frequencies": {
+        "EUR": "1 in 90"
+      },
+      "treatment_summary": "D-penicillamine or trientine (copper chelators), zinc (blocks intestinal absorption), low-copper diet. Liver transplant for acute failure. Early treatment highly effective; untreated disease is fatal.",
+      "penetrance_note": "Biallelic pathogenic ATP7B variants cause Wilson disease with high penetrance if untreated.",
+      "key_pmids": [
+        9311736,
+        38081089,
+        34285390
+      ],
+      "limitations": "VERY LIMITED DETECTION. ATP7B has >800 known pathogenic variants. H1069Q covers ~50% of European alleles but essentially 0% in East Asian populations. A negative result does NOT meaningfully reduce carrier risk.",
+      "variants": [
+        {
+          "rsid": "rs76151636",
+          "name": "H1069Q",
+          "gene": "ATP7B",
+          "chrom": "13",
+          "position": 52518281,
+          "ref_allele": "G",
+          "pathogenic_allele": "T",
+          "classification": "pathogenic",
+          "consequence": "missense_variant",
+          "hgvs_p": "p.His1069Gln",
+          "population_frequency": 0.005,
+          "position_grch38": 51944145
+        }
+      ]
+    }
+  ],
+  "conditions_not_screenable": [
+    {
+      "condition": "Spinal Muscular Atrophy",
+      "gene": "SMN1",
+      "reason": "Caused by copy number variation (SMN1 exon 7 deletion), not point mutations. SMN1 and SMN2 are 99.9% identical \u2014 SNP probes cannot distinguish them. Requires MLPA, qPCR, or dedicated copy number assays.",
+      "carrier_frequency": "1 in 50 (pan-ethnic)",
+      "key_pmids": [
+        21301861,
+        32066871
+      ]
+    },
+    {
+      "condition": "Fragile X Syndrome",
+      "gene": "FMR1",
+      "reason": "Caused by CGG trinucleotide repeat expansion, not point mutations. SNP arrays cannot measure repeat length or methylation status. Requires triplet-repeat primed PCR or Southern blot.",
+      "carrier_frequency": "1 in 250 females (premutation)",
+      "key_pmids": [
+        20301558,
+        34285390
+      ]
+    }
+  ]
+}
