@@ -14,6 +14,7 @@ class PrsScore(Base):
     trait_name: Mapped[str] = mapped_column(String(255))
     trait_efo_id: Mapped[str | None] = mapped_column(String(50))
     publication_pmid: Mapped[str | None] = mapped_column(String(20))
+    publication_doi: Mapped[str | None] = mapped_column(String(100))
     n_variants_total: Mapped[int] = mapped_column(Integer)
     n_variants_on_chip: Mapped[int | None] = mapped_column(Integer)
     development_ancestry: Mapped[str | None] = mapped_column(String(255))

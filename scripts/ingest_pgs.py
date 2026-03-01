@@ -333,10 +333,11 @@ async def ingest_score(
     if efo_traits:
         trait_efo = efo_traits[0].get("id")
 
-    pub = meta.get("trait_publication", meta.get("publication", {})) or {}
-    pmid = pub.get("pmid") or meta.get("publication", {}).get("pmid")
+    pub = meta.get("publication", {}) or {}
+    pmid = pub.get("PMID") or pub.get("pmid")
     if isinstance(pmid, str):
         pmid = pmid if pmid else None
+    doi = pub.get("doi")
 
     samples_dev = meta.get("samples_variants", [])
     dev_ancestry = None
@@ -350,6 +351,7 @@ async def ingest_score(
         trait_name=trait_name,
         trait_efo_id=trait_efo,
         publication_pmid=str(pmid) if pmid else None,
+        publication_doi=doi,
         n_variants_total=len(rows),
         development_ancestry=dev_ancestry,
         reported_auc=auc,

@@ -97,6 +97,7 @@ async def fetch_prs_results(
                    r.n_variants_matched, r.n_variants_total, r.computed_at,
                    r.percentile_lower, r.percentile_upper, r.coverage_quality,
                    s.trait_name, s.reported_auc,
+                   s.publication_pmid, s.publication_doi,
                    m.trait_type, m.prevalence, m.source AS prevalence_source
             FROM prs_results r
             JOIN prs_scores s ON r.pgs_id = s.pgs_id
@@ -121,6 +122,8 @@ async def fetch_prs_results(
             "n_variants_matched": row.n_variants_matched,
             "n_variants_total": row.n_variants_total,
             "reported_auc": row.reported_auc,
+            "publication_pmid": row.publication_pmid,
+            "publication_doi": row.publication_doi,
             "percentile_lower": round(row.percentile_lower, 1) if row.percentile_lower is not None else None,
             "percentile_upper": round(row.percentile_upper, 1) if row.percentile_upper is not None else None,
             "coverage_quality": row.coverage_quality,

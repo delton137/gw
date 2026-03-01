@@ -19,6 +19,9 @@ interface PrsDistributionChartProps {
   percentileUpper?: number | null;
   coverageQuality?: string | null;
   reportedAuc?: number | null;
+  publicationPmid?: string | null;
+  publicationDoi?: string | null;
+  pgsId?: string | null;
 }
 
 
@@ -74,6 +77,9 @@ export default function PrsDistributionChart({
   percentileUpper,
   coverageQuality,
   reportedAuc,
+  publicationPmid,
+  publicationDoi,
+  pgsId,
 }: PrsDistributionChartProps) {
   const [showDist, setShowDist] = useState(false);
   const risk = riskCategory(percentile);
@@ -87,6 +93,36 @@ export default function PrsDistributionChart({
       {/* Header row */}
       <div className="mb-1">
         <h3 className="text-sm font-medium">{traitName}</h3>
+        <div className="flex gap-2 mt-0.5">
+          {pgsId && <span className="text-[10px] text-muted">{pgsId}</span>}
+          {publicationPmid && (
+            <a href={`https://pubmed.ncbi.nlm.nih.gov/${publicationPmid}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-accent hover:underline">PubMed</a>
+          )}
+          {publicationDoi && (
+            <a href={`https://doi.org/${publicationDoi}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-accent hover:underline">DOI</a>
+          )}
+        </div>
+      </div>
+
+      {/* Percentile bar */}
+      <div className="mt-3 mb-2">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs font-medium" style={{ color: risk.color, backgroundColor: risk.bgColor, padding: "1px 6px", borderRadius: "2px" }}>
+            {risk.label}
+          </span>
+          <span className="text-sm font-semibold">
+            {percentileLabel(percentile)} percentile
+            {percentileLower != null && percentileUpper != null && (
+              <span className="text-xs text-muted font-normal ml-1">({percentileLabel(percentileLower)}&ndash;{percentileLabel(percentileUpper)})</span>
+            )}
+          </span>
+        </div>
+        <div className="h-2 bg-gray-100 w-full relative rounded-sm overflow-hidden">
+          <div
+            className="h-full absolute left-0 top-0 rounded-sm"
+            style={{ width: `${Math.max(percentile, 1)}%`, backgroundColor: risk.color, opacity: 0.7 }}
+          />
+        </div>
       </div>
 
       {relativeRisk != null && (
@@ -198,7 +234,6 @@ export default function PrsDistributionChart({
           {nTotal - nMatched > 0 && `, ${(nTotal - nMatched).toLocaleString()} imputed as reference`}
           . Normalized against 1000 Genomes {SUPERPOP_META[ancestryGroup]?.name || ancestryGroup}.
         </span>
-        <span>{percentileLabel(percentile)} percentile{percentileLower != null && percentileUpper != null && ` (${percentileLabel(percentileLower)}–${percentileLabel(percentileUpper)})`}</span>
         {reportedAuc != null && reportedAuc > 0.5 && populationRisk != null && populationRisk > 0 && (
           <button
             onClick={() => setShowDist(!showDist)}

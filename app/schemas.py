@@ -43,6 +43,8 @@ class PrsRow(TypedDict):
     n_variants_matched: int
     n_variants_total: int
     reported_auc: float | None
+    publication_pmid: str | None
+    publication_doi: str | None
     percentile_lower: float | None
     percentile_upper: float | None
     coverage_quality: str | None

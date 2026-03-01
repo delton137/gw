@@ -19,6 +19,8 @@ interface PrsResult {
   n_variants_total: number;
   ancestry_group_used: string;
   reported_auc: number | null;
+  publication_pmid: string | null;
+  publication_doi: string | null;
   absolute_risk: number | null;
   population_risk: number | null;
   risk_category: string | null;
@@ -237,11 +239,25 @@ export default function PrsPage() {
                 percentileUpper={prs.percentile_upper}
                 coverageQuality={prs.coverage_quality}
                 reportedAuc={prs.reported_auc}
+                publicationPmid={prs.publication_pmid}
+                publicationDoi={prs.publication_doi}
+                pgsId={prs.pgs_id}
               />
             ) : (
               <div key={prs.pgs_id} className="border border-border p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium">{prs.trait_name}</p>
+                  <div>
+                    <p className="text-sm font-medium">{prs.trait_name}</p>
+                    <div className="flex gap-2 mt-0.5">
+                      <span className="text-[10px] text-muted">{prs.pgs_id}</span>
+                      {prs.publication_pmid && (
+                        <a href={`https://pubmed.ncbi.nlm.nih.gov/${prs.publication_pmid}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-accent hover:underline">PubMed</a>
+                      )}
+                      {prs.publication_doi && (
+                        <a href={`https://doi.org/${prs.publication_doi}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-accent hover:underline">DOI</a>
+                      )}
+                    </div>
+                  </div>
                   <p className="text-sm font-semibold">
                     {Math.round(prs.percentile)}th percentile
                   </p>
