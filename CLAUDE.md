@@ -232,7 +232,7 @@ npm run dev
 - **020** — Genes table + ClinVar enrichment columns
 - **023** — Drop HLA tables (user_hla_results, hla_allele_definitions)
 
-## Notes
+## More Notes
 
 - Use Alembic for database migrations (not auto-create in production)
 - CORS: allow localhost:3000 (dev) and genewizard.ai (prod)
