@@ -1,6 +1,7 @@
 """Tests for the unified analysis pipeline."""
 
 import uuid
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -38,6 +39,18 @@ def _user_df(n_variants=100):
         "allele1": ["A"] * n_variants,
         "allele2": ["G"] * n_variants,
     })
+
+
+def _mock_session_factory():
+    """Mock async_session_factory that returns an AsyncMock session."""
+    mock_session = AsyncMock()
+    mock_session.execute = AsyncMock(return_value=MagicMock())
+
+    @asynccontextmanager
+    async def _factory():
+        yield mock_session
+
+    return _factory
 
 
 @pytest.fixture
@@ -97,16 +110,17 @@ class TestFastStepsSetDone:
         with patch("app.services.analysis.asyncio.to_thread") as mock_thread:
             mock_thread.side_effect = [
                 (user_df, "23andme", "23andme_v5", {}),  # parse
-                None,                                  # estimate_ancestry
+                None,   # determine_blood_type (in gather)
+                [],     # determine_carrier_status (in gather)
+                None,   # estimate_ancestry
             ]
-            with patch("app.services.analysis.match_traits", new_callable=AsyncMock) as mock_traits:
-                mock_traits.return_value = []
-                with patch("app.services.analysis.match_clinvar", new_callable=AsyncMock) as mock_cv:
-                    mock_cv.return_value = []
-                    with patch("app.services.analysis.match_pgx", new_callable=AsyncMock) as mock_pgx:
-                        mock_pgx.return_value = []
-                        with patch("app.services.analysis.determine_blood_type") as mock_bt:
-                            mock_bt.return_value = None
+            with patch("app.services.analysis.async_session_factory", _mock_session_factory()):
+                with patch("app.services.analysis.match_traits", new_callable=AsyncMock) as mock_traits:
+                    mock_traits.return_value = []
+                    with patch("app.services.analysis.match_clinvar", new_callable=AsyncMock) as mock_cv:
+                        mock_cv.return_value = []
+                        with patch("app.services.analysis.match_pgx", new_callable=AsyncMock) as mock_pgx:
+                            mock_pgx.return_value = []
                             await run_analysis_pipeline(
                                 analysis_id=analysis_id,
                                 user_id="user_test123",
@@ -115,10 +129,6 @@ class TestFastStepsSetDone:
                                 session=session,
                             )
 
-        # Status should have been set to "done" at some point (then "scoring_prs", then "complete")
-        status_calls = [
-            call[0] for call in session.commit.call_args_list
-        ]
         # The pipeline sets status to done, then scoring_prs, then complete
         assert analysis.status == "complete"
         assert analysis.completed_at is not None
@@ -134,16 +144,17 @@ class TestFastStepsSetDone:
         with patch("app.services.analysis.asyncio.to_thread") as mock_thread:
             mock_thread.side_effect = [
                 (user_df, "23andme", "23andme_v5", {}),
-                None,  # ancestry
+                None,   # blood_type
+                [],     # carrier
+                None,   # ancestry
             ]
-            with patch("app.services.analysis.match_traits", new_callable=AsyncMock) as mt:
-                mt.return_value = []
-                with patch("app.services.analysis.match_clinvar", new_callable=AsyncMock) as mc:
-                    mc.return_value = []
-                    with patch("app.services.analysis.match_pgx", new_callable=AsyncMock) as mp:
-                        mp.return_value = []
-                        with patch("app.services.analysis.determine_blood_type") as mbt:
-                            mbt.return_value = None
+            with patch("app.services.analysis.async_session_factory", _mock_session_factory()):
+                with patch("app.services.analysis.match_traits", new_callable=AsyncMock) as mt:
+                    mt.return_value = []
+                    with patch("app.services.analysis.match_clinvar", new_callable=AsyncMock) as mc:
+                        mc.return_value = []
+                        with patch("app.services.analysis.match_pgx", new_callable=AsyncMock) as mp:
+                            mp.return_value = []
                             await run_analysis_pipeline(
                                 analysis_id=analysis_id,
                                 user_id="user_test123",
@@ -179,16 +190,17 @@ class TestFullPipelineSetsComplete:
         with patch("app.services.analysis.asyncio.to_thread") as mock_thread:
             mock_thread.side_effect = [
                 (user_df, "23andme", "23andme_v5", {}),
+                None,             # blood_type
+                [],               # carrier
                 ancestry_result,  # estimate_ancestry
             ]
-            with patch("app.services.analysis.match_traits", new_callable=AsyncMock) as mt:
-                mt.return_value = []
-                with patch("app.services.analysis.match_clinvar", new_callable=AsyncMock) as mc:
-                    mc.return_value = []
-                    with patch("app.services.analysis.match_pgx", new_callable=AsyncMock) as mp:
-                        mp.return_value = []
-                        with patch("app.services.analysis.determine_blood_type") as mbt:
-                            mbt.return_value = None
+            with patch("app.services.analysis.async_session_factory", _mock_session_factory()):
+                with patch("app.services.analysis.match_traits", new_callable=AsyncMock) as mt:
+                    mt.return_value = []
+                    with patch("app.services.analysis.match_clinvar", new_callable=AsyncMock) as mc:
+                        mc.return_value = []
+                        with patch("app.services.analysis.match_pgx", new_callable=AsyncMock) as mp:
+                            mp.return_value = []
                             await run_analysis_pipeline(
                                 analysis_id=analysis_id,
                                 user_id="user_test123",
@@ -219,16 +231,17 @@ class TestSelectedAncestryPersisted:
         with patch("app.services.analysis.asyncio.to_thread") as mock_thread:
             mock_thread.side_effect = [
                 (user_df, "23andme", "23andme_v5", {}),
+                None,  # blood_type
+                [],    # carrier
                 None,  # ancestry
             ]
-            with patch("app.services.analysis.match_traits", new_callable=AsyncMock) as mt:
-                mt.return_value = []
-                with patch("app.services.analysis.match_clinvar", new_callable=AsyncMock) as mc:
-                    mc.return_value = []
-                    with patch("app.services.analysis.match_pgx", new_callable=AsyncMock) as mp:
-                        mp.return_value = []
-                        with patch("app.services.analysis.determine_blood_type") as mbt:
-                            mbt.return_value = None
+            with patch("app.services.analysis.async_session_factory", _mock_session_factory()):
+                with patch("app.services.analysis.match_traits", new_callable=AsyncMock) as mt:
+                    mt.return_value = []
+                    with patch("app.services.analysis.match_clinvar", new_callable=AsyncMock) as mc:
+                        mc.return_value = []
+                        with patch("app.services.analysis.match_pgx", new_callable=AsyncMock) as mp:
+                            mp.return_value = []
                             await run_analysis_pipeline(
                                 analysis_id=analysis_id,
                                 user_id="user_test123",
@@ -263,16 +276,17 @@ class TestAncestryEstimatorRunsInBackground:
         with patch("app.services.analysis.asyncio.to_thread") as mock_thread:
             mock_thread.side_effect = [
                 (user_df, "23andme", "23andme_v5", {}),
+                None,             # blood_type
+                [],               # carrier
                 ancestry_result,  # estimate_ancestry
             ]
-            with patch("app.services.analysis.match_traits", new_callable=AsyncMock) as mt:
-                mt.return_value = []
-                with patch("app.services.analysis.match_clinvar", new_callable=AsyncMock) as mc:
-                    mc.return_value = []
-                    with patch("app.services.analysis.match_pgx", new_callable=AsyncMock) as mp:
-                        mp.return_value = []
-                        with patch("app.services.analysis.determine_blood_type") as mbt:
-                            mbt.return_value = None
+            with patch("app.services.analysis.async_session_factory", _mock_session_factory()):
+                with patch("app.services.analysis.match_traits", new_callable=AsyncMock) as mt:
+                    mt.return_value = []
+                    with patch("app.services.analysis.match_clinvar", new_callable=AsyncMock) as mc:
+                        mc.return_value = []
+                        with patch("app.services.analysis.match_pgx", new_callable=AsyncMock) as mp:
+                            mp.return_value = []
                             await run_analysis_pipeline(
                                 analysis_id=analysis_id,
                                 user_id="user_test123",
@@ -298,16 +312,17 @@ class TestAncestryEstimatorRunsInBackground:
         with patch("app.services.analysis.asyncio.to_thread") as mock_thread:
             mock_thread.side_effect = [
                 (user_df, "23andme", "23andme_v5", {}),
+                None,  # blood_type
+                [],    # carrier
                 None,  # ancestry estimation fails (too few AIMs)
             ]
-            with patch("app.services.analysis.match_traits", new_callable=AsyncMock) as mt:
-                mt.return_value = []
-                with patch("app.services.analysis.match_clinvar", new_callable=AsyncMock) as mc:
-                    mc.return_value = []
-                    with patch("app.services.analysis.match_pgx", new_callable=AsyncMock) as mp:
-                        mp.return_value = []
-                        with patch("app.services.analysis.determine_blood_type") as mbt:
-                            mbt.return_value = None
+            with patch("app.services.analysis.async_session_factory", _mock_session_factory()):
+                with patch("app.services.analysis.match_traits", new_callable=AsyncMock) as mt:
+                    mt.return_value = []
+                    with patch("app.services.analysis.match_clinvar", new_callable=AsyncMock) as mc:
+                        mc.return_value = []
+                        with patch("app.services.analysis.match_pgx", new_callable=AsyncMock) as mp:
+                            mp.return_value = []
                             await run_analysis_pipeline(
                                 analysis_id=analysis_id,
                                 user_id="user_test123",
@@ -350,15 +365,16 @@ class TestPrsFailureKeepsDone:
         with patch("app.services.analysis.asyncio.to_thread") as mock_thread:
             mock_thread.side_effect = [
                 (user_df, "23andme", "23andme_v5", {}),
+                None,  # blood_type
+                [],    # carrier
             ]
-            with patch("app.services.analysis.match_traits", new_callable=AsyncMock) as mt:
-                mt.return_value = []
-                with patch("app.services.analysis.match_clinvar", new_callable=AsyncMock) as mc:
-                    mc.return_value = []
-                    with patch("app.services.analysis.match_pgx", new_callable=AsyncMock) as mp:
-                        mp.return_value = []
-                        with patch("app.services.analysis.determine_blood_type") as mbt:
-                            mbt.return_value = None
+            with patch("app.services.analysis.async_session_factory", _mock_session_factory()):
+                with patch("app.services.analysis.match_traits", new_callable=AsyncMock) as mt:
+                    mt.return_value = []
+                    with patch("app.services.analysis.match_clinvar", new_callable=AsyncMock) as mc:
+                        mc.return_value = []
+                        with patch("app.services.analysis.match_pgx", new_callable=AsyncMock) as mp:
+                            mp.return_value = []
                             await run_analysis_pipeline(
                                 analysis_id=analysis_id,
                                 user_id="user_test123",

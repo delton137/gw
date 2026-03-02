@@ -7,14 +7,12 @@ immediately after parsing.
 Pipeline order:
   1. Parse genotype file (status: parsing)
   2. Match SNPedia variants (status: matching_snpedia)
-  3. Match trait associations (status: matching_traits)
-  4. Cross-reference ClinVar (status: matching_clinvar)
-  5. Call pharmacogenes (status: matching_pgx)
-  6. Determine blood type (status: matching_blood)
-  7. Screen carrier status (status: matching_carrier)
-  8. Commit fast results → status: done  (frontend redirects to dashboard)
-  9. Background: ancestry estimation + PRS scoring (status: scoring_prs)
-  10. Complete → status: complete
+  3. Parallel fast matching (status: matching_fast):
+     - Trait associations, ClinVar, PGx (DB-bound, separate sessions)
+     - Blood type, carrier status (CPU-only, threaded)
+  4. Commit fast results → status: done  (frontend redirects to dashboard)
+  5. Background: ancestry estimation + PRS scoring (status: scoring_prs)
+  6. Complete → status: complete
 """
 
 from __future__ import annotations
@@ -34,6 +32,7 @@ from sqlalchemy import column as sa_column, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
+from app.db import async_session_factory
 from app.models.blood_type import UserBloodTypeResult
 from app.models.carrier_status import UserCarrierStatusResult
 from app.models.prs import PrsScore, PrsReferenceDistribution
@@ -187,42 +186,46 @@ async def _run_pipeline(
 
             _POS_COL = {"GRCh38": "position_grch38", "GRCh37": "position"}
             pos_col_name = _POS_COL.get(genome_build, "position")
-            pos_col = sa_column(pos_col_name)
 
-            # Source 1: snps table (~214 curated SNPs)
-            from app.models.snp import Snp
-            snp_result = await session.execute(
-                select(Snp.rsid, Snp.chrom, pos_col.label("pos"))
-                .select_from(Snp.__table__)
-                .where(pos_col.isnot(None))
+            # Run annotation source queries in parallel (separate sessions)
+            async def _query_snp_positions() -> list[tuple[str, str, int]]:
+                from app.models.snp import Snp
+                pos_col = sa_column(pos_col_name)
+                async with async_session_factory() as s:
+                    result = await s.execute(
+                        select(Snp.rsid, Snp.chrom, pos_col.label("pos"))
+                        .select_from(Snp.__table__)
+                        .where(pos_col.isnot(None))
+                    )
+                    return [(r.rsid, r.chrom, r.pos) for r in result.fetchall()]
+
+            async def _query_prs_positions() -> list[tuple[str, str, int]]:
+                if genome_build == "GRCh38":
+                    sql = """
+                        SELECT DISTINCT rsid, chrom, position_grch38 AS pos
+                        FROM prs_variant_weights
+                        WHERE rsid IS NOT NULL AND rsid != '.'
+                          AND position_grch38 IS NOT NULL
+                    """
+                else:
+                    sql = """
+                        SELECT DISTINCT rsid, chrom, position AS pos
+                        FROM prs_variant_weights
+                        WHERE rsid IS NOT NULL AND rsid != '.'
+                          AND position IS NOT NULL
+                    """
+                async with async_session_factory() as s:
+                    result = await s.execute(text(sql))
+                    return [(r.rsid, r.chrom, r.pos) for r in result.fetchall()]
+
+            snp_rows, prs_rows = await asyncio.gather(
+                _query_snp_positions(),
+                _query_prs_positions(),
             )
-            annotation_rows: list[tuple[str, str, int]] = [
-                (r.rsid, r.chrom, r.pos) for r in snp_result.fetchall()
-            ]
-
-            # Source 2: PRS variant weights (thousands of positions)
-            if genome_build == "GRCh38":
-                prs_sql = """
-                    SELECT DISTINCT rsid, chrom, position_grch38 AS pos
-                    FROM prs_variant_weights
-                    WHERE rsid IS NOT NULL AND rsid != '.'
-                      AND position_grch38 IS NOT NULL
-                """
-            else:
-                prs_sql = """
-                    SELECT DISTINCT rsid, chrom, position AS pos
-                    FROM prs_variant_weights
-                    WHERE rsid IS NOT NULL AND rsid != '.'
-                      AND position IS NOT NULL
-                """
-            prs_result = await session.execute(text(prs_sql))
-            annotation_rows.extend(
-                (r.rsid, r.chrom, r.pos) for r in prs_result.fetchall()
-            )
-
-            # Source 3: PGx allele-defining variants (1,333 positions)
+            # Source 3: PGx allele-defining variants (1,333 positions) — sync, cached
             pgx_positions = _load_pgx_positions(genome_build)
-            annotation_rows.extend(pgx_positions)
+
+            annotation_rows: list[tuple[str, str, int]] = snp_rows + prs_rows + pgx_positions
 
             if annotation_rows:
                 # Deduplicate: for each (chrom, pos), prefer rsid starting with "rs"
@@ -306,14 +309,46 @@ async def _run_pipeline(
         else:
             log.warning(f"[{analysis_id}] snpedia_snps table is empty — skipping variant storage")
 
-        # ----- Trait matching -----
-        analysis.status = "matching_traits"
+        # ----- Parallel fast matching (DB + CPU tasks) -----
+        analysis.status = "matching_fast"
+        analysis.status_detail = "Running trait, ClinVar, PGx, blood type, and carrier matching..."
         await session.commit()
-        t0_traits = time.perf_counter()
-        trait_hits = await match_traits(user_df, session, is_vcf=is_wgs)
-        elapsed_traits = time.perf_counter() - t0_traits
-        log.info(f"[{analysis_id}] Matched {len(trait_hits)} traits in {elapsed_traits:.2f}s")
+        t0_match = time.perf_counter()
 
+        # DB-bound tasks get their own sessions (AsyncSession is not concurrent-safe)
+        async def _run_traits():
+            async with async_session_factory() as s:
+                return await match_traits(user_df, s, is_vcf=is_wgs)
+
+        async def _run_clinvar():
+            async with async_session_factory() as s:
+                return await match_clinvar(user_df, s)
+
+        async def _run_pgx():
+            async with async_session_factory() as s:
+                return await match_pgx(user_df_full, s, genome_build=genome_build, is_vcf=is_vcf)
+
+        # CPU-only tasks run in threads
+        trait_hits, clinvar_hits, pgx_results, blood_type_result, carrier_results = (
+            await asyncio.gather(
+                _run_traits(),
+                _run_clinvar(),
+                _run_pgx(),
+                asyncio.to_thread(
+                    determine_blood_type, user_df_full,
+                    genome_build=genome_build, deletion_genotypes=deletion_genotypes,
+                ),
+                asyncio.to_thread(determine_carrier_status, user_df_full, genome_build=genome_build),
+            )
+        )
+
+        elapsed_match = time.perf_counter() - t0_match
+        log.info(
+            f"[{analysis_id}] Parallel matching complete in {elapsed_match:.2f}s — "
+            f"traits={len(trait_hits)}, clinvar={len(clinvar_hits)}, pgx={len(pgx_results)}"
+        )
+
+        # ----- Store results (sequential DB writes using main session) -----
         for hit in trait_hits:
             session.add(UserSnpTraitHit(
                 user_id=user_id,
@@ -327,15 +362,6 @@ async def _run_pipeline(
                 association_id=hit.association_id,
             ))
 
-        # ----- ClinVar cross-reference -----
-        analysis.status = "matching_clinvar"
-        await session.commit()
-        t0_cv = time.perf_counter()
-        clinvar_hits = await match_clinvar(user_df, session)
-        elapsed_cv = time.perf_counter() - t0_cv
-        log.info(f"[{analysis_id}] Matched {len(clinvar_hits)} ClinVar variants in {elapsed_cv:.2f}s")
-        await _set_detail(analysis, session, f"ClinVar: {len(clinvar_hits):,} annotated variants found", status="matching_pgx")
-
         for i in range(0, len(clinvar_hits), 5000):
             batch = clinvar_hits[i : i + 5000]
             session.add_all([
@@ -347,13 +373,6 @@ async def _run_pipeline(
                 )
                 for hit in batch
             ])
-
-        # ----- Pharmacogenomics -----
-        t0_pgx = time.perf_counter()
-        pgx_results = await match_pgx(user_df_full, session, genome_build=genome_build, is_vcf=is_vcf)
-        elapsed_pgx = time.perf_counter() - t0_pgx
-        log.info(f"[{analysis_id}] Matched {len(pgx_results)} PGX genes in {elapsed_pgx:.2f}s")
-        await _set_detail(analysis, session, f"Matched {len(pgx_results)} pharmacogenomic genes", status="matching_blood")
 
         for pr in pgx_results:
             session.add(UserPgxResult(
@@ -375,13 +394,6 @@ async def _run_pipeline(
                 clinical_note=pr.clinical_note,
                 variant_genotypes=pr.variant_genotypes,
             ))
-
-        # ----- Blood type -----
-        t0_bt = time.perf_counter()
-        blood_type_result = determine_blood_type(
-            user_df_full, genome_build=genome_build, deletion_genotypes=deletion_genotypes,
-        )
-        elapsed_bt = time.perf_counter() - t0_bt
 
         if blood_type_result:
             session.add(UserBloodTypeResult(
@@ -407,18 +419,10 @@ async def _run_pipeline(
             ))
             log.info(
                 f"[{analysis_id}] Blood type: {blood_type_result.display_type} "
-                f"({blood_type_result.confidence}, {blood_type_result.n_variants_tested}/{blood_type_result.n_variants_total} variants) "
-                f"in {elapsed_bt:.2f}s"
+                f"({blood_type_result.confidence}, {blood_type_result.n_variants_tested}/{blood_type_result.n_variants_total} variants)"
             )
-            await _set_detail(analysis, session, f"Blood type: {blood_type_result.display_type}", status="matching_carrier")
         else:
             log.info(f"[{analysis_id}] Blood type: insufficient variants for determination")
-            await _set_detail(analysis, session, "Blood type: insufficient variants", status="matching_carrier")
-
-        # ----- Carrier status screening -----
-        t0_cs = time.perf_counter()
-        carrier_results = determine_carrier_status(user_df_full, genome_build=genome_build)
-        elapsed_cs = time.perf_counter() - t0_cs
 
         n_carrier = sum(1 for r in carrier_results if r.status == "carrier")
         n_affected = sum(1 for r in carrier_results if r.status in ("likely_affected", "potential_compound_het"))
@@ -432,9 +436,8 @@ async def _run_pipeline(
         ))
         log.info(
             f"[{analysis_id}] Carrier status: {len(carrier_results)} genes screened, "
-            f"{n_carrier} carrier, {n_affected} affected/compound-het in {elapsed_cs:.2f}s"
+            f"{n_carrier} carrier, {n_affected} affected/compound-het"
         )
-        await _set_detail(analysis, session, f"Carrier screening: {len(carrier_results)} genes checked")
 
         # =================================================================
         # STEP 3: Commit fast results — frontend can redirect to dashboard
@@ -445,8 +448,7 @@ async def _run_pipeline(
         await session.commit()
         log.info(
             f"[{analysis_id}] Fast steps complete in {elapsed_fast:.2f}s "
-            f"(parse={elapsed_parse:.2f}s, traits={elapsed_traits:.2f}s, clinvar={elapsed_cv:.2f}s, "
-            f"pgx={elapsed_pgx:.2f}s, bt={elapsed_bt:.2f}s, cs={elapsed_cs:.2f}s)"
+            f"(parse={elapsed_parse:.2f}s, parallel_match={elapsed_match:.2f}s)"
         )
 
     except asyncio.CancelledError:
