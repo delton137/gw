@@ -212,9 +212,7 @@ export default function PrsDistributionChart({
       {/* Footer metadata */}
       <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted mt-4">
         <span>
-          {nMatched.toLocaleString()} / {nTotal.toLocaleString()} variants found in file
-          {nTotal - nMatched > 0 && `, ${(nTotal - nMatched).toLocaleString()} imputed as reference`}
-          . Normalized against 1000 Genomes {SUPERPOP_META[ancestryGroup]?.name || ancestryGroup}. {percentileLabel(percentile)} percentile{percentileLower != null && percentileUpper != null && ` (${percentileLabel(percentileLower)}\u2013${percentileLabel(percentileUpper)})`}.
+          Normalized against 1000 Genomes {SUPERPOP_META[ancestryGroup]?.name || ancestryGroup}. {percentileLabel(percentile)} percentile{percentileLower != null && percentileUpper != null && ` (${percentileLabel(percentileLower)}\u2013${percentileLabel(percentileUpper)})`}. Raw score: {rawScore.toPrecision(4)}.
         </span>
         {reportedAuc != null && reportedAuc > 0.5 && populationRisk != null && populationRisk > 0 && (
           <button

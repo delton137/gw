@@ -82,7 +82,7 @@ Raw file deleted after parsing. On failure: status `failed` with error_message.
 
 **ancestry_estimator.py** — MLE ancestry estimation on 128,097 AILs from 1000G Phase 3 (Aeon algorithm reimplemented in scipy). Estimates admixture fractions across 26 populations, aggregated to 5 superpopulations. Hardy-Weinberg genotype model with SLSQP optimization. Min 500 markers. See `docs/ancestry-estimation.md` for full details.
 
-**scorer.py** — PRS scoring with matched-variant reference distributions, mixture normalization for admixed users, 95% CI from missing-variant uncertainty.
+**scorer.py** — PRS scoring with matched-variant reference distributions, mixture normalization for admixed users, 95% CI from missing-variant uncertainty. Prefers empirical percentiles from scored reference panel (sorted_scores in percentiles_json) when available, falls back to analytical HWE. Sanity check flags scores >5σ from reference mean.
 
 **absolute_risk.py** — Converts PRS z-scores to disease probabilities via liability threshold model.
 
@@ -132,7 +132,8 @@ Raw file deleted after parsing. On failure: status `failed` with error_message.
 - **ingest_pgs.py** — PGS Catalog ingest (metadata + weights)
 - **compute_aim_panel.py** — AIM panel from 1000G (one-time)
 - **load_1kg_frequencies.py** — 1000G allele frequencies into prs_variant_weights
-- **compute_reference_dists.py** — Per-PRS, per-ancestry reference distributions
+- **compute_reference_dists.py** — Per-PRS, per-ancestry analytical reference distributions (HWE formula)
+- **compute_empirical_ref_dists.py** — Empirical reference distributions from scored reference panel (PLINK2 .sscore files). Stores sorted score arrays in percentiles_json for empirical percentile lookup. Two modes: `--ref-dir` (score with PLINK2) or `--sscore-dir` (read pre-existing .sscore files)
 - **seed_pgx_definitions.py** — PGx knowledge base (76 genes, 1916 alleles, 1136 guidelines). Idempotent.
 - **extract_cpic_dpwg.py** — ETL from PharmCAT (one-time)
 - **seed_snp_pages.py** — ~214 curated SNPs (high-traffic + pharmacogenomic) with MyVariant.info enrichment
@@ -192,7 +193,7 @@ npm run dev
 
 ## Testing
 
-~290 tests across 17 test files (all passing):
+~423 tests across 18 test files (all passing):
 
 - **test_parser.py** — 23andMe, AncestryDNA, VCF parsing
 - **test_scorer.py** — PRS scoring, mixture normalization, CIs

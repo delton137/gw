@@ -102,9 +102,13 @@ async def run_analysis_pipeline(
         await _run_pipeline(analysis_id, user_id, tmp_path, ancestry_group, session)
 
 
-async def _set_detail(analysis: Analysis, session: AsyncSession, detail: str) -> None:
-    """Update the status_detail field so the frontend can display live progress."""
+async def _set_detail(
+    analysis: Analysis, session: AsyncSession, detail: str, *, status: str | None = None,
+) -> None:
+    """Update status_detail (and optionally status) then commit once."""
     analysis.status_detail = detail
+    if status:
+        analysis.status = status
     await session.commit()
 
 
@@ -330,7 +334,7 @@ async def _run_pipeline(
         clinvar_hits = await match_clinvar(user_df, session)
         elapsed_cv = time.perf_counter() - t0_cv
         log.info(f"[{analysis_id}] Matched {len(clinvar_hits)} ClinVar variants in {elapsed_cv:.2f}s")
-        await _set_detail(analysis, session, f"ClinVar: {len(clinvar_hits):,} annotated variants found")
+        await _set_detail(analysis, session, f"ClinVar: {len(clinvar_hits):,} annotated variants found", status="matching_pgx")
 
         for i in range(0, len(clinvar_hits), 5000):
             batch = clinvar_hits[i : i + 5000]
@@ -345,13 +349,11 @@ async def _run_pipeline(
             ])
 
         # ----- Pharmacogenomics -----
-        analysis.status = "matching_pgx"
-        await session.commit()
         t0_pgx = time.perf_counter()
         pgx_results = await match_pgx(user_df_full, session, genome_build=genome_build, is_vcf=is_vcf)
         elapsed_pgx = time.perf_counter() - t0_pgx
         log.info(f"[{analysis_id}] Matched {len(pgx_results)} PGX genes in {elapsed_pgx:.2f}s")
-        await _set_detail(analysis, session, f"Matched {len(pgx_results)} pharmacogenomic genes")
+        await _set_detail(analysis, session, f"Matched {len(pgx_results)} pharmacogenomic genes", status="matching_blood")
 
         for pr in pgx_results:
             session.add(UserPgxResult(
@@ -371,11 +373,10 @@ async def _run_pipeline(
                 confidence=pr.confidence,
                 drugs_affected=pr.drugs_affected,
                 clinical_note=pr.clinical_note,
+                variant_genotypes=pr.variant_genotypes,
             ))
 
         # ----- Blood type -----
-        analysis.status = "matching_blood"
-        await session.commit()
         t0_bt = time.perf_counter()
         blood_type_result = determine_blood_type(
             user_df_full, genome_build=genome_build, deletion_genotypes=deletion_genotypes,
@@ -409,14 +410,12 @@ async def _run_pipeline(
                 f"({blood_type_result.confidence}, {blood_type_result.n_variants_tested}/{blood_type_result.n_variants_total} variants) "
                 f"in {elapsed_bt:.2f}s"
             )
-            await _set_detail(analysis, session, f"Blood type: {blood_type_result.display_type}")
+            await _set_detail(analysis, session, f"Blood type: {blood_type_result.display_type}", status="matching_carrier")
         else:
             log.info(f"[{analysis_id}] Blood type: insufficient variants for determination")
-            await _set_detail(analysis, session, "Blood type: insufficient variants")
+            await _set_detail(analysis, session, "Blood type: insufficient variants", status="matching_carrier")
 
         # ----- Carrier status screening -----
-        analysis.status = "matching_carrier"
-        await session.commit()
         t0_cs = time.perf_counter()
         carrier_results = determine_carrier_status(user_df_full, genome_build=genome_build)
         elapsed_cs = time.perf_counter() - t0_cs
@@ -595,9 +594,13 @@ async def _run_pipeline(
                 weights_df = pl.DataFrame(weights_data, schema=weights_schema)
 
                 ref_dist = ref_by_pgs.get(prs_score.pgs_id)
+                ref_sorted_scores = None
                 if ref_dist:
                     ref_mean = ref_dist.mean
                     ref_std = ref_dist.std
+                    # Extract empirical sorted scores for percentile lookup
+                    if ref_dist.percentiles_json and isinstance(ref_dist.percentiles_json, dict):
+                        ref_sorted_scores = ref_dist.percentiles_json.get("sorted_scores")
                 else:
                     log.warning(
                         f"[{analysis_id}] No pre-computed reference distribution for "
@@ -616,6 +619,7 @@ async def _run_pipeline(
                     ancestry_group=ancestry_group,
                     ancestry_weights=None,
                     genome_build=genome_build,
+                    ref_sorted_scores=ref_sorted_scores,
                 )
 
                 if prs_result.n_variants_matched > 0:

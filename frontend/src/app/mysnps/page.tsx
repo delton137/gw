@@ -342,7 +342,24 @@ export default function MySnpsPage() {
             <p className="text-sm text-muted py-8 text-center">No results match your filters.</p>
           ) : (
             <div className="space-y-8">
-              {groupedHits.map(([category, catHits]) => (
+              {groupedHits.map(([category, catHits]) => {
+                if (category === "Pharmacogenomics") {
+                  return (
+                    <div key={category}>
+                      <h2 className="font-serif text-lg font-semibold mb-2">Pharmacogenomics</h2>
+                      <div className="border border-border px-4 py-6 text-center">
+                        <p className="text-sm text-muted mb-2">
+                          Pharmacogenomic variants are analyzed using star allele calling and panel-based calling and the results are reported on the Pharmacogenomics page.
+                        </p>
+                        <Link href="/pgx" className="text-accent hover:underline font-medium text-sm">
+                          View Pharmacogenomics Results &rarr;
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
                 <div key={category}>
                   <h2 className="font-serif text-lg font-semibold mb-2">
                     {category}
@@ -432,7 +449,8 @@ export default function MySnpsPage() {
                     })}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
 

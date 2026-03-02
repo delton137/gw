@@ -26,6 +26,10 @@ MEDIUM_COVERAGE_THRESHOLD = 0.50
 ASSUMED_MAF_VARIANCE_FACTOR = 0.375
 
 
+# Threshold for score sanity check: flag scores beyond this many σ from reference mean
+SCORE_SANITY_THRESHOLD_Z = 5.0
+
+
 @dataclass
 class PrsResultData:
     """Result of computing a single PRS for a user."""
@@ -166,6 +170,25 @@ def score_to_percentile(
     # Normal CDF: Φ(z) = 0.5 * (1 + erf(z / sqrt(2)))
     percentile = 0.5 * (1.0 + erf(z / sqrt(2.0))) * 100.0
     return max(0.0, min(100.0, percentile))
+
+
+def empirical_percentile(
+    raw_score: float,
+    sorted_scores: list[float],
+) -> float:
+    """Compute empirical percentile from a sorted reference score array.
+
+    Returns the fraction of reference scores ≤ raw_score, as a percentage [0, 100].
+    Uses bisect for O(log n) lookup.
+    """
+    from bisect import bisect_right
+
+    n = len(sorted_scores)
+    if n == 0:
+        return 50.0
+
+    rank = bisect_right(sorted_scores, raw_score)
+    return max(0.0, min(100.0, rank / n * 100.0))
 
 
 def compute_matched_ref_dist(
@@ -428,6 +451,7 @@ def compute_prs(
     ancestry_weights: dict[str, float] | None = None,
     is_vcf: bool = False,
     genome_build: str = "GRCh37",
+    ref_sorted_scores: list[float] | None = None,
 ) -> PrsResultData:
     """Compute a single PRS for a user.
 
@@ -439,6 +463,9 @@ def compute_prs(
     mixture reference distribution blending all population-specific references
     by the user's ancestry proportions. Otherwise uses a single population.
 
+    If ref_sorted_scores is provided (from empirical reference panel scoring),
+    the percentile is computed empirically instead of using the normal CDF.
+
     Args:
         user_df: Parsed genotype DataFrame
         pgs_id: PGS Catalog ID
@@ -449,6 +476,7 @@ def compute_prs(
         ancestry_weights: Optional population proportions for mixture normalization
         is_vcf: Deprecated, kept for backward compatibility (ignored)
         genome_build: Genome build for position-based matching ("GRCh37" or "GRCh38")
+        ref_sorted_scores: Optional sorted array of reference panel scores for empirical percentile
 
     Returns:
         PrsResultData with score, percentile, and match stats.
@@ -513,8 +541,21 @@ def compute_prs(
     has_valid_ref = matched_ref_computed or has_valid_ref
 
     if has_valid_ref and ref_std > 0:
-        percentile = score_to_percentile(raw_score, ref_mean, ref_std)
         z = (raw_score - ref_mean) / ref_std
+
+        # Prefer empirical percentile when sorted reference scores are available
+        if ref_sorted_scores and len(ref_sorted_scores) >= 50:
+            percentile = empirical_percentile(raw_score, ref_sorted_scores)
+        else:
+            percentile = score_to_percentile(raw_score, ref_mean, ref_std)
+
+        # Score sanity check: flag physically implausible scores
+        if abs(z) > SCORE_SANITY_THRESHOLD_Z:
+            log.warning(
+                "SANITY CHECK: %s score %.6f is %.1fσ from reference mean %.6f "
+                "(std=%.6f). This may indicate a scoring bug or stale scoring file.",
+                pgs_id, raw_score, z, ref_mean, ref_std,
+            )
     else:
         percentile = None
         z = None

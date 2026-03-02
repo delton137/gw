@@ -279,6 +279,7 @@ async def delete_score_data(pgs_id: str, session: AsyncSession) -> None:
         {"pid": pgs_id},
     )
     await session.commit()
+    session.expire_all()
     log.info(f"  Deleted existing data for {pgs_id}")
 
 

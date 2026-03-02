@@ -7,6 +7,13 @@ import { apiFetch } from "@/lib/api";
 import PrsDistributionChart from "@/components/PrsDistributionChart";
 import { SUPERPOP_META } from "@/lib/populations";
 
+function formatPercentile(p: number): string {
+  const rounded = Math.round(p);
+  if (rounded === 0) return "<1";
+  if (rounded === 100) return ">99";
+  return String(rounded);
+}
+
 interface PrsResult {
   pgs_id: string;
   trait_name: string;
@@ -276,6 +283,36 @@ export default function PrsPage() {
               </div>
             )
           )}
+        </div>
+      )}
+
+      {/* Summary table */}
+      {prsData.prs_status === "ready" && prsData.results.length > 0 && (
+        <div className="mt-12 border border-border">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border text-left text-xs text-muted">
+                <th className="px-4 py-2 font-medium">ID</th>
+                <th className="px-4 py-2 font-medium">Trait</th>
+                <th className="px-4 py-2 font-medium text-right">Variants</th>
+                <th className="px-4 py-2 font-medium text-right">Raw Score</th>
+                <th className="px-4 py-2 font-medium text-right">Percentile</th>
+              </tr>
+            </thead>
+            <tbody>
+              {prsData.results.map((prs) => (
+                <tr key={prs.pgs_id} className="border-b border-border last:border-b-0">
+                  <td className="px-4 py-2">
+                    <a href={`https://www.pgscatalog.org/score/${prs.pgs_id}/`} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">{prs.pgs_id}</a>
+                  </td>
+                  <td className="px-4 py-2">{prs.trait_name}</td>
+                  <td className="px-4 py-2 text-right">{prs.n_variants_total.toLocaleString()}</td>
+                  <td className="px-4 py-2 text-right font-mono">{prs.raw_score.toPrecision(4)}</td>
+                  <td className="px-4 py-2 text-right">{formatPercentile(prs.percentile)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 

@@ -5,16 +5,18 @@ per-superpopulation mean/std from the actual score distribution. This captures
 LD effects that the analytical formula (Var[S] = Σ 2·p·(1-p)·w²) misses,
 which can dramatically underestimate variance for genome-wide PGS.
 
+Stores sorted score arrays in percentiles_json for exact empirical percentile
+lookup at scoring time (no normal distribution assumption needed).
+
 Reference panel: /media/dan/500Gb/work/ancestry/ref_extracted/GRCh37_HGDP+1kGP_ALL.{pgen,pvar.zst,psam}
 PLINK2 Docker image: ghcr.io/pgscatalog/plink2:2.00a5.10
 
-Three-step approach:
-  1. Subset: --extract range to pull only target positions → small pfile
-  2. Build scoring file: parse the subset pvar to get exact variant IDs,
-     match effect alleles to pvar ALT/REF
-  3. Score: --score on the small pfile (no ID renaming needed)
+Two modes:
+  A. --sscore-dir: Read pre-existing {PGS_ID}_ref.sscore files (fast, no PLINK2 needed)
+  B. --ref-dir: Run PLINK2 from scratch (three-step: subset → build scoring file → score)
 
 Usage:
+    python -m scripts.compute_empirical_ref_dists --sscore-dir /tmp/pgs_ref/
     python -m scripts.compute_empirical_ref_dists --pgs-id PGS000039
     python -m scripts.compute_empirical_ref_dists --all
     python -m scripts.compute_empirical_ref_dists --all --ref-dir /path/to/ref
@@ -25,8 +27,10 @@ from __future__ import annotations
 import argparse
 import asyncio
 import csv
+import json
 import logging
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -49,6 +53,9 @@ DEFAULT_DOCKER_IMAGE = "ghcr.io/pgscatalog/plink2:2.00a5.10"
 
 # HGDP+1kGP uses "CSA" for Central/South Asian; gene-wizard uses "SAS"
 SUPERPOP_MAP = {"CSA": "SAS"}
+
+# Pattern for pre-existing sscore files: {PGS_ID}_ref.sscore
+SSCORE_PATTERN = re.compile(r"^(PGS\d+)_ref\.sscore$")
 
 
 def load_psam(ref_dir: str, include_hgdp: bool = False) -> dict[str, str]:
@@ -350,33 +357,54 @@ async def process_pgs(
         {"pgs_id": pgs_id},
     )
 
+    # Collect sorted score arrays for empirical percentile storage
+    pop_sorted_scores: dict[str, list[float]] = {}
+    for iid, score in scores.items():
+        pop = iid_to_pop.get(iid)
+        if pop is None:
+            continue
+        pop_sorted_scores.setdefault(pop, []).append(score)
+    for pop in pop_sorted_scores:
+        pop_sorted_scores[pop].sort()
+
     for pop, (emp_mean, emp_std, n) in pop_stats.items():
         old_mean, old_std = analytical.get(pop, (None, None))
 
-        # Use analytical mean (matches user scoring) + empirical std (captures LD)
-        db_mean = old_mean if old_mean is not None else emp_mean
+        # Use empirical mean and std (captures LD, matches reference panel scoring)
+        db_mean = emp_mean
         db_std = emp_std
+
+        # Store sorted scores for empirical percentile lookup
+        sorted_scores = pop_sorted_scores.get(pop, [])
+        percentiles_data = {
+            "sorted_scores": [round(s, 8) for s in sorted_scores],
+            "n": len(sorted_scores),
+            "source": "HGDP+1kGP",
+        }
 
         if old_std is not None and old_std > 0:
             std_ratio = emp_std / old_std
             log.info(
                 f"  {pop}: empirical mean={emp_mean:.6f}, std={emp_std:.6f} (n={n})"
                 f"  [analytical: mean={old_mean:.6f}, std={old_std:.6f}, ratio={std_ratio:.2f}x]"
-                f"  → DB: mean={db_mean:.6f}, std={db_std:.6f}"
             )
         else:
             log.info(
                 f"  {pop}: empirical mean={emp_mean:.6f}, std={emp_std:.6f} (n={n})"
                 f"  [no prior analytical dist]"
-                f"  → DB: mean={db_mean:.6f}, std={db_std:.6f}"
             )
 
         await session.execute(
             text("""
-                INSERT INTO prs_reference_distributions (pgs_id, ancestry_group, mean, std)
-                VALUES (:pgs_id, :pop, :mean, :std)
+                INSERT INTO prs_reference_distributions
+                    (pgs_id, ancestry_group, mean, std, percentiles_json)
+                VALUES (:pgs_id, :pop, :mean, :std, :pct_json)
             """),
-            {"pgs_id": pgs_id, "pop": pop, "mean": db_mean, "std": db_std},
+            {
+                "pgs_id": pgs_id, "pop": pop,
+                "mean": db_mean, "std": db_std,
+                "pct_json": json.dumps(percentiles_data),
+            },
         )
 
     await session.commit()
@@ -394,6 +422,113 @@ async def process_pgs(
     elapsed = time.perf_counter() - t0
     log.info(f"  Done in {elapsed:.1f}s")
     return True
+
+
+async def main_from_sscore(
+    sscore_dir: str,
+    pgs_ids: list[str] | None,
+    ref_dir: str,
+    include_hgdp: bool = False,
+) -> None:
+    """Load empirical distributions from pre-existing .sscore files."""
+    if not os.path.isdir(sscore_dir):
+        log.error(f"Directory not found: {sscore_dir}")
+        return
+
+    # Find .sscore files
+    sscore_files: dict[str, str] = {}
+    for fname in os.listdir(sscore_dir):
+        m = SSCORE_PATTERN.match(fname)
+        if m:
+            sscore_files[m.group(1)] = os.path.join(sscore_dir, fname)
+
+    if not sscore_files:
+        log.error(f"No *_ref.sscore files found in {sscore_dir}")
+        return
+
+    if pgs_ids:
+        sscore_files = {k: v for k, v in sscore_files.items() if k in pgs_ids}
+
+    log.info(f"Found {len(sscore_files)} .sscore files in {sscore_dir}")
+
+    # Load population info from psam
+    panel_label = "HGDP+1kGP" if include_hgdp else "1kGP only"
+    log.info(f"Loading reference panel psam from {ref_dir} ({panel_label})...")
+    iid_to_pop = load_psam(ref_dir, include_hgdp=include_hgdp)
+    pop_counts: dict[str, int] = {}
+    for pop in iid_to_pop.values():
+        pop_counts[pop] = pop_counts.get(pop, 0) + 1
+    log.info(f"  {len(iid_to_pop)} individuals: {dict(sorted(pop_counts.items()))}")
+
+    engine = create_async_engine(settings.database_url)
+    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+    async with async_session() as session:
+        # Verify PGS IDs exist in database
+        result = await session.execute(select(PrsScore.pgs_id))
+        db_pgs_ids = {r[0] for r in result.fetchall()}
+
+        for pgs_id, path in sorted(sscore_files.items()):
+            if pgs_id not in db_pgs_ids:
+                log.warning(f"{pgs_id}: Not in database, skipping")
+                continue
+
+            log.info(f"\n{pgs_id}: Parsing {os.path.basename(path)}...")
+            try:
+                scores = parse_sscore(path)
+                log.info(f"  Parsed scores for {len(scores):,} individuals")
+
+                pop_stats = compute_pop_stats(scores, iid_to_pop)
+
+                # Collect sorted score arrays
+                pop_sorted_scores: dict[str, list[float]] = {}
+                for iid, score in scores.items():
+                    pop = iid_to_pop.get(iid)
+                    if pop is None:
+                        continue
+                    pop_sorted_scores.setdefault(pop, []).append(score)
+                for pop in pop_sorted_scores:
+                    pop_sorted_scores[pop].sort()
+
+                # Delete existing and insert new
+                await session.execute(
+                    text("DELETE FROM prs_reference_distributions WHERE pgs_id = :pgs_id"),
+                    {"pgs_id": pgs_id},
+                )
+
+                for pop, (emp_mean, emp_std, n) in pop_stats.items():
+                    sorted_scores = pop_sorted_scores.get(pop, [])
+                    percentiles_data = {
+                        "sorted_scores": [round(s, 8) for s in sorted_scores],
+                        "n": len(sorted_scores),
+                        "source": "HGDP+1kGP",
+                    }
+
+                    await session.execute(
+                        text("""
+                            INSERT INTO prs_reference_distributions
+                                (pgs_id, ancestry_group, mean, std, percentiles_json)
+                            VALUES (:pgs_id, :pop, :mean, :std, :pct_json)
+                        """),
+                        {
+                            "pgs_id": pgs_id, "pop": pop,
+                            "mean": emp_mean, "std": emp_std,
+                            "pct_json": json.dumps(percentiles_data),
+                        },
+                    )
+
+                    log.info(
+                        f"  {pop}: n={n}, mean={emp_mean:.6f}, std={emp_std:.6f}, "
+                        f"range=[{sorted_scores[0]:.6f}, {sorted_scores[-1]:.6f}]"
+                    )
+
+                await session.commit()
+            except Exception as e:
+                log.error(f"{pgs_id}: Failed: {e}", exc_info=True)
+                await session.rollback()
+
+    await engine.dispose()
+    log.info("\nDone!")
 
 
 async def main(
@@ -476,6 +611,11 @@ if __name__ == "__main__":
         help="Process all PGS scores in the database",
     )
     parser.add_argument(
+        "--sscore-dir", type=str,
+        help="Read pre-existing {PGS_ID}_ref.sscore files from this directory "
+             "(fast mode: no PLINK2 needed)",
+    )
+    parser.add_argument(
         "--ref-dir", type=str, default=DEFAULT_REF_DIR,
         help=f"Path to reference panel directory (default: {DEFAULT_REF_DIR})",
     )
@@ -490,8 +630,13 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    if not args.pgs_ids and not args.all:
-        parser.error("Must specify --pgs-id or --all")
-
-    asyncio.run(main(args.pgs_ids, args.all, args.ref_dir, args.docker_image,
-                      include_hgdp=args.include_hgdp))
+    if args.sscore_dir:
+        asyncio.run(main_from_sscore(
+            args.sscore_dir, args.pgs_ids, args.ref_dir,
+            include_hgdp=args.include_hgdp,
+        ))
+    else:
+        if not args.pgs_ids and not args.all:
+            parser.error("Must specify --pgs-id, --all, or --sscore-dir")
+        asyncio.run(main(args.pgs_ids, args.all, args.ref_dir, args.docker_image,
+                          include_hgdp=args.include_hgdp))

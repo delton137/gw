@@ -199,6 +199,7 @@ class PgxResult:
     confidence: str          # "high" | "medium" | "low"
     drugs_affected: str | None
     clinical_note: str | None
+    variant_genotypes: dict[str, str] | None  # {rsid: "A/G", ...}
 
 
 # ---------------------------------------------------------------------------
@@ -583,6 +584,16 @@ async def match_pgx(
             gene, calling_method, default_allele, defs, user_lookup
         )
 
+        # Collect per-variant genotypes for this gene's panel
+        gene_rsids: set[str] = set()
+        for d in defs:
+            gene_rsids.add(d["rsid"])
+        variant_genos: dict[str, str] = {}
+        for rsid in sorted(gene_rsids):
+            if rsid in user_lookup:
+                a1, a2 = user_lookup[rsid]
+                variant_genos[rsid] = f"{a1}/{a2}"
+
         # For VCF: all positions are assessed (absence = homozygous reference).
         # Missing positions have already been imputed as ref/ref, so every
         # defining variant is effectively tested.
@@ -661,6 +672,7 @@ async def match_pgx(
             confidence=confidence,
             drugs_affected=drugs_str,
             clinical_note=clinical_note,
+            variant_genotypes=variant_genos if variant_genos else None,
         ))
 
     elapsed = time.perf_counter() - t0

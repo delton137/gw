@@ -26,6 +26,7 @@ class PgxRow(TypedDict):
     drugs_affected: str | None
     clinical_note: str | None
     gene_description: str | None
+    variant_genotypes: dict[str, str] | None
     computed_at: str | None
 
 

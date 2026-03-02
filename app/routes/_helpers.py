@@ -52,6 +52,7 @@ async def fetch_pgx_rows(
                    r.n_variants_tested, r.n_variants_total,
                    r.calling_method, r.confidence,
                    r.drugs_affected, r.clinical_note, r.computed_at,
+                   r.variant_genotypes,
                    g.description AS gene_description
             FROM user_pgx_results r
             LEFT JOIN pgx_gene_definitions g ON r.gene = g.gene
@@ -77,6 +78,7 @@ async def fetch_pgx_rows(
             "drugs_affected": row.drugs_affected,
             "clinical_note": row.clinical_note,
             "gene_description": row.gene_description,
+            "variant_genotypes": row.variant_genotypes,
             "computed_at": row.computed_at.isoformat() if row.computed_at else None,
         }
         for row in rows
@@ -161,6 +163,35 @@ async def fetch_prs_results(
 # ---------------------------------------------------------------------------
 
 SKIP_ALLELES = frozenset({"negative", "positive", "rapid", "slow", "count"})
+
+
+async def fetch_pgx_panel_snps(
+    session: AsyncSession,
+    genes: list[str],
+) -> dict[str, list[str]]:
+    """Fetch all unique rsids in each gene's star allele panel.
+
+    Returns {gene: [rsid, ...]} sorted by rsid.
+    """
+    if not genes:
+        return {}
+
+    stmt = (
+        select(
+            PgxStarAlleleDefinition.gene,
+            PgxStarAlleleDefinition.rsid,
+        )
+        .where(PgxStarAlleleDefinition.gene.in_(genes))
+        .distinct()
+    )
+    rows = await session.execute(stmt)
+
+    result: dict[str, list[str]] = defaultdict(list)
+    for row in rows:
+        result[row.gene].append(row.rsid)
+    for gene in result:
+        result[gene].sort()
+    return result
 
 
 async def fetch_pgx_defining_variants(

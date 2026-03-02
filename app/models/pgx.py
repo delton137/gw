@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text, text
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, Integer, JSON, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -106,6 +106,7 @@ class UserPgxResult(Base):
     confidence: Mapped[str] = mapped_column(String(10))  # high / medium / low
     drugs_affected: Mapped[str | None] = mapped_column(Text)
     clinical_note: Mapped[str | None] = mapped_column(Text)
+    variant_genotypes: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     computed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )

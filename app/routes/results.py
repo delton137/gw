@@ -21,6 +21,7 @@ from app.models.user import Analysis, UserClinvarHit, UserSnpTraitHit, UserVaria
 from app.routes._helpers import (
     SKIP_ALLELES,
     fetch_pgx_defining_variants,
+    fetch_pgx_panel_snps,
     fetch_pgx_rows,
     fetch_prs_results,
     get_latest_analysis,
@@ -413,6 +414,12 @@ async def get_pgx_results(
     for r in results:
         gl = guidelines_map.get(r["gene"], {"cpic": [], "dpwg": []})
         r["guidelines"] = gl if (gl["cpic"] or gl["dpwg"]) else None
+
+    # Fetch all SNPs in each gene's panel
+    gene_list = [r["gene"] for r in results]
+    panel_snps_map = await fetch_pgx_panel_snps(session, gene_list)
+    for r in results:
+        r["panel_snps"] = panel_snps_map.get(r["gene"], [])
 
     return {
         "analysis_id": str(analysis.id),
