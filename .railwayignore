@@ -1,0 +1,16 @@
+frontend/
+tests/
+test_files/
+.venv/
+.pytest_cache/
+htmlcov/
+.coverage
+.vscode/
+.idea/
+.DS_Store
+*.md
+*.vcf
+*.vcf.gz
+*.bam
+*.fastq
+*.fastq.gz

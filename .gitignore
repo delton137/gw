@@ -1,0 +1,45 @@
+literature_ingesion_and_ai_analysis/
+existing_tools/
+outputs
+outputs/*
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+dist/
+build/
+
+# Test files / genotype data
+test_files/
+*.vcf
+*.vcf.gz
+*.bam
+*.fastq
+*.fastq.gz
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Next.js
+node_modules/
+.next/
+frontend/out/
+
+# Large data files (downloads, not build artifacts)
+app/data/var_citations.txt
+app/data/variant_summary.txt.gz
+app/data/gene_specific_summary.txt
+
+# OS
+.DS_Store
