@@ -6,10 +6,15 @@ immediately after parsing.
 
 Pipeline order:
   1. Parse genotype file (status: parsing)
-  2. Fast matching: SNPedia, traits, ClinVar, PGx, blood type (status: matching_fast)
-  3. Commit fast results → status: done  (frontend redirects to dashboard)
-  4. Background: ancestry estimation + PRS scoring (status: scoring_prs)
-  5. Complete → status: complete
+  2. Match SNPedia variants (status: matching_snpedia)
+  3. Match trait associations (status: matching_traits)
+  4. Cross-reference ClinVar (status: matching_clinvar)
+  5. Call pharmacogenes (status: matching_pgx)
+  6. Determine blood type (status: matching_blood)
+  7. Screen carrier status (status: matching_carrier)
+  8. Commit fast results → status: done  (frontend redirects to dashboard)
+  9. Background: ancestry estimation + PRS scoring (status: scoring_prs)
+  10. Complete → status: complete
 """
 
 from __future__ import annotations
@@ -266,12 +271,12 @@ async def _run_pipeline(
         is_wgs = is_vcf and chip_version == "wgs"
 
         # =================================================================
-        # STEP 2: Fast matching (SNPedia, traits, PGx, blood type, HLA)
+        # STEP 2: Fast matching (individual status per sub-step)
         # =================================================================
-        analysis.status = "matching_fast"
-        await session.commit()
 
         # ----- SNPedia variant storage -----
+        analysis.status = "matching_snpedia"
+        await session.commit()
         t_var = time.perf_counter()
         snpedia_result = await session.execute(text("SELECT rsid FROM snpedia_snps"))
         snpedia_rsids = {row.rsid for row in snpedia_result}
@@ -298,6 +303,8 @@ async def _run_pipeline(
             log.warning(f"[{analysis_id}] snpedia_snps table is empty — skipping variant storage")
 
         # ----- Trait matching -----
+        analysis.status = "matching_traits"
+        await session.commit()
         t0_traits = time.perf_counter()
         trait_hits = await match_traits(user_df, session, is_vcf=is_wgs)
         elapsed_traits = time.perf_counter() - t0_traits
@@ -317,6 +324,8 @@ async def _run_pipeline(
             ))
 
         # ----- ClinVar cross-reference -----
+        analysis.status = "matching_clinvar"
+        await session.commit()
         t0_cv = time.perf_counter()
         clinvar_hits = await match_clinvar(user_df, session)
         elapsed_cv = time.perf_counter() - t0_cv
@@ -336,6 +345,8 @@ async def _run_pipeline(
             ])
 
         # ----- Pharmacogenomics -----
+        analysis.status = "matching_pgx"
+        await session.commit()
         t0_pgx = time.perf_counter()
         pgx_results = await match_pgx(user_df_full, session, genome_build=genome_build, is_vcf=is_vcf)
         elapsed_pgx = time.perf_counter() - t0_pgx
@@ -363,6 +374,8 @@ async def _run_pipeline(
             ))
 
         # ----- Blood type -----
+        analysis.status = "matching_blood"
+        await session.commit()
         t0_bt = time.perf_counter()
         blood_type_result = determine_blood_type(
             user_df_full, genome_build=genome_build, deletion_genotypes=deletion_genotypes,
@@ -402,6 +415,8 @@ async def _run_pipeline(
             await _set_detail(analysis, session, "Blood type: insufficient variants")
 
         # ----- Carrier status screening -----
+        analysis.status = "matching_carrier"
+        await session.commit()
         t0_cs = time.perf_counter()
         carrier_results = determine_carrier_status(user_df_full, genome_build=genome_build)
         elapsed_cs = time.perf_counter() - t0_cs
@@ -425,10 +440,10 @@ async def _run_pipeline(
         # =================================================================
         # STEP 3: Commit fast results — frontend can redirect to dashboard
         # =================================================================
-        analysis.status = "done"
-        await session.commit()
-
         elapsed_fast = time.perf_counter() - t_total
+        analysis.status = "done"
+        analysis.pipeline_fast_seconds = round(elapsed_fast, 2)
+        await session.commit()
         log.info(
             f"[{analysis_id}] Fast steps complete in {elapsed_fast:.2f}s "
             f"(parse={elapsed_parse:.2f}s, traits={elapsed_traits:.2f}s, clinvar={elapsed_cv:.2f}s, "

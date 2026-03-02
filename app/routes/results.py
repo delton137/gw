@@ -61,6 +61,7 @@ async def get_analysis_status(
         "completed_at": analysis.completed_at.isoformat() if analysis.completed_at else None,
         "genome_build": analysis.genome_build,
         "status_detail": analysis.status_detail,
+        "pipeline_fast_seconds": analysis.pipeline_fast_seconds,
     }
 
 

@@ -21,37 +21,6 @@ export default function Home() {
         </Link>
       </section>
 
-      {/* How it works */}
-      <section className="py-16 border-t border-border">
-        <h2 className="font-serif text-2xl font-semibold mb-10">How it works</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-          <div>
-            <p className="text-sm font-medium text-accent mb-2">1</p>
-            <h3 className="font-serif text-lg font-medium mb-2">Upload</h3>
-            <p className="text-sm text-muted leading-relaxed">
-              Upload your raw genotype file. We support 23andMe, AncestryDNA, and VCF
-              formats. Your raw data is never stored.
-            </p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-accent mb-2">2</p>
-            <h3 className="font-serif text-lg font-medium mb-2">Analyze</h3>
-            <p className="text-sm text-muted leading-relaxed">
-              We compute polygenic risk scores using published weights from the PGS Catalog
-              and match your variants against known important SNPs.
-            </p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-accent mb-2">3</p>
-            <h3 className="font-serif text-lg font-medium mb-2">Explore</h3>
-            <p className="text-sm text-muted leading-relaxed">
-              Browse your results — risk scores with percentiles, important SNPs with
-              evidence levels, and links to the underlying research.
-            </p>
-          </div>
-        </div>
-      </section>
-
       {/* Brief explanation */}
       <section className="py-16 border-t border-border">
         <h2 className="font-serif text-2xl font-semibold mb-4">

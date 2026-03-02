@@ -31,6 +31,7 @@ class Analysis(Base):
     file_format: Mapped[str | None] = mapped_column(String(20))  # "23andme" | "ancestrydna" | "vcf"
     selected_ancestry: Mapped[str | None] = mapped_column(String(3))  # "EUR" | "AFR" | "EAS" | "SAS" | "AMR"
     status_detail: Mapped[str | None] = mapped_column(Text)  # human-readable progress message
+    pipeline_fast_seconds: Mapped[float | None] = mapped_column(Float)
 
     # Relationships to child tables (CASCADE handled at DB level)
     prs_results: Mapped[list["PrsResult"]] = relationship(back_populates="analysis", cascade="all, delete-orphan", passive_deletes=True)

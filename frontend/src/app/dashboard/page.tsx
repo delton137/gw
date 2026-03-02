@@ -37,6 +37,7 @@ interface Analysis {
   selected_ancestry: string | null;
   filename: string | null;
   genome_build: string | null;
+  pipeline_fast_seconds: number | null;
 }
 
 interface PgxResult {
@@ -331,6 +332,12 @@ export default function DashboardPage() {
               <p className="text-xs text-muted mb-0.5">Genome Build</p>
               <p className="text-sm font-medium">{analysis?.genome_build || "\u2014"}</p>
             </div>
+            {analysis?.pipeline_fast_seconds != null && (
+              <div>
+                <p className="text-xs text-muted mb-0.5">Pipeline Runtime</p>
+                <p className="text-sm font-medium">{analysis.pipeline_fast_seconds.toFixed(1)}s</p>
+              </div>
+            )}
           </div>
 
           {/* SNP Summary */}

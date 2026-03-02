@@ -261,6 +261,15 @@ export default function PgxPage() {
                             {r.clinical_note && (
                               <p className="text-sm mb-2">{r.clinical_note}</p>
                             )}
+                            {r.gene === "CYP2B6" && (
+                              <div className="text-xs bg-amber-50 border border-amber-200 rounded px-3 py-2 mb-2">
+                                <span className="font-semibold text-amber-900">Phase ambiguity warning:</span>{" "}
+                                <span className="text-amber-800">
+                                  CYP2B6 *6 is defined by two SNPs (rs3745274 + rs2279343). Without phasing, unphased data cannot distinguish *1/*6 (both variants on one chromosome) from *4/*9 (one variant on each chromosome), which may give a different phenotype. In a study of 1,583 individuals, 1.5% of CYP2B6 phenotype assignments were corrected after experimental phasing.{" "}
+                                  [<a href="https://pubmed.ncbi.nlm.nih.gov/31594036/" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline" onClick={(e) => e.stopPropagation()}>van der Lee et al. 2020</a>]
+                                </span>
+                              </div>
+                            )}
                             {r.drugs_affected && (
                               <p className="text-sm mb-2">
                                 <span className="font-medium">Drugs affected:</span>{" "}
