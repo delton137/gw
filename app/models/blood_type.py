@@ -33,12 +33,12 @@ class UserBloodTypeResult(Base):
     rh_e_antigen: Mapped[str | None] = mapped_column(String(5))  # "E/e", "e/e", etc.
     rh_cw_antigen: Mapped[bool | None] = mapped_column(Boolean)
 
-    # Extended systems (widened for RBCeq2 phenotype strings)
-    kell_phenotype: Mapped[str | None] = mapped_column(String(100))
-    mns_phenotype: Mapped[str | None] = mapped_column(String(100))
-    duffy_phenotype: Mapped[str | None] = mapped_column(String(100))
-    kidd_phenotype: Mapped[str | None] = mapped_column(String(100))
-    secretor_status: Mapped[str | None] = mapped_column(String(100))
+    # Extended systems (Text — RBCeq2 phenotype strings can exceed 100 chars)
+    kell_phenotype: Mapped[str | None] = mapped_column(Text)
+    mns_phenotype: Mapped[str | None] = mapped_column(Text)
+    duffy_phenotype: Mapped[str | None] = mapped_column(Text)
+    kidd_phenotype: Mapped[str | None] = mapped_column(Text)
+    secretor_status: Mapped[str | None] = mapped_column(Text)
 
     # Summary
     display_type: Mapped[str] = mapped_column(String(10))  # "A", "O", "AB"
