@@ -78,10 +78,10 @@ export async function generateMetadata({
   const totalCount = data?.clinvar_stats?.total_variants;
 
   return {
-    title: `${symbol.toUpperCase()}${name} — GeneWizard.ai`,
+    title: `${symbol.toUpperCase()}${name} — genewizard.net`,
     description: pathCount
       ? `${symbol.toUpperCase()} gene${name}. ${pathCount} pathogenic variants out of ${totalCount} total ClinVar variants. View all variants, disease associations, and external references.`
-      : `View genetic variants and disease associations for the ${symbol.toUpperCase()} gene on GeneWizard.ai.`,
+      : `View genetic variants and disease associations for the ${symbol.toUpperCase()} gene on genewizard.net.`,
   };
 }
 

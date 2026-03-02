@@ -1,4 +1,4 @@
-# GenoPred-Inspired Features for GeneWizard.ai
+# GenoPred-Inspired Features for genewizard.net
 
 The GenoPred paper and codebase (R/Shiny, 20+ PRS methods, PCA-based ancestry detection, absolute risk conversion) represent the academic gold standard for polygenic score interpretation. GeneWizard already has solid infrastructure (Polars-based scoring, ancestry-stratified reference distributions, trait matching, async pipeline), but lacks advanced visualization and clinical interpretation features. This plan identifies 7 high-impact features we can adapt from GenoPred's approach, ranked by utility and feasibility within our web app architecture.
 

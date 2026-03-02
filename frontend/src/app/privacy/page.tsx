@@ -14,7 +14,7 @@ export default function PrivacyPolicy() {
           analyzes raw genetic data from direct-to-consumer genomics companies
           (23andMe, AncestryDNA) and whole-genome sequencing VCF files. This
           Privacy Policy describes how we collect, use, and protect your
-          information when you use genewizard.ai (the &ldquo;Service&rdquo;).
+          information when you use genewizard.net (the &ldquo;Service&rdquo;).
         </p>
       </section>
 

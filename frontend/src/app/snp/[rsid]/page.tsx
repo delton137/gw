@@ -149,7 +149,7 @@ export async function generateMetadata({
   const traits = data?.trait_associations?.map((a) => a.trait).slice(0, 3).join(", ") || "";
 
   return {
-    title: `${rsid}${gene} — GeneWizard.ai`,
+    title: `${rsid}${gene} — genewizard.net`,
     description: traits
       ? `${rsid}${gene} is associated with ${traits}. View genetic variant details, important SNPs, and polygenic risk score memberships.`
       : `View details for genetic variant ${rsid}${gene} including important SNPs and polygenic risk scores.`,

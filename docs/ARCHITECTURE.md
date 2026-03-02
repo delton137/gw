@@ -1,6 +1,6 @@
-# GeneWizard.ai — How It Works
+# genewizard.net — How It Works
 
-Technical documentation for the GeneWizard.ai genomic analysis platform. This covers the full pipeline from file upload to results display.
+Technical documentation for the genewizard.net genomic analysis platform. This covers the full pipeline from file upload to results display.
 
 ---
 

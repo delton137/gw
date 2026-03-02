@@ -1,7 +1,7 @@
 [project]
 name = "gene-wizard"
 version = "0.1.0"
-description = "GeneWizard.ai — Polygenic risk score and SNP-trait analysis from DTC genotype files"
+description = "genewizard.net — Polygenic risk score and SNP-trait analysis from DTC genotype files"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115",

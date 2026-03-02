@@ -1,4 +1,4 @@
-"""GeneWizard.ai — FastAPI application."""
+"""genewizard.net — FastAPI application."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
             task.cancel()
 
 
-app = FastAPI(title="GeneWizard.ai", version="0.1.0", lifespan=lifespan, **docs_kwargs)
+app = FastAPI(title="genewizard.net", version="0.1.0", lifespan=lifespan, **docs_kwargs)
 
 app.add_middleware(
     CORSMiddleware,

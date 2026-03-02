@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "GeneWizard.ai — Understand your genetic risk",
+  title: "genewizard.net — Understand your genetic risk",
   description:
     "Analyze your raw genetic data with polygenic risk scores and important SNPs backed by the latest research.",
   icons: {

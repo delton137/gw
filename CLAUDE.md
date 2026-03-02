@@ -1,8 +1,8 @@
-# GeneWizard.ai — Claude Code Build Prompt
+# genewizard.net — Claude Code Build Prompt
 
 ## Project Overview
 
-GeneWizard.ai analyzes raw genetic data from DTC genomics companies (23andMe, AncestryDNA) and WGS VCFs. The app auto-detects genetic ancestry, computes polygenic risk scores (PRS) with ancestry-aware normalization, matches user variants against a curated SNP-trait knowledge base, infers pharmacogenomic star alleles with CPIC/DPWG drug guidelines, screens for recessive carrier status, and determines blood type using the RBCeq2 ISBT allele database. It also serves public SEO-friendly pages for every SNP in the database.
+genewizard.net analyzes raw genetic data from DTC genomics companies (23andMe, AncestryDNA) and WGS VCFs. The app auto-detects genetic ancestry, computes polygenic risk scores (PRS) with ancestry-aware normalization, matches user variants against a curated SNP-trait knowledge base, infers pharmacogenomic star alleles with CPIC/DPWG drug guidelines, screens for recessive carrier status, and determines blood type using the RBCeq2 ISBT allele database. It also serves public SEO-friendly pages for every SNP in the database.
 
 **Critical design constraint: Raw genetic data is NEVER persisted.** Files are parsed in memory, analysis results are stored, and the raw genotype data is discarded immediately after processing.
 
@@ -236,7 +236,7 @@ npm run dev
 ## More Notes
 
 - Use Alembic for database migrations (not auto-create in production)
-- CORS: allow localhost:3000 (dev) and genewizard.ai (prod)
+- CORS: allow localhost:3000 (dev) and genewizard.net (prod)
 - All timestamps timezone-aware (UTC)
 - Pydantic v2 with `model_config = {"from_attributes": True}`
 - Frontend API base URL: env var `NEXT_PUBLIC_API_URL`

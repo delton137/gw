@@ -116,7 +116,7 @@ def generate_report_pdf(
     story: list = []
 
     # --- Title ---
-    story.append(Paragraph("GeneWizard.ai — Genomic Analysis Report", styles["ReportTitle"]))
+    story.append(Paragraph("genewizard.net — Genomic Analysis Report", styles["ReportTitle"]))
     story.append(Paragraph(
         f"Generated {datetime.now(timezone.utc).strftime('%B %d, %Y at %H:%M UTC')}",
         styles["Small"],
@@ -303,7 +303,7 @@ def generate_report_pdf(
         "Consult a genetic counselor for family planning implications.<br/><br/>"
         "Please consult a healthcare provider or genetic counselor for medical interpretation "
         "of these results.<br/><br/>"
-        "GeneWizard.ai — genewizard.ai",
+        "genewizard.net — genewizard.net",
         styles["Disclaimer"],
     ))
 

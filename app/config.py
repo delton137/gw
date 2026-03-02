@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://genewizard:genewizard@localhost:5432/genewizard"
     max_upload_size: int = 5 * 1024 * 1024 * 1024  # 5GB
     max_decompressed_size: int = 10 * 1024 * 1024 * 1024  # 10GB
-    cors_origins_raw: str = "http://localhost:3000,https://genewizard.ai"
+    cors_origins_raw: str = "http://localhost:3000,https://genewizard.net,https://www.genewizard.net"
     environment: str = "development"  # development | production
 
     # Clerk

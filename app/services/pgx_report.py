@@ -205,7 +205,7 @@ def generate_pgx_report_pdf(
 
     # --- Title ---
     story.append(Paragraph(
-        "GeneWizard.ai — Pharmacogenomics Report", styles["ReportTitle"],
+        "genewizard.net — Pharmacogenomics Report", styles["ReportTitle"],
     ))
     story.append(Paragraph(
         f"Generated {datetime.now(timezone.utc).strftime('%B %d, %Y at %H:%M UTC')}",
