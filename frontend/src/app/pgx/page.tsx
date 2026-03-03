@@ -3,51 +3,17 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
-import { apiFetch, apiDownloadBlob, triggerBlobDownload } from "@/lib/api";
-
-interface DefiningVariant {
-  rsid: string;
-  variant_allele: string;
-}
-
-interface DrugGuideline {
-  drug: string;
-  recommendation: string;
-  implication: string | null;
-  strength: string | null;
-  pmid: string | null;
-}
-
-interface PgxResult {
-  gene: string;
-  diplotype: string | null;
-  allele1: string | null;
-  allele2: string | null;
-  allele1_function: string | null;
-  allele2_function: string | null;
-  phenotype: string | null;
-  activity_score: number | null;
-  n_variants_tested: number;
-  n_variants_total: number;
-  calling_method: string;
-  confidence: string;
-  drugs_affected: string | null;
-  clinical_note: string | null;
-  gene_description: string | null;
-  computed_at: string | null;
-  defining_variants: Record<string, DefiningVariant[]> | null;
-  guidelines: { cpic: DrugGuideline[]; dpwg: DrugGuideline[] } | null;
-  panel_snps: string[];
-  variant_genotypes: Record<string, string> | null;
-}
+import { apiFetch } from "@/lib/api";
+import { useReportDownload } from "@/hooks/useReportDownload";
+import type { PgxResult } from "@/lib/types";
 
 function isNonNormal(phenotype: string | null): boolean {
   if (!phenotype) return false;
   const p = phenotype.toLowerCase();
   return (
     !p.includes("normal") &&
-    p !== "negative" &&
-    p !== "typical"
+    !p.includes("negative") &&
+    !p.includes("typical")
   );
 }
 
@@ -91,7 +57,7 @@ export default function PgxPage() {
   const [analysisFilename, setAnalysisFilename] = useState<string | null>(null);
   const [chipType, setChipType] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [downloading, setDownloading] = useState(false);
+  const { download: downloadPgxReport, loading: downloading } = useReportDownload("/api/v1/report/pgx/download", "genewizard-pgx-report");
   const [expandedGene, setExpandedGene] = useState<string | null>(null);
 
   useEffect(() => {
@@ -122,20 +88,6 @@ export default function PgxPage() {
     }
     if (userId) load();
   }, [userId, getToken]);
-
-  const handleDownloadPgxReport = async () => {
-    setDownloading(true);
-    try {
-      const token = await getToken();
-      const blob = await apiDownloadBlob("/api/v1/report/pgx/download", token);
-      const suffix = analysisFilename ? `--${analysisFilename}` : "";
-      triggerBlobDownload(blob, `genewizard-pgx-report${suffix}.pdf`);
-    } catch {
-      alert("Failed to download PGX report. Please try again.");
-    } finally {
-      setDownloading(false);
-    }
-  };
 
   if (!userId) {
     return (
@@ -283,9 +235,9 @@ export default function PgxPage() {
                                   </div>
                                 )}
                                 {r.gene === "CYP2B6" && (
-                                  <div className="text-xs bg-amber-50 border border-amber-200 rounded px-3 py-2 mb-2">
-                                    <span className="font-semibold text-amber-900">Phase ambiguity warning:</span>{" "}
-                                    <span className="text-amber-800">
+                                  <div className="text-xs border border-border rounded px-3 py-2 mb-2">
+                                    <span className="font-semibold text-foreground">A note on phase ambiguity:</span>{" "}
+                                    <span className="text-muted">
                                       CYP2B6 *6 is defined by two SNPs (rs3745274 + rs2279343). Without phasing, unphased data cannot distinguish *1/*6 (both variants on one chromosome) from *4/*9 (one variant on each chromosome), which may give a different phenotype. In a study of 1,583 individuals, 1.5% of CYP2B6 phenotype assignments were corrected after experimental phasing.{" "}
                                       [<a href="https://pubmed.ncbi.nlm.nih.gov/31594036/" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline" onClick={(e) => e.stopPropagation()}>van der Lee et al. 2020</a>]
                                     </span>
@@ -438,7 +390,7 @@ export default function PgxPage() {
           {/* Actions */}
           <section className="mt-8">
             <button
-              onClick={handleDownloadPgxReport}
+              onClick={() => downloadPgxReport(analysisFilename ?? undefined)}
               disabled={downloading}
               className="px-5 py-2.5 text-sm font-medium border border-border hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >

@@ -330,7 +330,7 @@ class TestGetTraitHits:
         analysis_result.scalar_one_or_none.return_value = analysis
 
         hits_result = MagicMock()
-        hits_result.all.return_value = [(hit, "APOE")]
+        hits_result.all.return_value = [(hit, "APOE", "C", "Higher Alzheimer's risk")]
 
         kb_total_result = MagicMock()
         kb_total_result.scalar.return_value = 116

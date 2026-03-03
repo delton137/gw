@@ -4,46 +4,11 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
-
-interface CarrierVariant {
-  rsid: string;
-  name: string;
-  genotype: string;
-  pathogenic_allele: string;
-  pathogenic_allele_count: number;
-  classification: string;
-  hgvs_p: string | null;
-  population_frequency: number | null;
-}
-
-interface CarrierGeneResult {
-  gene: string;
-  condition: string;
-  inheritance: string;
-  severity: string;
-  status: string;
-  variants_detected: CarrierVariant[];
-  variants_tested: number;
-  total_variants_screened: number;
-  total_pathogenic_alleles: number;
-  carrier_frequencies: Record<string, string>;
-  condition_description: string;
-  treatment_summary: string;
-  penetrance_note: string;
-  key_pmids: number[];
-  limitations: string;
-  clinical_note: string;
-}
+import type { CarrierGeneResult, CarrierStatusResult } from "@/lib/types";
 
 interface CarrierStatusResponse {
   analysis_id: string;
-  result: {
-    results_json: Record<string, CarrierGeneResult>;
-    n_genes_screened: number;
-    n_carrier_genes: number;
-    n_affected_flags: number;
-    computed_at: string | null;
-  } | null;
+  result: CarrierStatusResult | null;
 }
 
 const NOT_SCREENABLE = [

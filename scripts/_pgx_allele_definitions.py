@@ -875,8 +875,8 @@ PGX_STAR_ALLELES = [
     # ADRB2 (simple gene, tier 2) — beta-2 adrenergic receptor
     # ===================================================================
     {"gene": "ADRB2", "star_allele": "Arg16Gly", "rsid": "rs1042713",
-     "variant_allele": "G", "function": "decreased_function", "activity_score": None,
-     "clinical_significance": "Arg16Gly — Gly16 associated with enhanced receptor downregulation and reduced bronchodilator response in asthma",
+     "variant_allele": "A", "function": "decreased_function", "activity_score": None,
+     "clinical_significance": "Arg16Gly — Arg16 (A allele) shows enhanced agonist-promoted receptor downregulation, reducing long-term bronchodilator response",
      "source": "CPIC"},
     {"gene": "ADRB2", "star_allele": "Gln27Glu", "rsid": "rs1042714",
      "variant_allele": "G", "function": "decreased_function", "activity_score": None,
@@ -938,13 +938,13 @@ PGX_STAR_ALLELES = [
     # ===================================================================
     # GRK4 (simple gene, tier 2) — G protein-coupled receptor kinase
     # ===================================================================
-    {"gene": "GRK4", "star_allele": "R65L", "rsid": "rs1024323",
+    {"gene": "GRK4", "star_allele": "A142V", "rsid": "rs1024323",
      "variant_allele": "T", "function": "decreased_function", "activity_score": None,
-     "clinical_significance": "R65L — affects beta-adrenergic receptor signaling and hypertension drug response",
+     "clinical_significance": "A142V — gain-of-function variant enhancing D1 receptor desensitization in renal tubules; reduces atenolol BP response",
      "source": "CPIC"},
-    {"gene": "GRK4", "star_allele": "A142V", "rsid": "rs1801058",
+    {"gene": "GRK4", "star_allele": "A486V", "rsid": "rs1801058",
      "variant_allele": "T", "function": "decreased_function", "activity_score": None,
-     "clinical_significance": "A142V — affects beta-adrenergic receptor signaling",
+     "clinical_significance": "A486V — enhances GRK4-mediated receptor phosphorylation; associated with adverse cardiovascular outcomes in INVEST trial",
      "source": "CPIC"},
 
     # ===================================================================

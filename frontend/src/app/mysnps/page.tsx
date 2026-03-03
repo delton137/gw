@@ -4,35 +4,8 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
-import { GENE_CATEGORIES, CATEGORY_ORDER } from "@/lib/geneCategories";
-
-interface TraitHit {
-  id: string;
-  rsid: string;
-  gene: string | null;
-  user_genotype: string;
-  trait: string;
-  effect_description: string;
-  risk_level: string;
-  evidence_level: string;
-}
-
-interface TraitsResponse {
-  analysis_id: string;
-  total: number;
-  total_snps_in_kb: number;
-  offset: number;
-  hits: TraitHit[];
-}
-
-interface VariantsResponse {
-  analysis_id: string;
-  filename: string | null;
-  total: number;
-  snpedia_total: number;
-  offset: number;
-  variants: { rsid: string }[];
-}
+import { CATEGORY_ORDER, getCategory, PGX_GENES } from "@/lib/geneCategories";
+import type { TraitHit, TraitsResponse, VariantsResponse } from "@/lib/types";
 
 const RISK_ORDER: Record<string, number> = { increased: 0, moderate: 1, typical: 2 };
 const EVIDENCE_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
@@ -45,20 +18,30 @@ function riskColor(level: string): string {
   }
 }
 
-function riskBadge(level: string): string {
-  switch (level) {
-    case "increased": return "bg-red-50 text-red-700";
-    case "moderate": return "bg-amber-50 text-amber-700";
-    default: return "bg-gray-50 text-gray-600";
-  }
-}
-
 function evidenceBadge(level: string): string {
   switch (level) {
     case "high": return "bg-green-50 text-green-700";
     case "medium": return "bg-blue-50 text-blue-700";
     default: return "bg-gray-50 text-gray-600";
   }
+}
+
+function GenotypeDisplay({ genotype, riskAllele }: { genotype: string; riskAllele: string | null }) {
+  if (!riskAllele) {
+    return <span className="text-gray-400">{genotype}</span>;
+  }
+  return (
+    <>
+      {genotype.split("").map((allele, i) => (
+        <span
+          key={i}
+          className={allele === riskAllele ? "text-purple-600 font-semibold" : "text-gray-400"}
+        >
+          {allele}
+        </span>
+      ))}
+    </>
+  );
 }
 
 type SortKey = "rsid" | "gene" | "trait" | "risk_level" | "evidence_level";
@@ -158,8 +141,8 @@ export default function MySnpsPage() {
   const availableCategories = useMemo(() => {
     const cats = new Set<string>();
     for (const h of hits) {
-      const cat = GENE_CATEGORIES[h.gene || ""];
-      if (cat) cats.add(cat);
+      const cat = getCategory(h.gene, h.trait);
+      if (cat && cat !== "Other") cats.add(cat);
     }
     return Array.from(cats).sort();
   }, [hits]);
@@ -184,7 +167,7 @@ export default function MySnpsPage() {
       result = result.filter((h) => h.evidence_level === evidenceFilter);
     }
     if (categoryFilter) {
-      result = result.filter((h) => GENE_CATEGORIES[h.gene || ""] === categoryFilter);
+      result = result.filter((h) => getCategory(h.gene, h.trait) === categoryFilter);
     }
 
     // Sort
@@ -224,14 +207,14 @@ export default function MySnpsPage() {
 
   const sortIndicator = (key: SortKey) => {
     if (sortKey !== key) return "";
-    return sortDir === "asc" ? " \u25B2" : " \u25BC";
+    return sortDir === "asc" ? " ▲" : " ▼";
   };
 
   // Group filtered hits by category
   const groupedHits = useMemo(() => {
     const groups: Record<string, TraitHit[]> = {};
     for (const hit of filteredHits) {
-      const cat = GENE_CATEGORIES[hit.gene || ""] || "Other";
+      const cat = getCategory(hit.gene, hit.trait);
       if (!groups[cat]) groups[cat] = [];
       groups[cat].push(hit);
     }
@@ -309,7 +292,7 @@ export default function MySnpsPage() {
               onChange={(e) => setRiskFilter(e.target.value)}
               className="border border-border bg-white px-3 py-1.5 text-sm"
             >
-              <option value="">All risk levels</option>
+              <option value="">All effect levels</option>
               <option value="increased">Increased</option>
               <option value="moderate">Moderate</option>
               <option value="typical">Typical</option>
@@ -343,13 +326,19 @@ export default function MySnpsPage() {
           ) : (
             <div className="space-y-8">
               {groupedHits.map(([category, catHits]) => {
+                // Hide PGx-panel genes from "Other" — they belong on /pgx
+                if (category === "Other") {
+                  catHits = catHits.filter(h => !PGX_GENES.has(h.gene || ""));
+                  if (catHits.length === 0) return null;
+                }
+
                 if (category === "Pharmacogenomics") {
                   return (
                     <div key={category}>
                       <h2 className="font-serif text-lg font-semibold mb-2">Pharmacogenomics</h2>
                       <div className="border border-border px-4 py-6 text-center">
                         <p className="text-sm text-muted mb-2">
-                          Pharmacogenomic variants are analyzed using star allele calling and panel-based calling and the results are reported on the Pharmacogenomics page.
+                          Information on drug metabolism and drug response is consolidated on the pharmacogenomics page. For many genes, we utilize star alleles or a panel of snps to make a gene function call.
                         </p>
                         <Link href="/pgx" className="text-accent hover:underline font-medium text-sm">
                           View Pharmacogenomics Results &rarr;
@@ -366,7 +355,7 @@ export default function MySnpsPage() {
                   </h2>
                   <div className="border border-border overflow-x-auto">
                     {/* Header */}
-                    <div className="grid grid-cols-[7rem_6rem_1fr_5rem_5.5rem_5.5rem] items-center px-4 py-2 border-b border-border text-sm">
+                    <div className="grid grid-cols-[7rem_5rem_1fr_4.5rem_minmax(8rem,auto)_5.5rem] items-center px-4 py-2 border-b border-border text-sm">
                       <span
                         className="font-medium text-muted cursor-pointer hover:text-foreground select-none"
                         onClick={() => handleSort("rsid")}
@@ -385,12 +374,12 @@ export default function MySnpsPage() {
                       >
                         Trait{sortIndicator("trait")}
                       </span>
-                      <span className="font-medium text-muted text-center">Genotype</span>
+                      <span className="font-medium text-muted text-center" title="Purple alleles are effect alleles associated with the trait">Genotype</span>
                       <span
                         className="font-medium text-muted text-center cursor-pointer hover:text-foreground select-none"
                         onClick={() => handleSort("risk_level")}
                       >
-                        Risk{sortIndicator("risk_level")}
+                        Risk / Effect{sortIndicator("risk_level")}
                       </span>
                       <span
                         className="font-medium text-muted text-center cursor-pointer hover:text-foreground select-none"
@@ -407,7 +396,7 @@ export default function MySnpsPage() {
                         <div key={hit.id} className="border-b border-border last:border-0">
                           <button
                             onClick={() => setExpandedId(isExpanded ? null : hit.id)}
-                            className="w-full text-left grid grid-cols-[7rem_6rem_1fr_5rem_5.5rem_5.5rem] items-center px-4 py-3 hover:bg-gray-50 transition-colors text-sm"
+                            className="w-full text-left grid grid-cols-[7rem_5rem_1fr_4.5rem_minmax(8rem,auto)_5.5rem] items-center px-4 py-3 hover:bg-gray-50 transition-colors text-sm"
                           >
                             <Link
                               href={`/snp/${hit.rsid}`}
@@ -416,13 +405,33 @@ export default function MySnpsPage() {
                             >
                               {hit.rsid}
                             </Link>
-                            <span className="font-medium truncate pr-1">{hit.gene || "\u2014"}</span>
+                            {hit.gene ? (
+                              <Link
+                                href={`/gene/${hit.gene}`}
+                                className="truncate pr-1 text-accent hover:underline"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {hit.gene}
+                              </Link>
+                            ) : (
+                              <span className="font-medium truncate pr-1">—</span>
+                            )}
                             <span className="truncate pr-2">{hit.trait}</span>
-                            <span className="font-mono text-xs text-center">{hit.user_genotype}</span>
+                            <span className="font-mono text-xs text-center">
+                              <GenotypeDisplay genotype={hit.user_genotype} riskAllele={hit.risk_allele} />
+                            </span>
                             <span className="text-center">
-                              <span className={`inline-block px-2 py-0.5 text-xs rounded-full capitalize ${riskBadge(hit.risk_level)}`}>
-                                {hit.risk_level}
-                              </span>
+                              {hit.risk_level === "typical" ? (
+                                <span className="text-xs text-gray-400">Typical</span>
+                              ) : hit.effect_summary ? (
+                                <span className={`text-xs ${riskColor(hit.risk_level)}`}>
+                                  {hit.effect_summary}
+                                </span>
+                              ) : (
+                                <span className={`text-xs capitalize ${riskColor(hit.risk_level)}`}>
+                                  {hit.risk_level}
+                                </span>
+                              )}
                             </span>
                             <span className="text-center">
                               <span className={`inline-block px-2 py-0.5 text-xs rounded-full capitalize ${evidenceBadge(hit.evidence_level)}`}>

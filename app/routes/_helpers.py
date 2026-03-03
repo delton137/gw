@@ -11,7 +11,7 @@ from fastapi import HTTPException
 from sqlalchemy import and_, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.pgx import PgxStarAlleleDefinition
+from app.models.pgx import PgxGeneDefinition, PgxStarAlleleDefinition
 from app.models.user import Analysis
 from app.schemas import PgxRow, PrsRow
 from app.services.absolute_risk import compute_absolute_risk
@@ -225,3 +225,69 @@ async def fetch_pgx_defining_variants(
             "variant_allele": dr.variant_allele,
         })
     return result
+
+
+# ---------------------------------------------------------------------------
+# PGX default alleles + defining variant attachment
+# ---------------------------------------------------------------------------
+
+async def fetch_pgx_default_alleles(
+    session: AsyncSession,
+) -> dict[str, str]:
+    """Fetch {gene: default_allele} for all PGX genes."""
+    result = await session.execute(
+        select(PgxGeneDefinition.gene, PgxGeneDefinition.default_allele)
+    )
+    return {row.gene: row.default_allele for row in result}
+
+
+def _collect_nondefault_allele_pairs(
+    results: list[PgxRow],
+    default_alleles: dict[str, str],
+) -> set[tuple[str, str]]:
+    """Collect (gene, star_allele) pairs for non-default alleles in results."""
+    pairs: set[tuple[str, str]] = set()
+    for r in results:
+        default = default_alleles.get(r["gene"], "*1")
+        for allele in (r["allele1"], r["allele2"]):
+            if allele and allele != default and allele not in SKIP_ALLELES:
+                pairs.add((r["gene"], allele))
+    return pairs
+
+
+async def attach_defining_variants(
+    session: AsyncSession,
+    results: list[PgxRow],
+    default_alleles: dict[str, str],
+) -> None:
+    """Attach defining variant info to each PGX result dict in-place.
+
+    Sets r["defining_variants"] = {allele: [{rsid, variant_allele}, ...]} or None.
+    """
+    allele_pairs = _collect_nondefault_allele_pairs(results, default_alleles)
+    defining_map = await fetch_pgx_defining_variants(session, allele_pairs)
+    for r in results:
+        variants: dict[str, list[dict]] = {}
+        for allele in (r["allele1"], r["allele2"]):
+            if allele and (r["gene"], allele) in defining_map:
+                variants[allele] = defining_map[(r["gene"], allele)]
+        r["defining_variants"] = variants if variants else None
+
+
+async def build_defining_variants_by_gene(
+    session: AsyncSession,
+    results: list[PgxRow],
+    default_alleles: dict[str, str],
+) -> dict[str, dict[str, list[dict]]]:
+    """Build {gene: {allele: [variants]}} for PGX report PDF generation."""
+    allele_pairs = _collect_nondefault_allele_pairs(results, default_alleles)
+    defining_map = await fetch_pgx_defining_variants(session, allele_pairs)
+    by_gene: dict[str, dict[str, list[dict]]] = {}
+    for r in results:
+        gene_dv: dict[str, list[dict]] = {}
+        for allele in (r["allele1"], r["allele2"]):
+            if allele and (r["gene"], allele) in defining_map:
+                gene_dv[allele] = defining_map[(r["gene"], allele)]
+        if gene_dv:
+            by_gene[r["gene"]] = gene_dv
+    return by_gene

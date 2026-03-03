@@ -52,32 +52,7 @@ log = logging.getLogger(__name__)
 # Limit concurrent parse+score operations to avoid OOM on 8GB servers.
 _analysis_semaphore = asyncio.Semaphore(1)
 
-# Cache for PGx variant positions from pgx_alleles.json, keyed by genome build
-_PGX_POS_CACHE: dict[str, list[tuple[str, str, int]]] = {}
-
-
-def _load_pgx_positions(genome_build: str = "GRCh38") -> list[tuple[str, str, int]]:
-    """Load (rsid, chrom, position) tuples from pgx_alleles.json."""
-    if genome_build in _PGX_POS_CACHE:
-        return _PGX_POS_CACHE[genome_build]
-
-    import json as _json
-    from pathlib import Path
-
-    pgx_path = Path(__file__).parent.parent / "data" / "pgx_alleles.json"
-    if not pgx_path.exists():
-        _PGX_POS_CACHE[genome_build] = []
-        return _PGX_POS_CACHE[genome_build]
-
-    pos_field = "position_grch37" if genome_build == "GRCh37" else "position"
-
-    data = _json.loads(pgx_path.read_text())
-    _PGX_POS_CACHE[genome_build] = [
-        (v["rsid"], str(v["chrom"]), int(v[pos_field]))
-        for v in data.get("variants", [])
-        if v.get("rsid") and v.get("chrom") and v.get(pos_field)
-    ]
-    return _PGX_POS_CACHE[genome_build]
+from app.services.data_loader import load_pgx_positions_list
 
 
 async def run_analysis_pipeline(
@@ -109,6 +84,30 @@ async def _set_detail(
     if status:
         analysis.status = status
     await session.commit()
+
+
+async def _fail_analysis(
+    session: AsyncSession,
+    analysis: "Analysis",
+    error_message: str,
+    *,
+    set_failed: bool = True,
+    tmp_path: str | None = None,
+) -> None:
+    """Rollback, record an error message, and optionally clean up the temp file."""
+    try:
+        await session.rollback()
+        if set_failed:
+            analysis.status = "failed"
+        analysis.error_message = error_message
+        await session.commit()
+    except Exception:
+        pass
+    if tmp_path:
+        try:
+            os.unlink(tmp_path)
+        except FileNotFoundError:
+            pass
 
 
 async def _run_pipeline(
@@ -223,7 +222,7 @@ async def _run_pipeline(
                 _query_prs_positions(),
             )
             # Source 3: PGx allele-defining variants (1,333 positions) — sync, cached
-            pgx_positions = _load_pgx_positions(genome_build)
+            pgx_positions = load_pgx_positions_list(genome_build)
 
             annotation_rows: list[tuple[str, str, int]] = snp_rows + prs_rows + pgx_positions
 
@@ -453,32 +452,20 @@ async def _run_pipeline(
 
     except asyncio.CancelledError:
         log.warning(f"[{analysis_id}] Analysis cancelled (server shutting down)")
-        try:
-            await session.rollback()
-            analysis.status = "failed"
-            analysis.error_message = "Analysis interrupted by server shutdown. Please re-upload."
-            await session.commit()
-        except Exception:
-            pass
-        try:
-            os.unlink(tmp_path)
-        except FileNotFoundError:
-            pass
+        await _fail_analysis(
+            session, analysis,
+            "Analysis interrupted by server shutdown. Please re-upload.",
+            tmp_path=tmp_path,
+        )
         return
 
     except Exception as e:
         log.error(f"[{analysis_id}] Analysis failed: {e}", exc_info=True)
-        try:
-            await session.rollback()
-            analysis.status = "failed"
-            analysis.error_message = "Analysis failed. Please try again or contact support."
-            await session.commit()
-        except Exception:
-            pass
-        try:
-            os.unlink(tmp_path)
-        except FileNotFoundError:
-            pass
+        await _fail_analysis(
+            session, analysis,
+            "Analysis failed. Please try again or contact support.",
+            tmp_path=tmp_path,
+        )
         return
 
     # =================================================================
@@ -542,10 +529,44 @@ async def _run_pipeline(
                 """)
             )
             all_weight_rows = all_weights_result.fetchall()
-            weights_by_pgs: dict[str, list] = {}
-            for r in all_weight_rows:
-                weights_by_pgs.setdefault(r.pgs_id, []).append(r)
+            all_weights_df = pl.DataFrame(
+                {
+                    "pgs_id": [r.pgs_id for r in all_weight_rows],
+                    "rsid": [r.rsid for r in all_weight_rows],
+                    "chrom": [r.chrom for r in all_weight_rows],
+                    "w_position": [r.position for r in all_weight_rows],
+                    "w_position_grch38": [r.position_grch38 for r in all_weight_rows],
+                    "effect_allele": [r.effect_allele for r in all_weight_rows],
+                    "weight": [r.weight for r in all_weight_rows],
+                    "eur_af": [r.eur_af for r in all_weight_rows],
+                    "afr_af": [r.afr_af for r in all_weight_rows],
+                    "eas_af": [r.eas_af for r in all_weight_rows],
+                    "sas_af": [r.sas_af for r in all_weight_rows],
+                    "amr_af": [r.amr_af for r in all_weight_rows],
+                    "effect_is_alt": [r.effect_is_alt for r in all_weight_rows],
+                },
+                schema={
+                    "pgs_id": pl.Utf8,
+                    "rsid": pl.Utf8,
+                    "chrom": pl.Utf8,
+                    "w_position": pl.Int64,
+                    "w_position_grch38": pl.Int64,
+                    "effect_allele": pl.Utf8,
+                    "weight": pl.Float64,
+                    "eur_af": pl.Float64,
+                    "afr_af": pl.Float64,
+                    "eas_af": pl.Float64,
+                    "sas_af": pl.Float64,
+                    "amr_af": pl.Float64,
+                    "effect_is_alt": pl.Boolean,
+                },
+            )
             del all_weight_rows  # free memory
+            weights_by_pgs = {
+                df["pgs_id"][0]: df.drop("pgs_id")
+                for df in all_weights_df.partition_by("pgs_id")
+            }
+            del all_weights_df
 
             all_refs_result = await session.execute(
                 select(PrsReferenceDistribution).where(
@@ -561,39 +582,9 @@ async def _run_pipeline(
                 log.debug(f"[{analysis_id}] Scoring PRS {i}/{n_total}: {prs_score.pgs_id}")
                 await _set_detail(analysis, session, f"Computing PRS {i}/{n_total}: {prs_score.trait_name or prs_score.pgs_id}")
 
-                weight_rows = weights_by_pgs.get(prs_score.pgs_id)
-                if not weight_rows:
+                weights_df = weights_by_pgs.get(prs_score.pgs_id)
+                if weights_df is None:
                     continue
-
-                weights_data = {
-                    "rsid": [r.rsid for r in weight_rows],
-                    "chrom": [r.chrom for r in weight_rows],
-                    "w_position": [r.position for r in weight_rows],
-                    "w_position_grch38": [r.position_grch38 for r in weight_rows],
-                    "effect_allele": [r.effect_allele for r in weight_rows],
-                    "weight": [r.weight for r in weight_rows],
-                }
-                weights_schema = {
-                    "rsid": pl.Utf8,
-                    "chrom": pl.Utf8,
-                    "w_position": pl.Int64,
-                    "w_position_grch38": pl.Int64,
-                    "effect_allele": pl.Utf8,
-                    "weight": pl.Float64,
-                }
-
-                for af_col in ["eur_af", "afr_af", "eas_af", "sas_af", "amr_af"]:
-                    vals = [getattr(r, af_col) for r in weight_rows]
-                    if any(v is not None for v in vals):
-                        weights_data[af_col] = vals
-                        weights_schema[af_col] = pl.Float64
-
-                flag_vals = [r.effect_is_alt for r in weight_rows]
-                if any(v is not None for v in flag_vals):
-                    weights_data["effect_is_alt"] = flag_vals
-                    weights_schema["effect_is_alt"] = pl.Boolean
-
-                weights_df = pl.DataFrame(weights_data, schema=weights_schema)
 
                 ref_dist = ref_by_pgs.get(prs_score.pgs_id)
                 ref_sorted_scores = None
@@ -683,20 +674,16 @@ async def _run_pipeline(
 
     except asyncio.CancelledError:
         log.warning(f"[{analysis_id}] PRS scoring cancelled (server shutting down)")
-        try:
-            await session.rollback()
-            # Fast results are already committed — leave status as "done"
-            analysis.error_message = "PRS scoring interrupted by server shutdown."
-            await session.commit()
-        except Exception:
-            pass
+        await _fail_analysis(
+            session, analysis,
+            "PRS scoring interrupted by server shutdown.",
+            set_failed=False,  # fast results already committed
+        )
 
     except Exception as e:
         log.error(f"[{analysis_id}] PRS scoring failed: {e}", exc_info=True)
-        try:
-            await session.rollback()
-            # Fast results are already committed — leave status as "done"
-            analysis.error_message = "PRS scoring failed. Please try again or contact support."
-            await session.commit()
-        except Exception:
-            pass
+        await _fail_analysis(
+            session, analysis,
+            "PRS scoring failed. Please try again or contact support.",
+            set_failed=False,  # fast results already committed
+        )

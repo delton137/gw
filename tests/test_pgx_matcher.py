@@ -3,6 +3,7 @@
 import polars as pl
 import pytest
 
+import app.services.data_loader as data_loader_mod
 import app.services.pgx_matcher as pgx_mod
 from app.services.pgx_matcher import (
     PgxResult,
@@ -606,7 +607,7 @@ class TestPgxPositionLookup:
     def test_load_pgx_positions_grch37(self):
         """GRCh37 positions should differ from GRCh38 for most variants."""
         # Clear cache so both builds load fresh
-        pgx_mod._PGX_POS_CACHE.clear()
+        data_loader_mod._PGX_POS_DICT_CACHE.clear()
 
         pos37 = _load_pgx_positions("GRCh37")
         pos38 = _load_pgx_positions("GRCh38")
@@ -626,7 +627,7 @@ class TestPgxPositionLookup:
 
     def test_load_pgx_ref_alleles(self):
         """Ref allele mapping should cover all positioned variants."""
-        pgx_mod._PGX_REF_CACHE = None
+        data_loader_mod._pgx_ref_alleles_cache = None
         ref_map = _load_pgx_ref_alleles()
         positions = _load_pgx_positions()
         assert len(ref_map) > 100
@@ -638,7 +639,7 @@ class TestPgxPositionLookup:
 
     def test_vcf_ref_imputation(self):
         """VCF mode should impute ref/ref for absent PGx positions."""
-        pgx_mod._PGX_REF_CACHE = None
+        data_loader_mod._pgx_ref_alleles_cache = None
         ref_alleles = _load_pgx_ref_alleles()
         pgx_positions = _load_pgx_positions()
         if not pgx_positions or not ref_alleles:
@@ -663,7 +664,7 @@ class TestPgxPositionLookup:
 
     def test_position_supplements_user_lookup_grch37(self):
         """Position-based supplement should work with GRCh37 coordinates."""
-        pgx_mod._PGX_POS_CACHE.clear()
+        data_loader_mod._PGX_POS_DICT_CACHE.clear()
         pgx_positions = _load_pgx_positions("GRCh37")
         if not pgx_positions:
             pytest.skip("stargazer_alleles.json not found")

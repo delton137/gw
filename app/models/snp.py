@@ -75,6 +75,7 @@ class SnpTraitAssociation(Base):
     beta: Mapped[float | None] = mapped_column(Float)
     p_value: Mapped[float | None] = mapped_column(Float)
     effect_description: Mapped[str | None] = mapped_column(Text)
+    effect_summary: Mapped[str | None] = mapped_column(String(120))  # short label e.g. "Higher Alzheimer's risk"
     evidence_level: Mapped[str] = mapped_column(String(10))  # high/medium/low
     source_pmid: Mapped[str | None] = mapped_column(String(20))
     source_title: Mapped[str | None] = mapped_column(Text)

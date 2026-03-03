@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { apiUpload, apiFetch } from "@/lib/api";
+import type { Analysis } from "@/lib/types";
 
 const ANCESTRY_OPTIONS = [
   { value: "EUR", label: "European" },
@@ -12,13 +13,6 @@ const ANCESTRY_OPTIONS = [
   { value: "SAS", label: "South Asian" },
   { value: "AMR", label: "Americas / Latino" },
 ];
-
-interface Analysis {
-  id: string;
-  status: string;
-  error_message?: string;
-  status_detail?: string;
-}
 
 export default function UploadPage() {
   const { getToken } = useAuth();

@@ -4,30 +4,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
-
-interface GwasScore {
-  study_id: string;
-  trait: string;
-  category: string;
-  citation: string | null;
-  pmid: string | null;
-  n_snps_in_score: number;
-  raw_score: number;
-  percentile: number | null;
-  z_score: number | null;
-  ref_mean: number | null;
-  ref_std: number | null;
-  ancestry_group_used: string;
-  n_variants_matched: number;
-  n_variants_total: number;
-}
-
-interface GwasResponse {
-  analysis_id: string;
-  gwas_status: "computing" | "failed" | "ready";
-  total_scores: number;
-  categories: Record<string, GwasScore[]>;
-}
+import type { GwasResponse, GwasScore } from "@/lib/types";
 
 const CATEGORY_ORDER = [
   "cardiovascular",

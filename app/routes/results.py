@@ -16,11 +16,11 @@ from app.models.blood_type import UserBloodTypeResult
 from app.models.carrier_status import UserCarrierStatusResult
 from app.services.pgx_guidelines import match_guidelines
 from app.models.gwas import GwasPrsResult, GwasStudy
-from app.models.snp import Snp
+from app.models.snp import Snp, SnpTraitAssociation
 from app.models.user import Analysis, UserClinvarHit, UserSnpTraitHit, UserVariant
 from app.routes._helpers import (
-    SKIP_ALLELES,
-    fetch_pgx_defining_variants,
+    attach_defining_variants,
+    fetch_pgx_default_alleles,
     fetch_pgx_panel_snps,
     fetch_pgx_rows,
     fetch_prs_results,
@@ -106,10 +106,11 @@ async def get_trait_hits(
 
     analysis = await get_latest_analysis(session, user_id)
 
-    # Build query with filters — join snps table for gene info
+    # Build query with filters — join snps table for gene info, associations for risk_allele
     query = (
-        select(UserSnpTraitHit, Snp.gene)
+        select(UserSnpTraitHit, Snp.gene, SnpTraitAssociation.risk_allele, SnpTraitAssociation.effect_summary)
         .outerjoin(Snp, UserSnpTraitHit.rsid == Snp.rsid)
+        .outerjoin(SnpTraitAssociation, UserSnpTraitHit.association_id == SnpTraitAssociation.id)
         .where(
             UserSnpTraitHit.analysis_id == analysis.id,
             UserSnpTraitHit.user_id == user_id,
@@ -141,12 +142,14 @@ async def get_trait_hits(
                 "rsid": h.rsid,
                 "gene": gene,
                 "user_genotype": h.user_genotype,
+                "risk_allele": risk_allele,
+                "effect_summary": effect_summary,
                 "trait": h.trait,
                 "effect_description": h.effect_description,
                 "risk_level": h.risk_level,
                 "evidence_level": h.evidence_level,
             }
-            for h, gene in rows
+            for h, gene, risk_allele, effect_summary in rows
         ],
     }
 
@@ -383,31 +386,9 @@ async def get_pgx_results(
     results = await fetch_pgx_rows(session, str(analysis.id), user_id)
     results = [r for r in results if r["gene"] not in PGX_SKIP_GENES]
 
-    # Collect non-default alleles for defining variant lookup
-    default_alleles: dict[str, str] = {}
-    allele_pairs: set[tuple[str, str]] = set()
-
-    gene_def_rows = await session.execute(
-        text("SELECT gene, default_allele FROM pgx_gene_definitions")
-    )
-    for gd_row in gene_def_rows:
-        default_alleles[gd_row.gene] = gd_row.default_allele
-
-    for r in results:
-        r["defining_variants"] = {}
-        default = default_alleles.get(r["gene"], "*1")
-        for allele in (r["allele1"], r["allele2"]):
-            if allele and allele != default and allele not in SKIP_ALLELES:
-                allele_pairs.add((r["gene"], allele))
-
     # Batch-fetch and attach defining variants
-    defining_map = await fetch_pgx_defining_variants(session, allele_pairs)
-    for r in results:
-        variants: dict[str, list[dict]] = {}
-        for allele in (r["allele1"], r["allele2"]):
-            if allele and (r["gene"], allele) in defining_map:
-                variants[allele] = defining_map[(r["gene"], allele)]
-        r["defining_variants"] = variants if variants else None
+    default_alleles = await fetch_pgx_default_alleles(session)
+    await attach_defining_variants(session, results, default_alleles)
 
     # Match CPIC/DPWG drug guidelines to results
     guidelines_map = await match_guidelines(session, results)
@@ -448,25 +429,8 @@ async def get_pgx_gene_detail(
         raise HTTPException(status_code=404, detail="Gene result not found")
 
     # Attach defining variants
-    default_row = await session.execute(
-        text("SELECT default_allele FROM pgx_gene_definitions WHERE gene = :gene"),
-        {"gene": gene},
-    )
-    default_allele = "*1"
-    dr = default_row.first()
-    if dr:
-        default_allele = dr.default_allele
-
-    allele_pairs: set[tuple[str, str]] = set()
-    for allele in (gene_result["allele1"], gene_result["allele2"]):
-        if allele and allele != default_allele and allele not in SKIP_ALLELES:
-            allele_pairs.add((gene, allele))
-
-    defining_map = await fetch_pgx_defining_variants(session, allele_pairs)
-    defining_variants: dict[str, list[dict]] = {}
-    for (g, star), variants in defining_map.items():
-        defining_variants[star] = variants
-    gene_result["defining_variants"] = defining_variants or None
+    default_alleles = await fetch_pgx_default_alleles(session)
+    await attach_defining_variants(session, [gene_result], default_alleles)
 
     # Match CPIC/DPWG guidelines
     guidelines_map = await match_guidelines(session, [gene_result])

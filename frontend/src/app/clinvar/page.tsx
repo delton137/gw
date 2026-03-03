@@ -4,21 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
-
-interface ClinvarHit {
-  rsid: string;
-  user_genotype: string;
-  gene: string | null;
-  clinvar_significance: string;
-  clinvar_conditions: string | null;
-  review_stars: number | null;
-  allele_id: number | null;
-  functional_class: string | null;
-  chrom: string | null;
-  position: number | null;
-  ref_allele: string | null;
-  alt_allele: string | null;
-}
+import type { ClinvarHit, ClinvarResponse } from "@/lib/types";
 
 function getZygosity(genotype: string, ref: string | null, alt: string | null): string | null {
   if (!ref || !alt || genotype.length !== 2) return null;
@@ -36,14 +22,6 @@ function getZygosity(genotype: string, ref: string | null, alt: string | null): 
     if (a1 === cRef && a2 === cRef) return "Hom Ref";
   }
   return null;
-}
-
-interface ClinvarResponse {
-  analysis_id: string;
-  total: number;
-  counts: Record<string, number>;
-  offset: number;
-  hits: ClinvarHit[];
 }
 
 const SIG_COLORS: Record<string, { bg: string; text: string; label: string }> = {

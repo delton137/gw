@@ -6,58 +6,13 @@ import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import PrsDistributionChart from "@/components/PrsDistributionChart";
 import { SUPERPOP_META } from "@/lib/populations";
+import type { Analysis, PrsResponse, PrsResult } from "@/lib/types";
 
 function formatPercentile(p: number): string {
   const rounded = Math.round(p);
   if (rounded === 0) return "<1";
   if (rounded === 100) return ">99";
   return String(rounded);
-}
-
-interface PrsResult {
-  pgs_id: string;
-  trait_name: string;
-  percentile: number;
-  raw_score: number;
-  z_score: number | null;
-  ref_mean: number | null;
-  ref_std: number | null;
-  n_variants_matched: number;
-  n_variants_total: number;
-  ancestry_group_used: string;
-  reported_auc: number | null;
-  publication_pmid: string | null;
-  publication_doi: string | null;
-  absolute_risk: number | null;
-  population_risk: number | null;
-  risk_category: string | null;
-  prevalence_source: string | null;
-  percentile_lower: number | null;
-  percentile_upper: number | null;
-  coverage_quality: string | null;
-}
-
-interface PrsResponse {
-  analysis_id: string;
-  prs_status: "computing" | "failed" | "ready";
-  selected_ancestry: string | null;
-  results: PrsResult[];
-}
-
-interface Analysis {
-  id: string;
-  detected_ancestry: {
-    superpopulations?: Record<string, number>;
-    populations?: Record<string, number>;
-    n_markers_used?: number;
-    n_markers_total?: number;
-    is_admixed?: boolean;
-    coverage_quality?: string;
-  } | null;
-  ancestry_method: string | null;
-  ancestry_confidence: number | null;
-  selected_ancestry: string | null;
-  error_message: string | null;
 }
 
 export default function PrsPage() {

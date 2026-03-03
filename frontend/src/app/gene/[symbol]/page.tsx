@@ -134,6 +134,10 @@ export default async function GenePage({
   // External links
   const links: { label: string; url: string }[] = [
     {
+      label: "Wikipedia",
+      url: `https://en.wikipedia.org/wiki/${data.symbol}`,
+    },
+    {
       label: "NCBI Gene",
       url: data.ncbi_gene_id
         ? `https://www.ncbi.nlm.nih.gov/gene/${data.ncbi_gene_id}`

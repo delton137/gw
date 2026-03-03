@@ -15,6 +15,8 @@ from app.models.carrier_status import UserCarrierStatusResult
 from app.models.pgx import PgxGeneDefinition, PgxStarAlleleDefinition
 from app.models.user import Analysis, UserSnpTraitHit
 from app.routes._helpers import (
+    build_defining_variants_by_gene,
+    fetch_pgx_default_alleles,
     fetch_pgx_rows,
     get_latest_analysis,
 )
@@ -125,7 +127,7 @@ async def download_pgx_report(
         gl = guidelines_map.get(r["gene"], {"cpic": [], "dpwg": []})
         r["guidelines"] = gl if (gl["cpic"] or gl["dpwg"]) else None
 
-    # Star allele rsIDs per gene for Methods section
+    # Star allele rsIDs per gene (panel SNPs)
     sa_result = await session.execute(
         select(
             PgxStarAlleleDefinition.gene,
@@ -136,12 +138,19 @@ async def download_pgx_report(
     for row in sa_result:
         star_allele_rsids.setdefault(row.gene, []).append(row.rsid)
 
+    # Defining variants per gene (non-default alleles)
+    default_alleles = await fetch_pgx_default_alleles(session)
+    defining_variants = await build_defining_variants_by_gene(
+        session, pgx_results, default_alleles,
+    )
+
     pdf_bytes = generate_pgx_report_pdf(
         analysis=analysis_dict,
         pgx_results=pgx_results,
         gene_definitions=gene_defs,
         drug_annotations=drug_cache,
         star_allele_rsids=star_allele_rsids,
+        defining_variants=defining_variants,
     )
 
     return Response(

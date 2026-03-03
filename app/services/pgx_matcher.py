@@ -97,56 +97,10 @@ DEFAULT_ALLELE_SCORE = 1.0
 
 _DRUG_CACHE: dict[str, list[str]] | None = None
 
-# Cache for PGx rsid → (chrom, position) from stargazer_alleles.json, keyed by genome build
-_PGX_POS_CACHE: dict[str, dict[str, tuple[str, int]]] = {}
-
-# Cache for PGx rsid → ref_allele from stargazer_alleles.json
-_PGX_REF_CACHE: dict[str, str] | None = None
-
-
-def _load_pgx_positions(genome_build: str = "GRCh38") -> dict[str, tuple[str, int]]:
-    """Load rsid → (chrom, position) mapping from stargazer_alleles.json."""
-    if genome_build in _PGX_POS_CACHE:
-        return _PGX_POS_CACHE[genome_build]
-
-    pgx_path = Path(__file__).parent.parent / "data" / "pgx_alleles.json"
-    if not pgx_path.exists():
-        _PGX_POS_CACHE[genome_build] = {}
-        return _PGX_POS_CACHE[genome_build]
-
-    pos_field = "position_grch37" if genome_build == "GRCh37" else "position"
-
-    data = json.loads(pgx_path.read_text())
-    cache: dict[str, tuple[str, int]] = {}
-    for v in data.get("variants", []):
-        rsid = v.get("rsid")
-        chrom = v.get("chrom")
-        pos = v.get(pos_field)
-        if rsid and chrom and pos:
-            cache[rsid] = (str(chrom), int(pos))
-    _PGX_POS_CACHE[genome_build] = cache
-    return cache
-
-
-def _load_pgx_ref_alleles() -> dict[str, str]:
-    """Load rsid → ref_allele mapping from stargazer_alleles.json."""
-    global _PGX_REF_CACHE
-    if _PGX_REF_CACHE is not None:
-        return _PGX_REF_CACHE
-
-    pgx_path = Path(__file__).parent.parent / "data" / "pgx_alleles.json"
-    if not pgx_path.exists():
-        _PGX_REF_CACHE = {}
-        return _PGX_REF_CACHE
-
-    data = json.loads(pgx_path.read_text())
-    _PGX_REF_CACHE = {}
-    for v in data.get("variants", []):
-        rsid = v.get("rsid")
-        ref = v.get("ref_allele")
-        if rsid and ref:
-            _PGX_REF_CACHE[rsid] = ref
-    return _PGX_REF_CACHE
+from app.services.data_loader import (
+    load_pgx_positions_dict as _load_pgx_positions,
+    load_pgx_ref_alleles_cached as _load_pgx_ref_alleles,
+)
 
 
 def _load_drug_cache() -> dict[str, list[str]]:
@@ -308,6 +262,25 @@ def call_star_alleles_for_gene(
 
             if all_present and min_copies > 0:
                 detected.append((star_allele, defs[0]["function"], int(min_copies)))
+
+    # Deduplicate: if multiple single-SNP alleles detected at the same rsid,
+    # keep only the first by priority (prevents double-counting from alias alleles
+    # e.g. DPYD *13 vs *S15 both defined by rs55886062 variant_allele=C)
+    seen_rsids: dict[str, str] = {}  # rsid -> first star_allele that claimed it
+    deduped: list[tuple[str, str, int]] = []
+    for star, func, copies in detected:
+        defs = allele_groups[star]
+        if len(defs) == 1:
+            rsid = defs[0]["rsid"]
+            if rsid in seen_rsids:
+                log.debug(
+                    "PGX: skipping %s (duplicate of %s at %s)",
+                    star, seen_rsids[rsid], rsid,
+                )
+                continue
+            seen_rsids[rsid] = star
+        deduped.append((star, func, copies))
+    detected = deduped
 
     return detected, n_tested, n_total
 
@@ -565,6 +538,9 @@ async def match_pgx(
     # Load drug annotations
     drug_cache = _load_drug_cache()
 
+    # Pre-load ref alleles for VCF genotype backfill (cached, no cost)
+    ref_alleles = _load_pgx_ref_alleles() if is_vcf else {}
+
     results: list[PgxResult] = []
 
     for gene_row in gene_rows:
@@ -593,6 +569,16 @@ async def match_pgx(
             if rsid in user_lookup:
                 a1, a2 = user_lookup[rsid]
                 variant_genos[rsid] = f"{a1}/{a2}"
+
+        # For VCF: absent positions are ref/ref — backfill any missing panel rsids
+        if is_vcf:
+            for rsid in gene_rsids:
+                if rsid not in variant_genos:
+                    if rsid in ref_alleles:
+                        ref = ref_alleles[rsid]
+                        variant_genos[rsid] = f"{ref}/{ref}"
+                    else:
+                        variant_genos[rsid] = "ref/ref"
 
         # For VCF: all positions are assessed (absence = homozygous reference).
         # Missing positions have already been imputed as ref/ref, so every

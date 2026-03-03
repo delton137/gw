@@ -12,23 +12,7 @@ import {
   Tooltip,
 } from "recharts";
 import { POP_NAMES, SUPERPOP_META, POP_TO_SUPER } from "@/lib/populations";
-
-interface AncestryDetail {
-  populations: Record<string, number>;
-  superpopulations: Record<string, number>;
-  n_markers_used: number;
-  n_markers_total: number;
-  coverage_quality: string;
-  is_admixed: boolean;
-}
-
-interface Analysis {
-  id: string;
-  status: string;
-  detected_ancestry: AncestryDetail | Record<string, number> | null;
-  ancestry_method: string | null;
-  ancestry_confidence: number | null;
-}
+import type { Analysis, AncestryDetail } from "@/lib/types";
 
 interface PrsResponse {
   analysis_id: string;

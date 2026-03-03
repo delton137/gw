@@ -843,24 +843,6 @@
     },
     {
       "gene": "CYP1A2",
-      "star_allele": "*1C",
-      "rsid": "rs2069514",
-      "variant_allele": "A",
-      "function": "decreased_function",
-      "activity_score": 0.5,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP1A2",
-      "star_allele": "*1F",
-      "rsid": "rs762551",
-      "variant_allele": "A",
-      "function": "uncertain_function",
-      "activity_score": 1.5,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP1A2",
       "star_allele": "*1K",
       "rsid": "rs2069526",
       "variant_allele": "G",
@@ -2346,15 +2328,6 @@
     },
     {
       "gene": "CYP3A4",
-      "star_allele": "*1B",
-      "rsid": "rs2740574",
-      "variant_allele": "C",
-      "function": "uncertain_function",
-      "activity_score": null,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP3A4",
       "star_allele": "*2",
       "rsid": "rs55785340",
       "variant_allele": "G",
@@ -2531,15 +2504,6 @@
       "variant_allele": "C",
       "function": "uncertain_function",
       "activity_score": null,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP3A4",
-      "star_allele": "*22",
-      "rsid": "rs35599367",
-      "variant_allele": "A",
-      "function": "decreased_function",
-      "activity_score": 0.5,
       "source": "Stargazer"
     },
     {
@@ -4902,15 +4866,6 @@
     },
     {
       "gene": "UGT2B15",
-      "star_allele": "*2",
-      "rsid": "rs1902023",
-      "variant_allele": "A",
-      "function": "uncertain_function",
-      "activity_score": null,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "UGT2B15",
       "star_allele": "*3",
       "rsid": "rs368012995",
       "variant_allele": "G",
@@ -5073,15 +5028,6 @@
     },
     {
       "gene": "CYP2C19",
-      "star_allele": "*5",
-      "rsid": "rs56337013",
-      "variant_allele": "T",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2C19",
       "star_allele": "*6",
       "rsid": "rs72552267",
       "variant_allele": "A",
@@ -5094,24 +5040,6 @@
       "star_allele": "*6",
       "rsid": "rs3758581",
       "variant_allele": "G",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2C19",
-      "star_allele": "*7",
-      "rsid": "rs72558186",
-      "variant_allele": "A",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2C19",
-      "star_allele": "*8",
-      "rsid": "rs41291556",
-      "variant_allele": "C",
       "function": "no_function",
       "activity_score": 0.0,
       "source": "Stargazer"
@@ -5240,15 +5168,6 @@
       "variant_allele": "G",
       "function": "normal_function",
       "activity_score": 1.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2C19",
-      "star_allele": "*16",
-      "rsid": "rs192154563",
-      "variant_allele": "T",
-      "function": "decreased_function",
-      "activity_score": 0.5,
       "source": "Stargazer"
     },
     {
@@ -5568,26 +5487,8 @@
     },
     {
       "gene": "NUDT15",
-      "star_allele": "*3",
-      "rsid": "rs116855232",
-      "variant_allele": "T",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "NUDT15",
       "star_allele": "*4",
       "rsid": "rs147390019",
-      "variant_allele": "A",
-      "function": "uncertain_function",
-      "activity_score": null,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "NUDT15",
-      "star_allele": "*5",
-      "rsid": "rs186364861",
       "variant_allele": "A",
       "function": "uncertain_function",
       "activity_score": null,
@@ -5748,24 +5649,6 @@
     },
     {
       "gene": "SLCO1B1",
-      "star_allele": "*4",
-      "rsid": "rs11045819",
-      "variant_allele": "A",
-      "function": "uncertain_function",
-      "activity_score": null,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "SLCO1B1",
-      "star_allele": "*5",
-      "rsid": "rs4149056",
-      "variant_allele": "C",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "SLCO1B1",
       "star_allele": "*6",
       "rsid": "rs55901008",
       "variant_allele": "C",
@@ -5789,15 +5672,6 @@
       "variant_allele": "G",
       "function": "uncertain_function",
       "activity_score": null,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "SLCO1B1",
-      "star_allele": "*9",
-      "rsid": "rs59502379",
-      "variant_allele": "C",
-      "function": "no_function",
-      "activity_score": 0.0,
       "source": "Stargazer"
     },
     {
@@ -6189,15 +6063,6 @@
     },
     {
       "gene": "SLCO1B1",
-      "star_allele": "*37",
-      "rsid": "rs2306283",
-      "variant_allele": "G",
-      "function": "normal_function",
-      "activity_score": 1.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "SLCO1B1",
       "star_allele": "*38",
       "rsid": "rs145144129",
       "variant_allele": "A",
@@ -6404,33 +6269,6 @@
       "source": "Stargazer"
     },
     {
-      "gene": "CYP4F2",
-      "star_allele": "*3",
-      "rsid": "rs2108622",
-      "variant_allele": "T",
-      "function": "decreased_function",
-      "activity_score": 0.5,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "DPYD",
-      "star_allele": "*S3",
-      "rsid": "rs3918290",
-      "variant_allele": "T",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "DPYD",
-      "star_allele": "*S4",
-      "rsid": "rs72549303",
-      "variant_allele": "T",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
       "gene": "DPYD",
       "star_allele": "*S5",
       "rsid": "rs1801158",
@@ -6513,38 +6351,11 @@
     },
     {
       "gene": "DPYD",
-      "star_allele": "*S12",
-      "rsid": "rs1801268",
-      "variant_allele": "A",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "DPYD",
       "star_allele": "*S13",
       "rsid": "rs72549306",
       "variant_allele": "A",
       "function": "normal_function",
       "activity_score": 1.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "DPYD",
-      "star_allele": "*S14",
-      "rsid": "rs78060119",
-      "variant_allele": "A",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "DPYD",
-      "star_allele": "*S15",
-      "rsid": "rs55886062",
-      "variant_allele": "C",
-      "function": "no_function",
-      "activity_score": 0.0,
       "source": "Stargazer"
     },
     {
@@ -6560,24 +6371,6 @@
       "gene": "DPYD",
       "star_allele": "*S16",
       "rsid": "rs75017182",
-      "variant_allele": "C",
-      "function": "decreased_function",
-      "activity_score": 0.5,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "DPYD",
-      "star_allele": "*S17",
-      "rsid": "rs67376798",
-      "variant_allele": "A",
-      "function": "decreased_function",
-      "activity_score": 0.5,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "DPYD",
-      "star_allele": "*S18",
-      "rsid": "rs115232898",
       "variant_allele": "C",
       "function": "decreased_function",
       "activity_score": 0.5,
@@ -10554,15 +10347,6 @@
     },
     {
       "gene": "G6PD",
-      "star_allele": "*2",
-      "rsid": "rs1050829",
-      "variant_allele": "C",
-      "function": "uncertain_function",
-      "activity_score": 1.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "G6PD",
       "star_allele": "*3",
       "rsid": "rs1050829",
       "variant_allele": "C",
@@ -10658,15 +10442,6 @@
       "variant_allele": "A",
       "function": "uncertain_function",
       "activity_score": 0.1,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "G6PD",
-      "star_allele": "*9",
-      "rsid": "rs1050828",
-      "variant_allele": "T",
-      "function": "uncertain_function",
-      "activity_score": 0.5,
       "source": "Stargazer"
     },
     {
@@ -11454,15 +11229,6 @@
     },
     {
       "gene": "TPMT",
-      "star_allele": "*2",
-      "rsid": "rs1800462",
-      "variant_allele": "G",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "TPMT",
       "star_allele": "*3A",
       "rsid": "rs1142345",
       "variant_allele": "C",
@@ -11477,42 +11243,6 @@
       "variant_allele": "T",
       "function": "no_function",
       "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "TPMT",
-      "star_allele": "*3B",
-      "rsid": "rs1800460",
-      "variant_allele": "T",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "TPMT",
-      "star_allele": "*3C",
-      "rsid": "rs1142345",
-      "variant_allele": "C",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "TPMT",
-      "star_allele": "*4",
-      "rsid": "rs1800584",
-      "variant_allele": "T",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "TPMT",
-      "star_allele": "*5",
-      "rsid": "rs72552740",
-      "variant_allele": "G",
-      "function": "uncertain_function",
-      "activity_score": null,
       "source": "Stargazer"
     },
     {
@@ -11823,24 +11553,6 @@
     },
     {
       "gene": "UGT1A1",
-      "star_allele": "*6",
-      "rsid": "rs4148323",
-      "variant_allele": "A",
-      "function": "decreased_function",
-      "activity_score": 0.5,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "UGT1A1",
-      "star_allele": "*27",
-      "rsid": "rs35350960",
-      "variant_allele": "A",
-      "function": "decreased_function",
-      "activity_score": 0.5,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "UGT1A1",
       "star_allele": "*28",
       "rsid": "rs1553620570",
       "variant_allele": "CATAT",
@@ -11867,33 +11579,6 @@
       "source": "Stargazer"
     },
     {
-      "gene": "UGT1A1",
-      "star_allele": "*80",
-      "rsid": "rs887829",
-      "variant_allele": "T",
-      "function": "uncertain_function",
-      "activity_score": null,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "VKORC1",
-      "star_allele": "*V66M",
-      "rsid": "rs72547529",
-      "variant_allele": "T",
-      "function": "uncertain_function",
-      "activity_score": null,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "VKORC1",
-      "star_allele": "*S1",
-      "rsid": "rs9923231",
-      "variant_allele": "T",
-      "function": "increased_function",
-      "activity_score": 1.5,
-      "source": "Stargazer"
-    },
-    {
       "gene": "VKORC1",
       "star_allele": "*D36Y",
       "rsid": "rs61742245",
@@ -11909,33 +11594,6 @@
       "variant_allele": "A",
       "function": "uncertain_function",
       "activity_score": null,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP3A5",
-      "star_allele": "*3",
-      "rsid": "rs776746",
-      "variant_allele": "C",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP3A5",
-      "star_allele": "*6",
-      "rsid": "rs10264272",
-      "variant_allele": "T",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP3A5",
-      "star_allele": "*7",
-      "rsid": "rs41303343",
-      "variant_allele": "TA",
-      "function": "no_function",
-      "activity_score": 0.0,
       "source": "Stargazer"
     },
     {
@@ -12435,69 +12093,6 @@
     },
     {
       "gene": "CYP2D6",
-      "star_allele": "*3",
-      "rsid": "rs35742686",
-      "variant_allele": "C",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2D6",
-      "star_allele": "*4",
-      "rsid": "rs3892097",
-      "variant_allele": "T",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2D6",
-      "star_allele": "*6",
-      "rsid": "rs5030655",
-      "variant_allele": "C",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2D6",
-      "star_allele": "*7",
-      "rsid": "rs5030867",
-      "variant_allele": "G",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2D6",
-      "star_allele": "*8",
-      "rsid": "rs5030865",
-      "variant_allele": "A",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2D6",
-      "star_allele": "*9",
-      "rsid": "rs5030656",
-      "variant_allele": "C",
-      "function": "decreased_function",
-      "activity_score": 0.5,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2D6",
-      "star_allele": "*10",
-      "rsid": "rs1065852",
-      "variant_allele": "A",
-      "function": "decreased_function",
-      "activity_score": 0.25,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2D6",
       "star_allele": "*11",
       "rsid": "rs201377835",
       "variant_allele": "G",
@@ -12507,36 +12102,9 @@
     },
     {
       "gene": "CYP2D6",
-      "star_allele": "*12",
-      "rsid": "rs5030862",
-      "variant_allele": "T",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2D6",
       "star_allele": "*14",
       "rsid": "rs5030865",
       "variant_allele": "T",
-      "function": "decreased_function",
-      "activity_score": 0.5,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2D6",
-      "star_allele": "*15",
-      "rsid": "rs774671100",
-      "variant_allele": "CA",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2D6",
-      "star_allele": "*17",
-      "rsid": "rs28371706",
-      "variant_allele": "A",
       "function": "decreased_function",
       "activity_score": 0.5,
       "source": "Stargazer"
@@ -12555,15 +12123,6 @@
       "star_allele": "*19",
       "rsid": "rs758320086",
       "variant_allele": "C",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2D6",
-      "star_allele": "*20",
-      "rsid": "rs72549354",
-      "variant_allele": "TC",
       "function": "no_function",
       "activity_score": 0.0,
       "source": "Stargazer"
@@ -12741,15 +12300,6 @@
     },
     {
       "gene": "CYP2D6",
-      "star_allele": "*34",
-      "rsid": "rs16947",
-      "variant_allele": "A",
-      "function": "normal_function",
-      "activity_score": 1.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2D6",
       "star_allele": "*35",
       "rsid": "rs1135840",
       "variant_allele": "G",
@@ -12818,15 +12368,6 @@
       "variant_allele": "G",
       "function": "normal_function",
       "activity_score": 1.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2D6",
-      "star_allele": "*41",
-      "rsid": "rs28371725",
-      "variant_allele": "T",
-      "function": "decreased_function",
-      "activity_score": 0.5,
       "source": "Stargazer"
     },
     {
@@ -13160,15 +12701,6 @@
       "variant_allele": "A",
       "function": "uncertain_function",
       "activity_score": null,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2D6",
-      "star_allele": "*59",
-      "rsid": "rs79292917",
-      "variant_allele": "T",
-      "function": "decreased_function",
-      "activity_score": 0.5,
       "source": "Stargazer"
     },
     {
@@ -14469,15 +14001,6 @@
     },
     {
       "gene": "CYP2D6",
-      "star_allele": "*119",
-      "rsid": "rs28371725",
-      "variant_allele": "T",
-      "function": "uncertain_function",
-      "activity_score": null,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2D6",
       "star_allele": "*121",
       "rsid": "rs1135840",
       "variant_allele": "G",
@@ -15369,24 +14892,6 @@
     },
     {
       "gene": "CYP2C9",
-      "star_allele": "*2",
-      "rsid": "rs1799853",
-      "variant_allele": "T",
-      "function": "decreased_function",
-      "activity_score": 0.5,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2C9",
-      "star_allele": "*3",
-      "rsid": "rs1057910",
-      "variant_allele": "C",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2C9",
       "star_allele": "*4",
       "rsid": "rs56165452",
       "variant_allele": "C",
@@ -15396,38 +14901,11 @@
     },
     {
       "gene": "CYP2C9",
-      "star_allele": "*5",
-      "rsid": "rs28371686",
-      "variant_allele": "G",
-      "function": "decreased_function",
-      "activity_score": 0.5,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2C9",
-      "star_allele": "*6",
-      "rsid": "rs9332131",
-      "variant_allele": "G",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2C9",
       "star_allele": "*7",
       "rsid": "rs67807361",
       "variant_allele": "A",
       "function": "uncertain_function",
       "activity_score": null,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2C9",
-      "star_allele": "*8",
-      "rsid": "rs7900194",
-      "variant_allele": "A",
-      "function": "decreased_function",
-      "activity_score": 0.5,
       "source": "Stargazer"
     },
     {
@@ -15446,33 +14924,6 @@
       "variant_allele": "G",
       "function": "uncertain_function",
       "activity_score": null,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2C9",
-      "star_allele": "*11",
-      "rsid": "rs28371685",
-      "variant_allele": "T",
-      "function": "decreased_function",
-      "activity_score": 0.5,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2C9",
-      "star_allele": "*12",
-      "rsid": "rs9332239",
-      "variant_allele": "T",
-      "function": "decreased_function",
-      "activity_score": 0.5,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2C9",
-      "star_allele": "*13",
-      "rsid": "rs72558187",
-      "variant_allele": "C",
-      "function": "no_function",
-      "activity_score": 0.0,
       "source": "Stargazer"
     },
     {
@@ -15621,15 +15072,6 @@
     },
     {
       "gene": "CYP2C9",
-      "star_allele": "*29",
-      "rsid": "rs182132442",
-      "variant_allele": "A",
-      "function": "decreased_function",
-      "activity_score": 0.5,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2C9",
       "star_allele": "*30",
       "rsid": "rs781583846",
       "variant_allele": "A",
@@ -15750,15 +15192,6 @@
       "star_allele": "*42",
       "rsid": "rs12414460",
       "variant_allele": "A",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2C9",
-      "star_allele": "*43",
-      "rsid": "rs767576260",
-      "variant_allele": "T",
       "function": "no_function",
       "activity_score": 0.0,
       "source": "Stargazer"
@@ -16170,38 +15603,11 @@
     },
     {
       "gene": "CYP2B6",
-      "star_allele": "*2",
-      "rsid": "rs8192709",
-      "variant_allele": "T",
-      "function": "normal_function",
-      "activity_score": 1.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2B6",
       "star_allele": "*3",
       "rsid": "rs45482602",
       "variant_allele": "A",
       "function": "uncertain_function",
       "activity_score": null,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2B6",
-      "star_allele": "*4",
-      "rsid": "rs2279343",
-      "variant_allele": "G",
-      "function": "increased_function",
-      "activity_score": 1.5,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2B6",
-      "star_allele": "*5",
-      "rsid": "rs3211371",
-      "variant_allele": "T",
-      "function": "normal_function",
-      "activity_score": 1.0,
       "source": "Stargazer"
     },
     {
@@ -16256,15 +15662,6 @@
       "variant_allele": "G",
       "function": "no_function",
       "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2B6",
-      "star_allele": "*9",
-      "rsid": "rs3745274",
-      "variant_allele": "T",
-      "function": "decreased_function",
-      "activity_score": 0.5,
       "source": "Stargazer"
     },
     {
@@ -16386,15 +15783,6 @@
     },
     {
       "gene": "CYP2B6",
-      "star_allele": "*18",
-      "rsid": "rs28399499",
-      "variant_allele": "C",
-      "function": "no_function",
-      "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2B6",
       "star_allele": "*19",
       "rsid": "rs3745274",
       "variant_allele": "T",
@@ -16454,15 +15842,6 @@
       "variant_allele": "A",
       "function": "uncertain_function",
       "activity_score": null,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "CYP2B6",
-      "star_allele": "*22",
-      "rsid": "rs34223104",
-      "variant_allele": "C",
-      "function": "increased_function",
-      "activity_score": 1.5,
       "source": "Stargazer"
     },
     {
@@ -16742,15 +16121,6 @@
       "variant_allele": "G",
       "function": "no_function",
       "activity_score": 0.0,
-      "source": "Stargazer"
-    },
-    {
-      "gene": "ABCG2",
-      "star_allele": "*S1",
-      "rsid": "rs2231142",
-      "variant_allele": "T",
-      "function": "decreased_function",
-      "activity_score": 0.5,
       "source": "Stargazer"
     }
   ],

@@ -47,8 +47,11 @@ log = logging.getLogger(__name__)
 def _merge_pgx_alleles(curated: list[dict]) -> list[dict]:
     """Merge PGx allele definitions from pgx_alleles.json with curated definitions.
 
-    Curated definitions take priority: if a (gene, star_allele, rsid) triple
-    exists in both, the curated version is kept.
+    Curated definitions take priority:
+    - Exact (gene, star_allele, rsid) matches: curated version is kept.
+    - Cross-source single-SNP duplicates: Stargazer single-SNP alleles whose
+      (gene, rsid, variant_allele) already exists under a curated allele are
+      removed to prevent double-counting in diplotype assignment.
     """
     if not PGX_ALLELES_JSON.exists():
         log.warning("PGx alleles JSON not found at %s — using curated only", PGX_ALLELES_JSON)
@@ -67,9 +70,23 @@ def _merge_pgx_alleles(curated: list[dict]) -> list[dict]:
     for sa in curated:
         curated_keys.add((sa["gene"], sa["star_allele"], sa["rsid"]))
 
+    # Build set of curated (gene, rsid, variant_allele) triples — used to
+    # detect Stargazer single-SNP alleles that duplicate a curated variant
+    # under a different star_allele name (e.g. DPYD *S15 == *13).
+    curated_variants: set[tuple[str, str, str]] = set()
+    for sa in curated:
+        curated_variants.add((sa["gene"], sa["rsid"], sa["variant_allele"]))
+
+    # Identify which Stargazer alleles are single-SNP (only one row per allele)
+    sg_by_star: dict[tuple[str, str], int] = {}
+    for sa in sg_alleles:
+        key = (sa["gene"], sa["star_allele"])
+        sg_by_star[key] = sg_by_star.get(key, 0) + 1
+
     merged = list(curated)
     added = 0
     skipped_orphans = 0
+    skipped_duplicates = 0
     for sa in sg_alleles:
         if sa["gene"] not in valid_genes:
             skipped_orphans += 1
@@ -77,16 +94,66 @@ def _merge_pgx_alleles(curated: list[dict]) -> list[dict]:
         key = (sa["gene"], sa["star_allele"], sa["rsid"])
         if key in curated_keys:
             continue
+        # Skip single-SNP Stargazer alleles that duplicate a curated variant
+        star_key = (sa["gene"], sa["star_allele"])
+        if sg_by_star.get(star_key, 0) == 1:
+            var_key = (sa["gene"], sa["rsid"], sa["variant_allele"])
+            if var_key in curated_variants:
+                skipped_duplicates += 1
+                continue
         curated_keys.add(key)
         merged.append(sa)
         added += 1
 
     if skipped_orphans:
         log.info("Skipped %d PGx alleles with no gene definition", skipped_orphans)
+    if skipped_duplicates:
+        log.info(
+            "Skipped %d Stargazer alleles that duplicate curated variants "
+            "(same gene+rsid+variant_allele under different star_allele name)",
+            skipped_duplicates,
+        )
+
+    # Validate: warn about remaining single-SNP alleles sharing a variant
+    _validate_no_single_snp_duplicates(merged)
 
     log.info("Merged %d PGx alleles (curated: %d, new: %d, total: %d)",
              len(sg_alleles), len(curated), added, len(merged))
     return merged
+
+
+def _validate_no_single_snp_duplicates(alleles: list[dict]) -> None:
+    """Warn if any single-SNP alleles share (gene, rsid, variant_allele).
+
+    Multi-SNP alleles sharing a variant are expected (e.g. CYP2D6 *2A has
+    multiple defining variants, some shared with *2). Only single-SNP alleles
+    that overlap pose a double-counting risk.
+    """
+    by_star: dict[tuple[str, str], list[dict]] = {}
+    for a in alleles:
+        key = (a["gene"], a["star_allele"])
+        by_star.setdefault(key, []).append(a)
+
+    single_snp_map: dict[tuple[str, str, str], list[str]] = {}
+    for (gene, star), defs in by_star.items():
+        if len(defs) == 1:
+            d = defs[0]
+            var_key = (gene, d["rsid"], d["variant_allele"])
+            single_snp_map.setdefault(var_key, []).append(star)
+
+    issues = 0
+    for (gene, rsid, var), stars in sorted(single_snp_map.items()):
+        if len(stars) > 1:
+            issues += 1
+            log.warning(
+                "Duplicate single-SNP alleles: %s %s (variant=%s) -> %s",
+                gene, rsid, var, ", ".join(sorted(stars)),
+            )
+    if issues:
+        log.warning(
+            "%d single-SNP allele duplicate group(s) found — these may cause "
+            "double-counting in diplotype assignment", issues,
+        )
 
 
 def _load_pgx_variants() -> list[dict]:

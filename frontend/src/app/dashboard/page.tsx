@@ -3,107 +3,21 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { apiFetch, apiDelete, apiDownloadBlob, triggerBlobDownload } from "@/lib/api";
+import { apiFetch, apiDelete } from "@/lib/api";
 import { SUPERPOP_COLORS, SUPERPOP_NAMES } from "@/lib/populations";
-
-interface TraitHit {
-  id: string;
-  rsid: string;
-  user_genotype: string;
-  trait: string;
-  effect_description: string;
-  risk_level: string;
-  evidence_level: string;
-}
-
-interface AncestryDetail {
-  populations: Record<string, number>;
-  superpopulations: Record<string, number>;
-  n_markers_used: number;
-  n_markers_total: number;
-  coverage_quality: string;
-  is_admixed: boolean;
-}
-
-interface Analysis {
-  id: string;
-  chip_type: string;
-  variant_count: number;
-  status: string;
-  error_message: string | null;
-  detected_ancestry: AncestryDetail | Record<string, number> | null;
-  ancestry_method: string | null;
-  ancestry_confidence: number | null;
-  selected_ancestry: string | null;
-  filename: string | null;
-  genome_build: string | null;
-  pipeline_fast_seconds: number | null;
-}
-
-interface PgxResult {
-  gene: string;
-  phenotype: string | null;
-}
-
-interface BloodTypeResult {
-  display_type: string;
-  abo_genotype: string;
-  abo_phenotype: string;
-  rh_c_antigen: string | null;
-  rh_e_antigen: string | null;
-  rh_cw_antigen: boolean | null;
-  kell_phenotype: string | null;
-  mns_phenotype: string | null;
-  duffy_phenotype: string | null;
-  kidd_phenotype: string | null;
-  secretor_status: string | null;
-  systems: Record<string, { genotype: string; phenotype: string }> | null;
-  n_variants_tested: number;
-  n_variants_total: number;
-  n_systems_determined: number;
-  confidence: string;
-  confidence_note: string | null;
-}
-
-interface CarrierStatusResult {
-  results_json: Record<string, {
-    gene: string;
-    condition: string;
-    status: string;
-    variants_detected: { rsid: string; name: string; genotype: string; pathogenic_allele_count: number }[];
-  }>;
-  n_genes_screened: number;
-  n_carrier_genes: number;
-  n_affected_flags: number;
-}
-
-interface VariantsResponse {
-  analysis_id: string;
-  total: number;
-  snpedia_total: number;
-  offset: number;
-  variants: { rsid: string }[];
-}
-
-interface ClinvarResponse {
-  total: number;
-  counts: Record<string, number>;
-}
-
-interface PrsResponse {
-  analysis_id: string;
-  prs_status: "computing" | "failed" | "ready";
-  prs_status_detail: string | null;
-  selected_ancestry: string | null;
-  results: { pgs_id: string }[];
-}
-
-interface GwasResponse {
-  analysis_id: string;
-  gwas_status: "computing" | "failed" | "ready";
-  total_scores: number;
-  categories: Record<string, { percentile: number | null }[]>;
-}
+import { useReportDownload } from "@/hooks/useReportDownload";
+import type {
+  Analysis,
+  AncestryDetail,
+  BloodTypeResult,
+  CarrierStatusResult,
+  ClinvarResponse,
+  GwasResponse,
+  PgxResult,
+  PrsResponse,
+  TraitHit,
+  VariantsResponse,
+} from "@/lib/types";
 
 export default function DashboardPage() {
   const { getToken } = useAuth();
@@ -125,8 +39,8 @@ export default function DashboardPage() {
   const [gwasStatus, setGwasStatus] = useState<"computing" | "failed" | "ready" | null>(null);
   const [gwasCount, setGwasCount] = useState(0);
   const [gwasElevated, setGwasElevated] = useState(0);
-  const [downloading, setDownloading] = useState(false);
-  const [downloadingPgx, setDownloadingPgx] = useState(false);
+  const { download: downloadReport, loading: downloading } = useReportDownload("/api/v1/report/download", "genewizard-report");
+  const { download: downloadPgxReport, loading: downloadingPgx } = useReportDownload("/api/v1/report/pgx/download", "genewizard-pgx-report");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -233,34 +147,6 @@ export default function DashboardPage() {
     }
     if (user) load();
   }, [getToken, user, pollPrs]);
-
-  const handleDownloadReport = async () => {
-    setDownloading(true);
-    try {
-      const token = await getToken();
-      const blob = await apiDownloadBlob("/api/v1/report/download", token);
-      const suffix = analysis?.filename ? `--${analysis.filename}` : "";
-      triggerBlobDownload(blob, `genewizard-report${suffix}.pdf`);
-    } catch {
-      alert("Failed to download report. Please try again.");
-    } finally {
-      setDownloading(false);
-    }
-  };
-
-  const handleDownloadPgxReport = async () => {
-    setDownloadingPgx(true);
-    try {
-      const token = await getToken();
-      const blob = await apiDownloadBlob("/api/v1/report/pgx/download", token);
-      const suffix = analysis?.filename ? `--${analysis.filename}` : "";
-      triggerBlobDownload(blob, `genewizard-pgx-report${suffix}.pdf`);
-    } catch {
-      alert("Failed to download PGX report. Please try again.");
-    } finally {
-      setDownloadingPgx(false);
-    }
-  };
 
   const handleDeleteData = async () => {
     setDeleting(true);
@@ -686,7 +572,7 @@ export default function DashboardPage() {
           <section className="border-t border-border pt-8 mt-8">
             <div className="flex flex-wrap gap-4 items-center">
               <button
-                onClick={handleDownloadReport}
+                onClick={() => downloadReport(analysis?.filename ?? undefined)}
                 disabled={downloading}
                 className="px-5 py-2.5 text-sm font-medium border border-border hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -695,7 +581,7 @@ export default function DashboardPage() {
 
               {pgxResults.length > 0 && (
                 <button
-                  onClick={handleDownloadPgxReport}
+                  onClick={() => downloadPgxReport(analysis?.filename ?? undefined)}
                   disabled={downloadingPgx}
                   className="px-5 py-2.5 text-sm font-medium border border-border hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
