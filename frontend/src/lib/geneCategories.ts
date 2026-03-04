@@ -90,7 +90,7 @@ export const GENE_CATEGORIES: Record<string, string> = {
   TERT: "Longevity / Aging",
   KL: "Longevity / Aging",
   SIRT1: "Longevity / Aging",
-  TOMM40: "Longevity / Aging",
+  TOMM40: "Alzheimer's & Neurodegeneration",
   // Athletic Performance
   COL1A1: "Athletic Performance",
   PPARGC1A: "Athletic Performance",
@@ -152,6 +152,8 @@ export const TRAIT_CATEGORIES: Record<string, string> = {
   "S-Adenosylhomocysteine Metabolism": "Methylation Cycle",
   "Transsulfuration Pathway": "Methylation Cycle",
   "Folate-Mediated One-Carbon Metabolism": "Methylation Cycle",
+  "Cardiovascular Disease Risk": "Cardiovascular",
+  "Alzheimer's Disease Risk": "Alzheimer's & Neurodegeneration",
 };
 
 /** Resolve category: trait-based override first, then gene-based, then "Other". */
@@ -177,23 +179,24 @@ export const PGX_GENES = new Set([
 ]);
 
 export const CATEGORY_ORDER = [
-  "Methylation Cycle",
   "Alzheimer's & Neurodegeneration",
-  "Hereditary Cancer",
+  "Athletic Performance",
+  "Bone Health",
+  "Caffeine / Substances",
   "Cardiovascular",
   "Clotting / Thrombophilia",
   "Diabetes / Metabolic",
-  "Pharmacogenomics",
-  "Metabolism & Nutrition",
-  "Mental Health & Cognition",
-  "Sleep / Circadian",
-  "Physical Traits",
-  "Skin / Hair / Appearance",
-  "Vision",
-  "Bone Health",
-  "Athletic Performance",
+  "Fertility / Reproductive",
+  "Hereditary Cancer",
   "Immunity & Autoimmune",
   "Longevity / Aging",
-  "Fertility / Reproductive",
+  "Mental Health & Cognition",
+  "Metabolism & Nutrition",
+  "Methylation Cycle",
+  "Pharmacogenomics",
+  "Physical Traits",
+  "Skin / Hair / Appearance",
+  "Sleep / Circadian",
+  "Vision",
   "Caffeine / Substances",
 ];
