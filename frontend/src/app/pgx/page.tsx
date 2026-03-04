@@ -331,7 +331,6 @@ export default function PgxPage() {
                                             >
                                               {v.rsid}
                                             </Link>
-                                            <span className="text-xs text-muted ml-0.5">({v.variant_allele})</span>
                                           </span>
                                         ))}
                                       </div>

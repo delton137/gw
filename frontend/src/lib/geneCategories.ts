@@ -198,5 +198,4 @@ export const CATEGORY_ORDER = [
   "Skin / Hair / Appearance",
   "Sleep / Circadian",
   "Vision",
-  "Caffeine / Substances",
 ];
