@@ -92,7 +92,7 @@ Raw file deleted after parsing. On failure: status `failed` with error_message.
 
 **pgx_guidelines.py** — Match CPIC/DPWG prescribing recommendations to user PGx results.
 
-**carrier_matcher.py** — Screen for recessive carrier status across 10 genes. Returns per-gene status (not_detected/carrier/likely_affected/potential_compound_het) with detected variant details.
+**carrier_matcher.py** — Screen for recessive carrier status across 9 genes. Returns per-gene status (not_detected/carrier/likely_affected/potential_compound_het) with detected variant details.
 
 **blood_type.py** — Blood type determination using RBCeq2 ISBT allele database. ABO, Rh (C/c, E/e, Cw), Kell, MNS, Duffy, Kidd, Secretor, Diego, Dombrock, Colton, Lutheran, and more. Cannot detect RhD+/- (requires gene deletion testing).
 

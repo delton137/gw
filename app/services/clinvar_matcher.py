@@ -49,10 +49,11 @@ async def match_clinvar(
     if not user_rsids:
         return []
 
-    # Build rsid → genotype lookup
-    genotype_lookup: dict[str, str] = {}
-    for row in user_df.select("rsid", "allele1", "allele2").iter_rows():
-        genotype_lookup[row[0]] = f"{row[1]}{row[2]}"
+    # Build rsid → genotype lookup using vectorized extraction
+    rsids = user_df["rsid"].to_list()
+    a1s = user_df["allele1"].to_list()
+    a2s = user_df["allele2"].to_list()
+    genotype_lookup: dict[str, str] = {r: f"{a1}{a2}" for r, a1, a2 in zip(rsids, a1s, a2s)}
 
     hits: list[ClinvarHit] = []
 

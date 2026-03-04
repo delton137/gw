@@ -29,7 +29,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [pgxResults, setPgxResults] = useState<PgxResult[]>([]);
   const [bloodType, setBloodType] = useState<BloodTypeResult | null>(null);
-  const [showBloodDetails, setShowBloodDetails] = useState(false);
   const [carrierStatus, setCarrierStatus] = useState<CarrierStatusResult | null>(null);
   const [clinvarTotal, setClinvarTotal] = useState(0);
   const [prsStatus, setPrsStatus] = useState<"computing" | "failed" | "ready" | null>(null);
@@ -226,9 +225,10 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* SNP Summary */}
-          {(traitHits.length > 0 || variantsTotal > 0) && (
-            <section className="mb-12">
+          {/* Card grid */}
+          <div className="grid grid-cols-1 gap-6 mb-12">
+            {/* SNP Summary */}
+            {(traitHits.length > 0 || variantsTotal > 0) && (
               <div className="border border-border p-5">
                 <h2 className="font-serif text-xl font-semibold mb-2">Curated SNPs</h2>
                 {traitHits.length > 0 && (
@@ -239,9 +239,9 @@ export default function DashboardPage() {
                 {variantsTotal > 0 && (
                   <p className="text-sm text-muted mb-2">
                     <span className="font-semibold text-foreground">{variantsTotal.toLocaleString()}</span>{" "}
-                    SNPedia variants matched
+                    SNPedia variants found
                     {snpediaTotal > 0 && (
-                      <> out of <span className="font-semibold text-foreground">{snpediaTotal.toLocaleString()}</span> tracked</>
+                      <> out of <span className="font-semibold text-foreground">{snpediaTotal.toLocaleString()}</span></>
                     )}
                   </p>
                 )}
@@ -252,12 +252,10 @@ export default function DashboardPage() {
                   View all SNP results &rarr;
                 </Link>
               </div>
-            </section>
-          )}
+            )}
 
-          {/* Pharmacogenomics Summary */}
-          {pgxResults.length > 0 && (
-            <section className="mb-12">
+            {/* Pharmacogenomics Summary */}
+            {pgxResults.length > 0 && (
               <div className="border border-border p-5">
                 <h2 className="font-serif text-xl font-semibold mb-2">
                   Pharmacogenomics
@@ -272,68 +270,10 @@ export default function DashboardPage() {
                   View pharmacogenomics results &rarr;
                 </Link>
               </div>
-            </section>
-          )}
+            )}
 
-          {/* Carrier Status Card */}
-          {carrierStatus && (
-            <div className="border border-border p-5 mb-12">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h2 className="font-serif text-xl font-semibold mb-1">Carrier Screening</h2>
-                  <p className="text-sm text-muted">
-                    {carrierStatus.n_genes_screened} genes screened
-                    {carrierStatus.n_carrier_genes === 0 && carrierStatus.n_affected_flags === 0 && (
-                      <span className="ml-2 text-gray-400">&mdash; no carrier variants detected</span>
-                    )}
-                  </p>
-                </div>
-                {carrierStatus.n_carrier_genes === 0 && carrierStatus.n_affected_flags === 0 ? null
-                : carrierStatus.n_affected_flags > 0 ? (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-700">
-                    Action recommended
-                  </span>
-                ) : (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
-                    {carrierStatus.n_carrier_genes} carrier gene{carrierStatus.n_carrier_genes !== 1 ? "s" : ""}
-                  </span>
-                )}
-              </div>
-              {(carrierStatus.n_carrier_genes > 0 || carrierStatus.n_affected_flags > 0) && (
-                <div className="space-y-1 mb-3">
-                  {Object.values(carrierStatus.results_json)
-                    .filter((g) => g.status !== "not_detected")
-                    .map((g) => (
-                      <div key={g.gene} className="flex items-center gap-2 text-sm">
-                        <span className={`inline-block w-2 h-2 rounded-full ${
-                          g.status === "carrier" ? "bg-amber-500"
-                          : g.status === "likely_affected" ? "bg-red-500"
-                          : "bg-red-500"
-                        }`} />
-                        <span className="font-mono text-xs text-foreground">{g.gene}</span>
-                        <span className="text-muted">&mdash; {g.condition}</span>
-                        <span className={`text-xs ${
-                          g.status === "carrier" ? "text-amber-700"
-                          : "text-red-700"
-                        }`}>
-                          ({g.status.replace(/_/g, " ")})
-                        </span>
-                      </div>
-                    ))}
-                </div>
-              )}
-              <Link
-                href="/carrier"
-                className="inline-block text-sm font-medium text-accent hover:underline"
-              >
-                View carrier status details &rarr;
-              </Link>
-            </div>
-          )}
-
-          {/* ClinVar Summary */}
-          {clinvarTotal > 0 && (
-            <section className="mb-12">
+            {/* ClinVar Summary */}
+            {clinvarTotal > 0 && (
               <div className="border border-border p-5">
                 <h2 className="font-serif text-xl font-semibold mb-2">ClinVar Annotations</h2>
                 <p className="text-sm text-muted mb-2">
@@ -346,174 +286,168 @@ export default function DashboardPage() {
                   View ClinVar annotations &rarr;
                 </Link>
               </div>
-            </section>
-          )}
+            )}
 
-          {/* Blood Type */}
-          {bloodType && (
-            <section className="mb-12">
+            {/* Carrier Status Card */}
+            {carrierStatus && (
+              <div className="border border-border p-5">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h2 className="font-serif text-xl font-semibold mb-1">
+                      Carrier Screening
+                      <span className="ml-2 align-middle inline-block text-[10px] font-sans font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 uppercase tracking-wide">
+                        Experimental
+                      </span>
+                    </h2>
+                    <p className="text-sm text-muted">
+                      {carrierStatus.n_genes_screened} genes analyzed
+                      {carrierStatus.n_carrier_genes === 0 && carrierStatus.n_affected_flags === 0 && (
+                        <span className="ml-2 text-gray-400">&mdash; no carrier variants detected</span>
+                      )}
+                    </p>
+                  </div>
+                  {carrierStatus.n_carrier_genes === 0 && carrierStatus.n_affected_flags === 0 ? null
+                  : carrierStatus.n_affected_flags > 0 ? (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-700">
+                      Action recommended
+                    </span>
+                  ) : (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
+                      {carrierStatus.n_carrier_genes} carrier gene{carrierStatus.n_carrier_genes !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                </div>
+                {(carrierStatus.n_carrier_genes > 0 || carrierStatus.n_affected_flags > 0) && (
+                  <div className="space-y-1 mb-3">
+                    {Object.values(carrierStatus.results_json)
+                      .filter((g) => g.status !== "not_detected")
+                      .map((g) => (
+                        <div key={g.gene} className="flex items-center gap-2 text-sm">
+                          <span className={`inline-block w-2 h-2 rounded-full ${
+                            g.status === "carrier" ? "bg-amber-500"
+                            : g.status === "likely_affected" ? "bg-red-500"
+                            : "bg-red-500"
+                          }`} />
+                          <span className="font-mono text-xs text-foreground">{g.gene}</span>
+                          <span className="text-muted">&mdash; {g.condition}</span>
+                          <span className={`text-xs ${
+                            g.status === "carrier" ? "text-amber-700"
+                            : "text-red-700"
+                          }`}>
+                            ({g.status.replace(/_/g, " ")})
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                )}
+                <Link
+                  href="/carrier"
+                  className="inline-block text-sm font-medium text-accent hover:underline"
+                >
+                  View carrier status details &rarr;
+                </Link>
+              </div>
+            )}
+
+            {/* Blood Type */}
+            {bloodType && (
               <div className="border border-border p-5">
                 <h2 className="font-serif text-xl font-semibold mb-2">
-                  Blood Type (Estimated)
+                  Blood Type
                   <span className="ml-2 align-middle inline-block text-[10px] font-sans font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 uppercase tracking-wide">
                     Experimental
                   </span>
                 </h2>
-                <div className="flex items-baseline gap-3 mb-2">
-                  <span className="font-serif text-4xl font-bold tracking-tight">{bloodType.display_type}</span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    bloodType.confidence === "high"
-                      ? "bg-green-50 text-green-700"
-                      : bloodType.confidence === "medium"
-                      ? "bg-yellow-50 text-yellow-700"
-                      : "bg-red-50 text-red-700"
-                  }`}>
-                    {bloodType.confidence} confidence
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowBloodDetails(!showBloodDetails)}
-                  className="text-sm text-accent hover:underline"
-                >
-                  {showBloodDetails ? "Hide details \u2191" : "Show details \u2193"}
-                </button>
-                {showBloodDetails && (
-                  <div className="mt-3 pt-3 border-t border-border">
-                    <p className="text-sm text-muted mb-1">
-                      ABO genotype: <span className="font-mono font-medium text-foreground">{bloodType.abo_genotype}</span>
-                    </p>
-                    <p className="text-sm text-muted mb-3">
-                      {bloodType.n_systems_determined > 0
-                        ? <><span className="font-semibold text-foreground">{bloodType.n_systems_determined}</span> blood group systems determined</>
-                        : "Blood group systems determined"
-                      }
-                      {" "}&middot; Rh D status unknown
-                    </p>
-                    {(() => {
-                      const items: { label: string; value: string }[] = [];
-                      const coreKeys = new Set(["ABO"]);
-                      if (bloodType.systems) {
-                        for (const [name, data] of Object.entries(bloodType.systems)) {
-                          if (coreKeys.has(name)) continue;
-                          const val = data.phenotype || data.genotype;
-                          if (val) items.push({ label: name, value: val });
-                        }
-                      } else {
-                        if (bloodType.rh_e_antigen) items.push({ label: "Rh E/e", value: bloodType.rh_e_antigen });
-                        if (bloodType.rh_c_antigen) items.push({ label: "Rh C/c", value: bloodType.rh_c_antigen });
-                        if (bloodType.rh_cw_antigen !== null) items.push({ label: "Rh Cw", value: bloodType.rh_cw_antigen ? "+" : "-" });
-                        if (bloodType.kell_phenotype) items.push({ label: "Kell", value: bloodType.kell_phenotype });
-                        if (bloodType.mns_phenotype) items.push({ label: "MNS", value: bloodType.mns_phenotype });
-                        if (bloodType.duffy_phenotype) items.push({ label: "Duffy", value: bloodType.duffy_phenotype });
-                        if (bloodType.kidd_phenotype) items.push({ label: "Kidd", value: bloodType.kidd_phenotype });
-                        if (bloodType.secretor_status) items.push({ label: "Secretor", value: bloodType.secretor_status });
-                      }
-                      if (items.length === 0) return null;
-                      return (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-1.5 text-sm mb-3">
-                          {items.map((item) => (
-                            <div key={item.label}><span className="text-muted">{item.label}:</span> <span className="font-mono">{item.value}</span></div>
-                          ))}
-                        </div>
-                      );
-                    })()}
-                    <p className="text-xs text-muted">
-                      {bloodType.n_variants_tested} of {bloodType.n_variants_total} blood group variant positions detected in your data.
-                    </p>
-                    <p className="text-xs text-muted mt-1">
-                      Rh D +/- cannot be determined from SNP data &mdash; requires gene deletion testing.
-                    </p>
-                    <p className="text-xs text-muted mt-1">
-                      Blood type estimation from genetic data is informational only and should not be used
-                      for medical decisions including transfusions.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
-
-          {/* PRS Status Card */}
-          <div className="border border-border p-5 mb-12">
-            <h2 className="font-serif text-xl font-semibold mb-2">
-              Polygenic Risk Scores
-              <span className="ml-2 align-middle inline-block text-[10px] font-sans font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 uppercase tracking-wide">
-                Experimental
-              </span>
-            </h2>
-            {prsStatus === "computing" && (
-              <div>
-                <div className="flex items-center gap-2 text-sm text-muted">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Computing PRS scores... This may take a few minutes.
-                </div>
-                {prsDetail && (
-                  <p className="text-xs text-muted mt-1.5 ml-6">{prsDetail}</p>
-                )}
-              </div>
-            )}
-            {prsStatus === "failed" && (
-              <div className="text-sm">
-                <p className="text-risk-high mb-1">PRS computation failed.</p>
-                {prsError && <p className="text-xs text-muted">{prsError}</p>}
-              </div>
-            )}
-            {prsStatus === "ready" && (
-              <div>
-                <p className="text-sm text-muted mb-3">
-                  <span className="font-semibold text-foreground">{prsCount}</span> polygenic risk score{prsCount !== 1 ? "s" : ""} computed
-                </p>
+                <p className="font-serif text-2xl font-bold tracking-tight mb-3">{bloodType.display_type}</p>
                 <Link
-                  href="/prs"
+                  href="/bloodtype"
                   className="inline-block text-sm font-medium text-accent hover:underline"
                 >
-                  View PRS results &rarr;
+                  View blood type details &rarr;
                 </Link>
               </div>
             )}
-          </div>
 
-          {/* GWAS Risk Scores Card */}
-          {(gwasStatus === "ready" || gwasStatus === "computing") && (
-            <div className="border border-border p-5 mb-12">
+            {/* PRS Status Card */}
+            <div className="border border-border p-5">
               <h2 className="font-serif text-xl font-semibold mb-2">
-                GWAS Risk Scores
+                Polygenic Risk Scores
                 <span className="ml-2 align-middle inline-block text-[10px] font-sans font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 uppercase tracking-wide">
                   Experimental
                 </span>
               </h2>
-              {gwasStatus === "computing" && (
-                <div className="flex items-center gap-2 text-sm text-muted">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Computing GWAS risk scores...
+              {prsStatus === "computing" && (
+                <div>
+                  <div className="flex items-center gap-2 text-sm text-muted">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Computing PRS scores... This may take a few minutes.
+                  </div>
+                  {prsDetail && (
+                    <p className="text-xs text-muted mt-1.5 ml-6">{prsDetail}</p>
+                  )}
                 </div>
               )}
-              {gwasStatus === "ready" && (
+              {prsStatus === "failed" && (
+                <div className="text-sm">
+                  <p className="text-risk-high mb-1">PRS computation failed.</p>
+                  {prsError && <p className="text-xs text-muted">{prsError}</p>}
+                </div>
+              )}
+              {prsStatus === "ready" && (
                 <div>
                   <p className="text-sm text-muted mb-3">
-                    <span className="font-semibold text-foreground">{gwasCount}</span> GWAS risk score{gwasCount !== 1 ? "s" : ""} computed
+                    <span className="font-semibold text-foreground">{prsCount}</span> polygenic risk score{prsCount !== 1 ? "s" : ""} computed
                   </p>
                   <Link
-                    href="/gwas"
+                    href="/prs"
                     className="inline-block text-sm font-medium text-accent hover:underline"
                   >
-                    View GWAS risk scores &rarr;
+                    View PRS results &rarr;
                   </Link>
                 </div>
               )}
             </div>
-          )}
 
-          {/* Ancestry Card */}
-          {analysis?.detected_ancestry && (
-            <div className="border border-border p-5 mb-12">
+            {/* GWAS Risk Scores Card */}
+            {(gwasStatus === "ready" || gwasStatus === "computing") && (
+              <div className="border border-border p-5">
+                <h2 className="font-serif text-xl font-semibold mb-2">
+                  GWAS Risk Scores
+                  <span className="ml-2 align-middle inline-block text-[10px] font-sans font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 uppercase tracking-wide">
+                    Experimental
+                  </span>
+                </h2>
+                {gwasStatus === "computing" && (
+                  <div className="flex items-center gap-2 text-sm text-muted">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Computing GWAS risk scores...
+                  </div>
+                )}
+                {gwasStatus === "ready" && (
+                  <div>
+                    <p className="text-sm text-muted mb-3">
+                      <span className="font-semibold text-foreground">{gwasCount}</span> GWAS risk score{gwasCount !== 1 ? "s" : ""} computed
+                    </p>
+                    <Link
+                      href="/gwas"
+                      className="inline-block text-sm font-medium text-accent hover:underline"
+                    >
+                      View GWAS risk scores &rarr;
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Ancestry Card */}
+            {analysis?.detected_ancestry && (
+              <div className="border border-border p-5">
               <h2 className="font-serif text-xl font-semibold mb-2">
                 Genetic Ancestry
                 <span className="ml-2 align-middle inline-block text-[10px] font-sans font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 uppercase tracking-wide">
@@ -551,11 +485,6 @@ export default function DashboardPage() {
                         </div>
                       ))}
                     </div>
-                    {nMarkers > 0 && (
-                      <p className="text-xs text-muted mb-3">
-                        Estimated from {nMarkers.toLocaleString()} ancestry-informative markers
-                      </p>
-                    )}
                     <Link
                       href="/ancestry"
                       className="inline-block text-sm font-medium text-accent hover:underline"
@@ -565,8 +494,9 @@ export default function DashboardPage() {
                   </>
                 );
               })()}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
 
           {/* Actions: Download Report & Delete Data */}
           <section className="border-t border-border pt-8 mt-8">

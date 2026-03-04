@@ -266,7 +266,7 @@ def _estimate_confidence_interval(
     Returns:
         (percentile_lower, percentile_upper, coverage_quality)
     """
-    n_missing = n_total - n_matched
+    n_missing = max(0, n_total - n_matched)
 
     # Coverage quality classification
     if n_total == 0:

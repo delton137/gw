@@ -12,6 +12,8 @@ from fastapi.params import Form
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from sqlalchemy import delete, select
+
 from app.auth import get_current_user_id_upload
 from app.config import settings
 from app.db import get_session, async_session_factory
@@ -115,6 +117,18 @@ async def upload_genotype_file(
 
     tmp_path = None
     try:
+        # Delete old analyses (and all cascaded results) for this user
+        old_analyses = await session.execute(
+            select(Analysis.id).where(Analysis.user_id == user_id)
+        )
+        old_ids = [row[0] for row in old_analyses.all()]
+        if old_ids:
+            await session.execute(
+                delete(Analysis).where(Analysis.id.in_(old_ids))
+            )
+            await session.commit()
+            log.info("[%s] Deleted %d old analysis/result rows for user %s", rid, len(old_ids), user_id)
+
         analysis = Analysis(user_id=user_id, status="pending", filename=file.filename)
         session.add(analysis)
         await session.commit()

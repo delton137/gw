@@ -76,10 +76,11 @@ async def match_traits(
     if not user_rsids and not is_vcf:
         return []
 
-    # Build a lookup from rsid → (allele1, allele2) using polars
-    user_lookup: dict[str, tuple[str, str]] = {}
-    for row in user_df.select("rsid", "allele1", "allele2").iter_rows():
-        user_lookup[row[0]] = (row[1], row[2])
+    # Build a lookup from rsid → (allele1, allele2) using vectorized extraction
+    rsids = user_df["rsid"].to_list()
+    a1s = user_df["allele1"].to_list()
+    a2s = user_df["allele2"].to_list()
+    user_lookup: dict[str, tuple[str, str]] = dict(zip(rsids, zip(a1s, a2s)))
 
     hits: list[TraitHit] = []
     matched_assoc_rsids: set[str] = set()

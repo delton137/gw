@@ -36,29 +36,29 @@ class TestGenerateReportPdf:
             "n_carrier_genes": 1,
             "n_affected_flags": 0,
             "results_json": {
-                "CFTR": {
-                    "gene": "CFTR",
-                    "condition": "Cystic Fibrosis",
+                "HFE": {
+                    "gene": "HFE",
+                    "condition": "Hereditary Hemochromatosis",
                     "inheritance": "AR",
-                    "severity": "Severe",
+                    "severity": "Treatable",
                     "status": "carrier",
                     "variants_detected": [
                         {
-                            "rsid": "rs75527207",
-                            "name": "F508del",
-                            "genotype": "AG",
-                            "pathogenic_allele": "G",
+                            "rsid": "rs1800562",
+                            "name": "C282Y",
+                            "genotype": "GA",
+                            "pathogenic_allele": "A",
                             "pathogenic_allele_count": 1,
                             "classification": "Pathogenic",
-                            "hgvs_p": "p.Phe508del",
-                            "population_frequency": "0.02",
+                            "hgvs_p": "p.Cys282Tyr",
+                            "population_frequency": "0.06",
                         }
                     ],
-                    "total_variants_screened": 5,
+                    "total_variants_screened": 3,
                     "total_pathogenic_alleles": 1,
-                    "carrier_frequencies": {"EUR": "1 in 25"},
-                    "condition_description": "Severe lung and digestive disease",
-                    "treatment_summary": "Symptomatic management",
+                    "carrier_frequencies": {"EUR": "1 in 10"},
+                    "condition_description": "Iron overload disorder",
+                    "treatment_summary": "Phlebotomy",
                     "penetrance_note": "",
                     "key_pmids": [],
                     "limitations": "",
@@ -122,16 +122,16 @@ class TestGenerateReportPdf:
             n_affected_flags=1,
             n_carrier_genes=1,
         )
-        cs["results_json"]["CFTR"]["status"] = "likely_affected"
-        cs["results_json"]["CFTR"]["variants_detected"].append({
-            "rsid": "rs121908769",
-            "name": "G551D",
-            "genotype": "AA",
-            "pathogenic_allele": "A",
+        cs["results_json"]["HFE"]["status"] = "likely_affected"
+        cs["results_json"]["HFE"]["variants_detected"].append({
+            "rsid": "rs1799945",
+            "name": "H63D",
+            "genotype": "GG",
+            "pathogenic_allele": "G",
             "pathogenic_allele_count": 2,
             "classification": "Pathogenic",
-            "hgvs_p": "p.Gly551Asp",
-            "population_frequency": "0.003",
+            "hgvs_p": "p.His63Asp",
+            "population_frequency": "0.14",
         })
         pdf = generate_report_pdf(self._make_analysis(), cs, [])
         assert pdf[:5] == b"%PDF-"

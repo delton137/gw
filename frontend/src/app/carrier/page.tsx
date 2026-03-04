@@ -69,6 +69,15 @@ function inheritanceLabel(inheritance: string) {
   return inheritance.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+function variantCoverageColor(tested: number, total: number): string {
+  if (total === 0) return "text-red-600";
+  const pct = tested / total;
+  if (pct >= 1.0) return "text-green-700";
+  if (pct >= 0.5) return "text-yellow-600";
+  if (pct >= 0.25) return "text-orange-600";
+  return "text-red-600";
+}
+
 function PmidLink({ pmid }: { pmid: number }) {
   return (
     <a
@@ -87,7 +96,6 @@ export default function CarrierPage() {
   const [data, setData] = useState<CarrierStatusResponse["result"]>(null);
   const [loading, setLoading] = useState(true);
   const [expandedGene, setExpandedGene] = useState<string | null>(null);
-  const [showNotDetected, setShowNotDetected] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -153,17 +161,30 @@ export default function CarrierPage() {
 
   const genes = Object.values(data.results_json);
   const detectedGenes = genes.filter((g) => g.status !== "not_detected");
-  const notDetectedGenes = genes.filter((g) => g.status === "not_detected");
   const affectedGenes = genes.filter(
     (g) =>
       g.status === "likely_affected" || g.status === "potential_compound_het",
   );
+
+  // Sort: affected first, then carriers, then not detected
+  const sortedGenes = [...genes].sort((a, b) => {
+    const order: Record<string, number> = {
+      likely_affected: 0,
+      potential_compound_het: 1,
+      carrier: 2,
+      not_detected: 3,
+    };
+    return (order[a.status] ?? 4) - (order[b.status] ?? 4);
+  });
 
   return (
     <div className="mx-auto max-w-4xl px-6 pt-8 pb-16">
       <div className="flex items-start justify-between mb-2">
         <h1 className="font-serif text-3xl font-semibold">
           Carrier Screening
+          <span className="ml-2 align-middle inline-block text-[10px] font-sans font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 uppercase tracking-wide">
+            Experimental
+          </span>
         </h1>
         <Link
           href="/dashboard"
@@ -244,133 +265,69 @@ export default function CarrierPage() {
         )}
       </div>
 
-      {/* Detected genes — always visible */}
-      {detectedGenes.length > 0 && (
-        <section className="mb-8">
-          <h2 className="font-serif text-xl font-semibold mb-4">
-            Carrier Variants Detected
-          </h2>
-          <div className="border border-border">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left">
-                  <th className="px-4 py-2 font-medium text-muted">Gene</th>
-                  <th className="px-4 py-2 font-medium text-muted">
-                    Condition
-                  </th>
-                  <th className="px-4 py-2 font-medium text-muted">Status</th>
-                  <th className="px-4 py-2 font-medium text-muted">
-                    Inheritance
-                  </th>
-                  <th className="px-4 py-2 font-medium text-muted text-center">
-                    Severity
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {detectedGenes
-                  .sort((a, b) => {
-                    const order: Record<string, number> = {
-                      likely_affected: 0,
-                      potential_compound_het: 1,
-                      carrier: 2,
-                    };
-                    return (order[a.status] ?? 3) - (order[b.status] ?? 3);
-                  })
-                  .map((g) => {
-                    const isExpanded = expandedGene === g.gene;
-                    const badge = statusBadge(g.status);
-                    const sev = severityLabel(g.severity);
-
-                    return (
-                      <tr
-                        key={g.gene}
-                        className="border-b border-border last:border-0"
-                      >
-                        <td colSpan={5} className="p-0">
-                          <button
-                            onClick={() =>
-                              setExpandedGene(isExpanded ? null : g.gene)
-                            }
-                            className={`w-full text-left grid grid-cols-[0.8fr_1.5fr_1fr_1fr_0.7fr] items-center px-4 py-3 hover:bg-gray-50 transition-colors ${
-                              g.status === "likely_affected" ||
-                              g.status === "potential_compound_het"
-                                ? "bg-red-50/30"
-                                : ""
-                            }`}
-                          >
-                            <span className="font-mono font-medium text-sm">
-                              {g.gene}
-                            </span>
-                            <span className="text-sm">{g.condition}</span>
-                            <span>
-                              <span
-                                className={`inline-block px-2 py-0.5 text-xs rounded-full ${badge.bg}`}
-                              >
-                                {badge.label}
-                              </span>
-                            </span>
-                            <span className="text-xs text-muted">
-                              {inheritanceLabel(g.inheritance)}
-                            </span>
-                            <span
-                              className={`text-xs text-center ${sev.color}`}
-                            >
-                              {sev.text}
-                            </span>
-                          </button>
-
-                          {/* Expanded details */}
-                          {isExpanded && (
-                            <GeneDetails gene={g} />
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
-
-      {/* Not-detected genes — collapsed by default */}
+      {/* Gene results table — all genes in one table like PGx */}
       <section className="mb-8">
-        <button
-          onClick={() => setShowNotDetected(!showNotDetected)}
-          className="flex items-center gap-2 font-serif text-xl font-semibold mb-4 hover:text-accent transition-colors"
-        >
-          <span
-            className={`text-xs transition-transform ${showNotDetected ? "rotate-90" : ""}`}
-          >
-            &#9654;
-          </span>
-          Genes Screened — No Variants Detected ({notDetectedGenes.length})
-        </button>
-        {showNotDetected && (
-          <div className="border border-border p-4">
-            <p className="text-sm text-muted mb-3">
-              No pathogenic variants were detected for these genes. A negative
-              result does <strong>not</strong> eliminate carrier risk — only a
-              subset of known variants per gene is tested.
-            </p>
-            <div className="space-y-2">
-              {notDetectedGenes.map((g) => (
-                <div
-                  key={g.gene}
-                  className="flex items-center gap-3 text-sm py-1"
-                >
-                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-400" />
-                  <span className="font-mono text-xs w-20">{g.gene}</span>
-                  <span className="text-muted">{g.condition}</span>
-                  <span className="text-xs text-muted ml-auto font-mono">
-                    {g.variants_tested}/{g.total_variants_screened} variants tested
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <h2 className="font-serif text-xl font-semibold mb-3">
+          Screening Results
+        </h2>
+        <p className="text-xs text-muted mb-3">
+          {data.n_genes_screened} genes screened for pathogenic variants associated with autosomal recessive and co-dominant conditions.
+        </p>
+        <div className="border border-border overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border text-left">
+                <th className="px-4 py-2 font-medium text-muted">Gene</th>
+                <th className="px-4 py-2 font-medium text-muted">Condition</th>
+                <th className="px-4 py-2 font-medium text-muted">Status</th>
+                <th className="px-4 py-2 font-medium text-muted text-center">Variants Found</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedGenes.map((g) => {
+                const isExpanded = expandedGene === g.gene;
+                const badge = statusBadge(g.status);
+                const rowBg =
+                  g.status === "likely_affected" || g.status === "potential_compound_het"
+                    ? "bg-red-50/30"
+                    : g.status === "carrier"
+                      ? "bg-amber-50/30"
+                      : "";
+
+                return (
+                  <tr key={g.gene} className="border-b border-border last:border-0">
+                    <td colSpan={4} className="p-0">
+                      <button
+                        onClick={() =>
+                          setExpandedGene(isExpanded ? null : g.gene)
+                        }
+                        className={`w-full text-left grid grid-cols-[0.8fr_1.5fr_1fr_0.75fr] items-center px-4 py-3 hover:bg-gray-50 transition-colors ${rowBg}`}
+                      >
+                        <span className="font-medium">{g.gene}</span>
+                        <span>{g.condition}</span>
+                        <span>
+                          <span
+                            className={`inline-block px-2 py-0.5 text-xs rounded-full ${badge.bg}`}
+                          >
+                            {badge.label}
+                          </span>
+                        </span>
+                        <span className={`text-center font-mono text-xs font-semibold ${variantCoverageColor(g.variants_tested, g.total_variants_screened)}`}>
+                          {g.variants_tested}/{g.total_variants_screened}
+                        </span>
+                      </button>
+
+                      {/* Expanded details */}
+                      {isExpanded && (
+                        <GeneDetails gene={g} />
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       {/* Conditions not screenable from SNP arrays */}
@@ -464,6 +421,8 @@ export default function CarrierPage() {
 /* ----- Gene detail panel (shown when row expanded) ----- */
 
 function GeneDetails({ gene: g }: { gene: CarrierGeneResult }) {
+  const sev = severityLabel(g.severity);
+
   return (
     <div className="px-4 pb-5 pt-2 bg-surface/50 border-t border-border/50 space-y-4">
       {/* Clinical interpretation */}
@@ -472,7 +431,9 @@ function GeneDetails({ gene: g }: { gene: CarrierGeneResult }) {
           className={`text-sm leading-relaxed p-3 border-l-2 ${
             g.status === "likely_affected" || g.status === "potential_compound_het"
               ? "border-red-400 bg-red-50/50"
-              : "border-amber-400 bg-amber-50/50"
+              : g.status === "carrier"
+                ? "border-amber-400 bg-amber-50/50"
+                : "border-gray-300 bg-gray-50/50"
           }`}
         >
           {g.clinical_note}
@@ -487,10 +448,22 @@ function GeneDetails({ gene: g }: { gene: CarrierGeneResult }) {
         </div>
       )}
 
+      {/* Severity + Inheritance */}
+      <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+        <span>
+          <span className="font-medium">Severity:</span>{" "}
+          <span className={sev.color}>{sev.text}</span>
+        </span>
+        <span>
+          <span className="font-medium">Inheritance:</span>{" "}
+          <span className="text-muted">{inheritanceLabel(g.inheritance)}</span>
+        </span>
+      </div>
+
       {/* Variants detected */}
       {g.variants_detected.length > 0 && (
         <div>
-          <p className="font-medium text-sm mb-2">Variants detected:</p>
+          <p className="font-medium text-sm mb-2">Pathogenic variants detected:</p>
           <div className="border border-border text-xs">
             <table className="w-full">
               <thead>
@@ -555,6 +528,34 @@ function GeneDetails({ gene: g }: { gene: CarrierGeneResult }) {
         </div>
       )}
 
+      {/* SNPs in panel — like PGx panel_snps display */}
+      {g.panel_rsids && g.panel_rsids.length > 0 && (
+        <div className="text-sm mb-2">
+          <span className="font-medium">SNPs in panel ({g.panel_rsids.length}):</span>
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 ml-2">
+            {g.panel_rsids.map((rsid) => {
+              const geno = g.variant_genotypes?.[rsid];
+              return (
+                <span key={rsid} className="text-xs font-mono">
+                  <Link
+                    href={`/snp/${rsid}`}
+                    className="text-accent hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {rsid}
+                  </Link>
+                  {geno ? (
+                    <span className="text-muted ml-1">({geno})</span>
+                  ) : (
+                    <span className="text-red-400 ml-1">(—)</span>
+                  )}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Carrier frequencies by population */}
       {Object.keys(g.carrier_frequencies).length > 0 && (
         <div className="text-sm">
@@ -613,9 +614,6 @@ function GeneDetails({ gene: g }: { gene: CarrierGeneResult }) {
         </span>
         <span>
           Pathogenic alleles found: {g.total_pathogenic_alleles}
-        </span>
-        <span>
-          Inheritance: {inheritanceLabel(g.inheritance)}
         </span>
       </div>
     </div>

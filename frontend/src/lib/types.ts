@@ -187,6 +187,7 @@ export interface BloodTypeResult {
   n_systems_determined: number;
   confidence: string;
   confidence_note: string | null;
+  computed_at: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -221,6 +222,8 @@ export interface CarrierGeneResult {
   key_pmids: number[];
   limitations: string;
   clinical_note: string;
+  panel_rsids: string[];
+  variant_genotypes: Record<string, string | null>;
 }
 
 export interface CarrierStatusResult {

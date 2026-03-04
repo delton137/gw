@@ -4,14 +4,18 @@ One-time script that:
 1. Reads Aeon's g1k_allele_freqs.txt (128,097 AILs × 26 populations)
 2. Parses variant IDs into chrom/position/ref/alt
 3. Optionally resolves rsids via MyVariant.info (slow, ~30 min)
-4. Outputs app/data/aeon_reference.parquet
+4. Optionally adds GRCh37 positions via pyliftover
+5. Outputs app/data/aeon_reference.parquet
 
 The primary matching strategy is chromosome+position, so rsid resolution
 is optional. Pass --with-rsids to enable MyVariant.info lookups.
+Pass --with-grch37 to add GRCh37 position column via liftover.
 
 Usage:
-    python -m scripts.build_aeon_reference             # fast, no rsid lookup
-    python -m scripts.build_aeon_reference --with-rsids # slow, includes rsids
+    python -m scripts.build_aeon_reference                          # fast
+    python -m scripts.build_aeon_reference --with-rsids             # slow, includes rsids
+    python -m scripts.build_aeon_reference --with-grch37            # adds GRCh37 positions
+    python -m scripts.build_aeon_reference --with-rsids --with-grch37  # both
 """
 
 from __future__ import annotations
@@ -117,12 +121,46 @@ def _query_rsids(hgvs_ids: list[str]) -> dict[str, str | None]:
     return result
 
 
+def _liftover_grch38_to_grch37(chroms: list[str], positions: list[int]) -> list[int | None]:
+    """Convert GRCh38 positions to GRCh37 using pyliftover.
+
+    Returns list of GRCh37 positions (None for failed conversions).
+    """
+    from pyliftover import LiftOver
+
+    lo = LiftOver("hg38", "hg19")
+    results: list[int | None] = []
+    n_failed = 0
+
+    for i, (chrom, pos) in enumerate(zip(chroms, positions)):
+        # pyliftover expects 0-based, "chr"-prefixed chromosomes
+        chrom_prefixed = f"chr{chrom}" if not chrom.startswith("chr") else chrom
+        converted = lo.convert_coordinate(chrom_prefixed, pos - 1)  # 0-based
+        if converted and len(converted) > 0:
+            # converted[0] = (chrom, pos_0based, strand, score)
+            results.append(converted[0][1] + 1)  # back to 1-based
+        else:
+            results.append(None)
+            n_failed += 1
+
+        if (i + 1) % 10000 == 0:
+            print(f"  Lifted {i + 1:,}/{len(positions):,} positions...", flush=True)
+
+    print(f"  Liftover complete: {len(positions) - n_failed:,} succeeded, {n_failed:,} failed", flush=True)
+    return results
+
+
 def main():
     parser = argparse.ArgumentParser(description="Build Aeon reference parquet")
     parser.add_argument(
         "--with-rsids",
         action="store_true",
         help="Query MyVariant.info for rsid mappings (slow, ~30 min)",
+    )
+    parser.add_argument(
+        "--with-grch37",
+        action="store_true",
+        help="Add GRCh37 positions via pyliftover (takes ~1 min)",
     )
     args = parser.parse_args()
 
@@ -184,8 +222,25 @@ def main():
         )
         print("  Skipping rsid lookup (use --with-rsids to enable)", flush=True)
 
-    # Step 4: Select final columns and write parquet
-    output_cols = ["rsid", "VAR_ID", "chrom", "position", "ref", "alt"] + POPULATIONS
+    # Step 4: Optionally add GRCh37 positions via liftover
+    if args.with_grch37:
+        print("Lifting over GRCh38 → GRCh37 positions...", flush=True)
+        chroms = af_df["chrom"].to_list()
+        positions = af_df["position"].to_list()
+        grch37_positions = _liftover_grch38_to_grch37(chroms, positions)
+        af_df = af_df.with_columns(
+            pl.Series("position_grch37", grch37_positions, dtype=pl.Int64)
+        )
+        n_lifted = sum(1 for p in grch37_positions if p is not None)
+        print(f"  {n_lifted:,}/{len(grch37_positions):,} positions lifted ({n_lifted/len(grch37_positions)*100:.1f}%)", flush=True)
+    else:
+        af_df = af_df.with_columns(
+            pl.lit(None).cast(pl.Int64).alias("position_grch37")
+        )
+        print("  Skipping GRCh37 liftover (use --with-grch37 to enable)", flush=True)
+
+    # Step 5: Select final columns and write parquet
+    output_cols = ["rsid", "VAR_ID", "chrom", "position", "position_grch37", "ref", "alt"] + POPULATIONS
     af_df = af_df.select(output_cols).rename({"VAR_ID": "var_id"})
 
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)

@@ -60,7 +60,7 @@ class TestPanelLoading:
         panel = _load_panel()
         gene_names = {g["gene"] for g in panel["genes"]}
         assert "HFE" in gene_names
-        assert "CFTR" in gene_names
+        assert "GJB2" in gene_names
         assert "HBB" in gene_names
 
     def test_panel_genes_have_variants(self):

@@ -231,11 +231,13 @@ def _build_user_lookups(
     pos_lookup: dict[tuple[str, int], tuple[str, str]] = {}
     user_positions: set[tuple[str, int]] = set()
 
-    for row in user_df.iter_rows(named=True):
-        chrom = str(row["chrom"])
-        pos = int(row["position"])
-        key = (chrom, pos)
-        pos_lookup[key] = (row["allele1"], row["allele2"])
+    _chroms = user_df["chrom"].to_list()
+    _positions = user_df["position"].to_list()
+    _a1s = user_df["allele1"].to_list()
+    _a2s = user_df["allele2"].to_list()
+    for chrom, pos, a1, a2 in zip(_chroms, _positions, _a1s, _a2s):
+        key = (str(chrom), int(pos))
+        pos_lookup[key] = (a1, a2)
         user_positions.add(key)
 
     # Handle the ABO 261delG from DTC deletion genotypes (rs8176719)

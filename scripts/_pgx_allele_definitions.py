@@ -341,7 +341,7 @@ PGX_STAR_ALLELES = [
      "clinical_significance": "Premature stop codon — complete loss of function",
      "source": "CPIC"},
     {"gene": "CYP2C19", "star_allele": "*17", "rsid": "rs12248560",
-     "variant_allele": "T", "function": "increased_function", "activity_score": 2.0,
+     "variant_allele": "T", "function": "increased_function", "activity_score": 1.5,
      "clinical_significance": "Promoter variant — increased CYP2C19 expression",
      "source": "CPIC"},
     # CYP2C19 expanded alleles (WGS coverage)
@@ -1258,13 +1258,13 @@ PGX_DIPLOTYPE_PHENOTYPES = [
     # HTR2C — serotonin receptor (weight gain)
     # ===================================================================
     {"gene": "HTR2C", "function_pair": "decreased_function/decreased_function",
-     "phenotype": "Increased Weight Gain Risk",
+     "phenotype": "Increased Antipsychotic Weight Gain Risk",
      "description": "Homozygous — higher risk of antipsychotic-induced weight gain"},
     {"gene": "HTR2C", "function_pair": "decreased_function/normal_function",
-     "phenotype": "Moderate Weight Gain Risk",
+     "phenotype": "Moderate Antipsychotic Weight Gain Risk",
      "description": "Heterozygous — moderate risk of antipsychotic-induced weight gain"},
     {"gene": "HTR2C", "function_pair": "normal_function/normal_function",
-     "phenotype": "Typical Weight Gain Risk",
+     "phenotype": "Typical Antipsychotic Weight Gain Risk",
      "description": "Standard risk for antipsychotic-induced metabolic effects"},
 
     # ===================================================================
@@ -1396,4 +1396,11 @@ PGX_DIPLOTYPE_PHENOTYPES = [
     {"gene": "GRIK4", "function_pair": "normal_function/normal_function",
      "phenotype": "Normal GRIK4 Function",
      "description": "Standard glutamate receptor function"},
+
+    # ===================================================================
+    # IFNL3 — interferon lambda 3 (IL28B)
+    # ===================================================================
+    {"gene": "IFNL3", "function_pair": "uncertain_function/uncertain_function",
+     "phenotype": "Uncertain Function",
+     "description": "IFNL3 variant function not yet fully characterized — rs12979860 genotype may inform HCV treatment response"},
 ]

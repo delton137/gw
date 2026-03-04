@@ -80,6 +80,8 @@ class CarrierGeneResult:
     key_pmids: list[int] = field(default_factory=list)
     limitations: str = ""
     clinical_note: str = ""
+    panel_rsids: list[str] = field(default_factory=list)
+    variant_genotypes: dict[str, str | None] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return {
@@ -111,6 +113,8 @@ class CarrierGeneResult:
             "key_pmids": self.key_pmids,
             "limitations": self.limitations,
             "clinical_note": self.clinical_note,
+            "panel_rsids": self.panel_rsids,
+            "variant_genotypes": self.variant_genotypes,
         }
 
 
@@ -181,6 +185,7 @@ def _count_allele(genotype: str, allele: str) -> int:
 def determine_carrier_status(
     user_df: pl.DataFrame,
     genome_build: str = "GRCh37",
+    is_vcf: bool = False,
 ) -> list[CarrierGeneResult]:
     """Determine carrier status across all genes in the panel.
 
@@ -188,6 +193,8 @@ def determine_carrier_status(
         user_df: Polars DataFrame with columns [rsid, chrom, position, allele1, allele2]
         genome_build: Genome build of the input data ("GRCh37" or "GRCh38").
             Used for position-based matching when rsid matching fails.
+        is_vcf: If True, absent variants are assumed homozygous reference
+            (VCF only contains sites that differ from the reference).
 
     Returns:
         List of CarrierGeneResult, one per gene in the panel.
@@ -199,20 +206,22 @@ def determine_carrier_status(
     # Build (chrom, position) → (allele1, allele2) lookup for VCF fallback
     pos_lookup: dict[tuple[str, int], tuple[str, str]] = {}
 
-    for row in user_df.iter_rows(named=True):
-        rsid = row["rsid"]
-        a1 = row.get("allele1", "")
-        a2 = row.get("allele2", "")
+    _rsids = user_df["rsid"].to_list()
+    _a1s = user_df["allele1"].to_list()
+    _a2s = user_df["allele2"].to_list()
+    _chroms = user_df["chrom"].to_list()
+    _positions = user_df["position"].to_list()
+
+    for rsid, a1, a2, chrom, pos in zip(_rsids, _a1s, _a2s, _chroms, _positions):
         if not a1 or not a2:
             continue
 
         if rsid and rsid != ".":
             rsid_lookup[rsid] = (a1, a2)
 
-        chrom = str(row.get("chrom", "")).replace("chr", "")
-        pos = row.get("position")
-        if chrom and pos:
-            pos_lookup[(chrom, int(pos))] = (a1, a2)
+        chrom_norm = str(chrom).replace("chr", "") if chrom else ""
+        if chrom_norm and pos:
+            pos_lookup[(chrom_norm, int(pos))] = (a1, a2)
 
     # Choose which position field to use based on genome build
     pos_field = "position_grch38" if genome_build == "GRCh38" else "position"
@@ -226,6 +235,8 @@ def determine_carrier_status(
         total_pathogenic = 0
         distinct_pathogenic_variants = 0
         n_tested = 0
+        panel_rsids = [v["rsid"] for v in variants]
+        variant_genotypes: dict[str, str | None] = {v["rsid"]: None for v in variants}
 
         for var_def in variants:
             rsid = var_def["rsid"]
@@ -243,6 +254,10 @@ def determine_carrier_status(
                     alleles = pos_lookup.get((var_chrom, int(var_pos)))
 
             if alleles is None:
+                if is_vcf and ref_allele:
+                    # VCF omits sites matching the reference — assume hom-ref
+                    n_tested += 1
+                    variant_genotypes[rsid] = ref_allele + ref_allele
                 continue
 
             n_tested += 1
@@ -262,6 +277,7 @@ def determine_carrier_status(
                 a1, a2 = resolved
 
             geno = a1 + a2
+            variant_genotypes[rsid] = geno
             count = _count_allele(geno, pathogenic_allele)
 
             if count > 0:
@@ -339,6 +355,8 @@ def determine_carrier_status(
             key_pmids=gene_def.get("key_pmids", []),
             limitations=gene_def.get("limitations", ""),
             clinical_note=clinical_note,
+            panel_rsids=panel_rsids,
+            variant_genotypes=variant_genotypes,
         ))
 
     return results

@@ -25,6 +25,7 @@ log = logging.getLogger(__name__)
 SUPERPOPULATIONS = ["EUR", "AFR", "EAS", "SAS", "AMR"]
 ADMIXED_THRESHOLD = 0.80  # Below this → flagged as admixed
 MIN_MARKERS = 500  # With 128K panel, we should match thousands; 500 is very conservative
+_VCF_HOM_REF_MIN_MATCH_FRAC = 0.03  # Need ≥3% position match to trust coordinates for hom-ref imputation
 
 _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 _REFERENCE_PATH = _DATA_DIR / "aeon_reference.parquet"
@@ -57,7 +58,7 @@ def _load_reference() -> tuple[pl.DataFrame | None, dict[str, str] | None, list[
     # Population column order (matches reference parquet columns)
     _CACHED_POP_ORDER = [
         c for c in _CACHED_REF.columns
-        if c not in ("rsid", "var_id", "chrom", "position", "ref", "alt")
+        if c not in ("rsid", "var_id", "chrom", "position", "position_grch37", "ref", "alt")
     ]
 
     log.info(
@@ -144,15 +145,21 @@ class AncestryResult:
 def estimate_ancestry(
     user_df: pl.DataFrame,
     is_vcf: bool = False,
+    genome_build: str = "GRCh38",
 ) -> AncestryResult | None:
     """Estimate ancestry using MLE on 128K ancestry-informative loci.
 
-    Matches user genotypes to the Aeon reference panel by rsid (build-independent).
-    Falls back to chromosome+position matching for GRCh38 VCFs if rsid match is poor.
+    Matches user genotypes to the Aeon reference panel by chromosome+position,
+    using the correct position column for the detected genome build.
+    Falls back to rsid-based matching if position matching is poor.
+
+    For VCF files with sufficient position matches, unmatched reference
+    positions are treated as homozygous reference (dosage 0).
 
     Args:
         user_df: Parsed genotype DataFrame [rsid, chrom, position, allele1, allele2].
-        is_vcf: If True, VCF file (may enable position-based matching).
+        is_vcf: If True, VCF file (enables hom-ref imputation for unmatched positions).
+        genome_build: Detected genome build ("GRCh37", "GRCh38", or "unknown").
 
     Returns:
         AncestryResult with 26-population proportions, or None if too few markers.
@@ -173,19 +180,32 @@ def estimate_ancestry(
             pl.col("chrom").str.replace("^chr", "").alias("chrom_norm")
         )
 
-        # Strategy 1: Position-based matching (primary — works for all builds
-        # when positions align, which covers GRCh38 VCFs and most DTC files)
-        matched = user_norm.join(
-            ref_norm.select(["chrom_norm", "position", "ref", "alt"] + pop_order),
-            left_on=["chrom_norm", "position"],
-            right_on=["chrom_norm", "position"],
-            how="inner",
-        )
-        n_matched = len(matched)
-        log.info(f"Ancestry: matched {n_matched} markers by chrom+position")
+        # Pick the correct reference position column for the user's build
+        ref_pos_col = "position_grch37" if genome_build == "GRCh37" else "position"
+        has_build_positions = ref_pos_col in ref_norm.columns
+        log.info(f"Ancestry: matching with {genome_build} positions (column={ref_pos_col})")
 
-        # Strategy 2: rsid-based matching (fallback — build-independent,
-        # helps when position matching fails e.g. GRCh37 DTC data)
+        # Strategy 1: Position-based matching (primary)
+        if has_build_positions:
+            ref_for_match = ref_norm.filter(pl.col(ref_pos_col).is_not_null())
+            matched = user_norm.join(
+                ref_for_match.select(["chrom_norm", ref_pos_col, "ref", "alt"] + pop_order),
+                left_on=["chrom_norm", "position"],
+                right_on=["chrom_norm", ref_pos_col],
+                how="inner",
+            )
+        else:
+            # No GRCh37 column available, try GRCh38 positions as fallback
+            matched = user_norm.join(
+                ref_norm.select(["chrom_norm", "position", "ref", "alt"] + pop_order),
+                left_on=["chrom_norm", "position"],
+                right_on=["chrom_norm", "position"],
+                how="inner",
+            )
+        n_matched = len(matched)
+        log.info(f"Ancestry: matched {n_matched} markers by chrom+position ({genome_build})")
+
+        # Strategy 2: rsid-based matching (fallback — build-independent)
         if n_matched < MIN_MARKERS:
             ref_with_rsid = ref_df.filter(pl.col("rsid").is_not_null())
             if len(ref_with_rsid) > 0:
@@ -220,6 +240,43 @@ def estimate_ancestry(
 
         # --- Step 3: Extract allele frequency matrix ---
         af_matrix = matched.select(pop_order).to_numpy().astype(np.float64)
+
+        # --- Step 3b: For VCF, missing reference positions are hom-ref (dosage 0) ---
+        # Only apply when match rate is high enough to trust coordinate alignment (≥3%).
+        # Low match rate suggests build mismatch → don't assume hom-ref.
+        match_frac = n_matched / len(ref_df)
+        if is_vcf and match_frac >= _VCF_HOM_REF_MIN_MATCH_FRAC:
+            # Use the build-appropriate position column for anti-join
+            if has_build_positions and ref_pos_col != "position":
+                # For GRCh37: anti-join on user positions vs ref GRCh37 positions
+                matched_positions = matched.select(
+                    pl.col("chrom_norm"),
+                    pl.col("position"),  # user's position
+                )
+                unmatched_ref = ref_for_match.join(
+                    matched_positions,
+                    left_on=["chrom_norm", ref_pos_col],
+                    right_on=["chrom_norm", "position"],
+                    how="anti",
+                )
+            else:
+                unmatched_ref = ref_norm.join(
+                    matched.select("chrom_norm", "position").unique(),
+                    on=["chrom_norm", "position"],
+                    how="anti",
+                )
+            n_unmatched = len(unmatched_ref)
+            if n_unmatched > 0:
+                log.info(f"VCF mode: adding {n_unmatched} hom-ref positions from reference")
+                unmatched_af = unmatched_ref.select(pop_order).to_numpy().astype(np.float64)
+                dosages = np.concatenate([dosages, np.zeros(n_unmatched, dtype=np.int64)])
+                af_matrix = np.vstack([af_matrix, unmatched_af])
+                n_matched += n_unmatched
+        elif is_vcf:
+            log.info(
+                f"VCF mode: low match rate ({match_frac:.1%}), "
+                f"skipping hom-ref imputation"
+            )
 
         # --- Step 4: Run MLE ---
         log.info(f"Running MLE ancestry estimation with {len(dosages)} markers...")

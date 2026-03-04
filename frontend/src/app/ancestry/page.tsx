@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import { POP_NAMES, SUPERPOP_META, POP_TO_SUPER } from "@/lib/populations";
+import { SUPERPOP_META } from "@/lib/populations";
 import type { Analysis, AncestryDetail } from "@/lib/types";
 
 interface PrsResponse {
@@ -114,18 +114,6 @@ export default function AncestryPage() {
       color: SUPERPOP_META[code]?.color || "#6b7280",
     }));
 
-  // Group populations by superpopulation for the table
-  const popGroups: Record<string, { code: string; frac: number }[]> = {};
-  for (const [pop, frac] of Object.entries(ancestry.populations)) {
-    if (frac < 0.005) continue;
-    const sp = POP_TO_SUPER[pop] || "OTHER";
-    if (!popGroups[sp]) popGroups[sp] = [];
-    popGroups[sp].push({ code: pop, frac });
-  }
-  for (const sp of Object.keys(popGroups)) {
-    popGroups[sp].sort((a, b) => b.frac - a.frac);
-  }
-
   // Sort superpopulations by total fraction
   const sortedSuperPops = Object.entries(ancestry.superpopulations)
     .sort(([, a], [, b]) => b - a);
@@ -148,10 +136,6 @@ export default function AncestryPage() {
       </h1>
       <p className="text-sm text-amber-700 mb-3">
         May not be very accurate!
-      </p>
-      <p className="text-sm text-muted mb-4">
-        Estimated from {ancestry.n_markers_used.toLocaleString()} ancestry-informative
-        markers across 26 reference populations (1000 Genomes Phase 3).
       </p>
       <p className="text-xs text-muted mb-10 border border-border/50 bg-gray-50/50 p-3 rounded">
         This analysis uses techniques from the{" "}
@@ -252,58 +236,6 @@ export default function AncestryPage() {
         </div>
       </div>
 
-      {/* Population Breakdown Table */}
-      <div className="border border-border mb-10">
-        <div className="px-5 py-3 border-b border-border">
-          <h2 className="font-serif text-lg font-semibold">Population Breakdown</h2>
-          <p className="text-xs text-muted mt-0.5">
-            Fine-grained estimates across 26 reference populations from 1000 Genomes Phase 3.
-            Populations below 0.5% are not shown.
-          </p>
-        </div>
-
-        {sortedSuperPops
-          .filter(([sp]) => popGroups[sp] && popGroups[sp].length > 0)
-          .map(([sp]) => (
-            <div key={sp} className="border-b border-border last:border-b-0">
-              <div className="px-5 py-2 bg-gray-50/50 flex items-center gap-2">
-                <span
-                  className="inline-block w-2.5 h-2.5 rounded-full"
-                  style={{ backgroundColor: SUPERPOP_META[sp]?.color || "#6b7280" }}
-                />
-                <span className="text-sm font-semibold">
-                  {SUPERPOP_META[sp]?.name || sp}
-                </span>
-                <span className="text-xs text-muted">
-                  ({(ancestry.superpopulations[sp] * 100).toFixed(1)}% total)
-                </span>
-              </div>
-              <div className="divide-y divide-border/50">
-                {popGroups[sp].map(({ code, frac }) => (
-                  <div key={code} className="px-5 py-2 flex items-center gap-3">
-                    <span className="font-mono text-xs text-muted w-8">{code}</span>
-                    <span className="text-sm flex-1">
-                      {POP_NAMES[code]?.name || code}
-                    </span>
-                    <div className="w-32 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${Math.max(frac * 100, 0.5)}%`,
-                          backgroundColor: SUPERPOP_META[sp]?.color || "#6b7280",
-                        }}
-                      />
-                    </div>
-                    <span className="text-xs font-mono text-muted w-12 text-right">
-                      {(frac * 100).toFixed(1)}%
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-      </div>
-
       {/* Coverage Metrics */}
       <div className="border border-border p-5 mb-10">
         <h2 className="font-serif text-lg font-semibold mb-2">Analysis Quality</h2>
@@ -375,8 +307,8 @@ export default function AncestryPage() {
                   Ancestry from unrepresented groups will be attributed to the closest match.
                 </li>
                 <li>
-                  European populations (CEU, GBR, FIN, IBS, TSI) overlap significantly.
-                  Fractions split across multiple European populations are normal for European-ancestry individuals.
+                  The model uses 5 broad continental groupings (superpopulations) aggregated from
+                  26 reference populations. Fine-grained within-continent distinctions are not shown.
                 </li>
                 <li>
                   Coverage depends on your genotyping platform. DTC arrays typically match

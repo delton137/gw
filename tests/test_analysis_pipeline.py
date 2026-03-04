@@ -63,6 +63,13 @@ def session():
     return AsyncMock()
 
 
+@pytest.fixture(autouse=True)
+def _mock_genome_build():
+    """Mock detect_genome_build to return GRCh37 for synthetic test data."""
+    with patch("app.services.analysis.detect_genome_build", return_value="GRCh37"):
+        yield
+
+
 def _setup_session_for_fast_steps(session, analysis):
     """Set up session mocks for a pipeline run through fast steps."""
     analysis_result = MagicMock()

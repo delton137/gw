@@ -457,9 +457,10 @@ async def match_pgx(
     if not user_rsids:
         return []
 
-    user_lookup: dict[str, tuple[str, str]] = {}
-    for row in user_df.select("rsid", "allele1", "allele2").iter_rows():
-        user_lookup[row[0]] = (row[1], row[2])
+    _rsids = user_df["rsid"].to_list()
+    _a1s = user_df["allele1"].to_list()
+    _a2s = user_df["allele2"].to_list()
+    user_lookup: dict[str, tuple[str, str]] = dict(zip(_rsids, zip(_a1s, _a2s)))
 
     # Supplement user_lookup with position-resolved genotypes
     # for PGx variants where the VCF has "." rsids
@@ -477,10 +478,12 @@ async def match_pgx(
         )
         matched = user_df.join(lookup_df, on=["chrom", "position"], how="inner")
 
-        supplemented = 0
-        for row in matched.select("pgx_rsid", "allele1", "allele2").iter_rows():
-            user_lookup[row[0]] = (row[1], row[2])
-            supplemented += 1
+        _m_rsids = matched["pgx_rsid"].to_list()
+        _m_a1s = matched["allele1"].to_list()
+        _m_a2s = matched["allele2"].to_list()
+        for r, a1, a2 in zip(_m_rsids, _m_a1s, _m_a2s):
+            user_lookup[r] = (a1, a2)
+        supplemented = len(_m_rsids)
 
         if supplemented > 0:
             log.info(f"PGX: supplemented {supplemented} genotypes via position lookup ({genome_build})")

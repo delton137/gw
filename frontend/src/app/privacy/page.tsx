@@ -105,13 +105,8 @@ export default function PrivacyPolicy() {
             purpose of the Service
           </li>
           <li>
-            <strong>Improve the Service</strong> &mdash; fix bugs, enhance
-            features, and optimize performance using aggregate, non-identifying
-            metrics
-          </li>
-          <li>
-            <strong>Communicate with you</strong> &mdash; respond to support
-            requests or notify you of significant changes to the Service
+            <strong>Communicate with you</strong> &mdash; to respond to support
+            requests.
           </li>
         </ul>
       </section>

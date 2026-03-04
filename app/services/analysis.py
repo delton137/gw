@@ -172,6 +172,15 @@ async def _run_pipeline(
 
         # Detect genome build (needed for blood type position matching + VCF rsID lookup)
         genome_build = detect_genome_build(user_df)
+        if genome_build == "unknown":
+            await _fail_analysis(
+                session, analysis,
+                "Unable to determine genome build. GeneWizard supports GRCh37 (hg19) and "
+                "GRCh38 (hg38) only. Please verify your file was generated against a "
+                "standard human reference genome and try again.",
+                tmp_path=tmp_path,
+            )
+            return
         analysis.genome_build = genome_build
         log.info(f"[{analysis_id}] Detected genome build: {genome_build}")
 
@@ -289,7 +298,7 @@ async def _run_pipeline(
 
         if snpedia_rsids:
             user_rsids = user_df["rsid"].to_list()
-            matched_rsids = [r for r in user_rsids if r in snpedia_rsids]
+            matched_rsids = list(set(user_rsids) & snpedia_rsids)
 
             if matched_rsids:
                 batch_size = 5000
@@ -337,7 +346,7 @@ async def _run_pipeline(
                     determine_blood_type, user_df_full,
                     genome_build=genome_build, deletion_genotypes=deletion_genotypes,
                 ),
-                asyncio.to_thread(determine_carrier_status, user_df_full, genome_build=genome_build),
+                asyncio.to_thread(determine_carrier_status, user_df_full, genome_build=genome_build, is_vcf=is_vcf),
             )
         )
 
@@ -348,18 +357,22 @@ async def _run_pipeline(
         )
 
         # ----- Store results (sequential DB writes using main session) -----
-        for hit in trait_hits:
-            session.add(UserSnpTraitHit(
-                user_id=user_id,
-                analysis_id=analysis_id,
-                rsid=hit.rsid,
-                user_genotype=hit.user_genotype,
-                trait=hit.trait,
-                effect_description=hit.effect_description,
-                risk_level=hit.risk_level,
-                evidence_level=hit.evidence_level,
-                association_id=hit.association_id,
-            ))
+        for i in range(0, len(trait_hits), 5000):
+            batch = trait_hits[i : i + 5000]
+            session.add_all([
+                UserSnpTraitHit(
+                    user_id=user_id,
+                    analysis_id=analysis_id,
+                    rsid=hit.rsid,
+                    user_genotype=hit.user_genotype,
+                    trait=hit.trait,
+                    effect_description=hit.effect_description,
+                    risk_level=hit.risk_level,
+                    evidence_level=hit.evidence_level,
+                    association_id=hit.association_id,
+                )
+                for hit in batch
+            ])
 
         for i in range(0, len(clinvar_hits), 5000):
             batch = clinvar_hits[i : i + 5000]
@@ -479,7 +492,9 @@ async def _run_pipeline(
 
         # ----- Ancestry estimation (for comparison display) -----
         t_anc = time.perf_counter()
-        ancestry_result = await asyncio.to_thread(estimate_ancestry, user_df_full, is_vcf)
+        ancestry_result = await asyncio.to_thread(
+            estimate_ancestry, user_df_full, is_vcf, genome_build
+        )
 
         if ancestry_result:
             # Store full ancestry detail as JSON (26 populations + metadata)
