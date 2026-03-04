@@ -90,7 +90,7 @@ export default function UploadPage() {
     <div className="mx-auto max-w-2xl px-6 pt-8 pb-16">
       <h1 className="font-serif text-3xl font-semibold mb-2">Upload your genotype file</h1>
       <p className="text-muted mb-10">
-        We support 23andMe, AncestryDNA, CGI .tsv, .vcf, .vcf.gz, and .vcf.zip formats. There is currently a 1 GB file size limit — if your VCF is larger, please compress it to .vcf.gz or .vcf.zip before uploading. Your raw data is processed in memory and never stored.
+        We support 23andMe, AncestryDNA, CGI .tsv, .vcf, .vcf.gz, and .vcf.zip formats. Your raw data is processed in memory and never stored.
       </p>
 
       {/* Drop zone */}
