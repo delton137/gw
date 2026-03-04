@@ -2,6 +2,7 @@
 
 import io
 import uuid
+import zipfile
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -36,7 +37,7 @@ def client():
 class TestValidateExtension:
     def test_valid_extensions(self):
         """All allowed extensions pass validation."""
-        for ext in [".txt", ".csv", ".tsv", ".vcf", ".vcf.gz", ".txt.gz", ".tsv.gz"]:
+        for ext in [".txt", ".csv", ".tsv", ".vcf", ".vcf.gz", ".vcf.zip", ".txt.gz", ".tsv.gz"]:
             _validate_extension(f"genome{ext}")  # should not raise
 
     def test_invalid_extension(self):
@@ -60,6 +61,10 @@ class TestValidateMagicBytes:
     def test_utf8_text(self):
         """Plain text files pass validation."""
         _validate_magic_bytes(b"# rsid\tchromosome\tposition\tgenotype")
+
+    def test_zip_magic_bytes(self):
+        """ZIP files pass validation."""
+        _validate_magic_bytes(b"PK\x03\x04" + b"\x00" * 12)
 
     def test_binary_rejected(self):
         """Non-gzip binary files are rejected."""
@@ -236,3 +241,42 @@ class TestUploadEndpoint:
                 )
 
             assert response.status_code == 200, f"Failed for ancestry group: {group}"
+
+    def test_upload_vcf_zip(self, client):
+        """Upload of a .vcf.zip file is accepted."""
+        analysis = MagicMock()
+        analysis.id = uuid.uuid4()
+        analysis.created_at = datetime(2025, 1, 15, tzinfo=timezone.utc)
+
+        session = AsyncMock()
+        rate_result = MagicMock()
+        rate_result.scalar.return_value = 0
+        session.execute = AsyncMock(return_value=rate_result)
+        session.add = MagicMock()
+        session.commit = AsyncMock()
+        session.refresh = AsyncMock(side_effect=lambda a: setattr(a, 'id', analysis.id) or setattr(a, 'created_at', analysis.created_at))
+
+        async def override():
+            return session
+
+        _app.dependency_overrides[get_session] = override
+
+        # Build a minimal ZIP containing a VCF
+        vcf_content = b"##fileformat=VCFv4.1\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE\n1\t100\trs1234\tA\tG\t.\t.\t.\tGT\t0/1\n"
+        zip_buf = io.BytesIO()
+        with zipfile.ZipFile(zip_buf, "w") as zf:
+            zf.writestr("genome.vcf", vcf_content)
+        zip_bytes = zip_buf.getvalue()
+
+        with patch("app.routes.upload.asyncio.create_task") as mock_task:
+            mock_task.return_value = MagicMock()
+            mock_task.return_value.add_done_callback = MagicMock()
+            response = client.post(
+                "/api/v1/upload/",
+                files={"file": ("genome.vcf.zip", io.BytesIO(zip_bytes), "application/zip")},
+                data={"ancestry_group": "EUR"},
+            )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "pending"

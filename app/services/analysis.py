@@ -18,6 +18,7 @@ Pipeline order:
 from __future__ import annotations
 
 import asyncio
+import io
 try:
     from isal import igzip as gzip
 except ImportError:
@@ -25,6 +26,7 @@ except ImportError:
 import logging
 import os
 import time
+import zipfile
 from datetime import datetime, timezone
 
 import polars as pl
@@ -148,6 +150,25 @@ async def _run_pipeline(
                 decompressed_mb = len(decompressed) / 1024 / 1024
                 log.info(f"[{analysis_id}] Decompressed to {decompressed_mb:.0f} MB")
                 del file_bytes
+                if len(decompressed) > settings.max_decompressed_size:
+                    raise ParseError("Decompressed file exceeds 10GB size limit")
+                content = decompressed.decode("utf-8", errors="replace")
+                del decompressed
+            elif file_bytes[:4] == b"PK\x03\x04":
+                log.info(f"[{analysis_id}] Extracting ZIP archive ({len(file_bytes) / 1024 / 1024:.0f} MB)...")
+                with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
+                    vcf_names = [
+                        n for n in zf.namelist()
+                        if n.lower().endswith(".vcf") and not n.startswith("__MACOSX")
+                    ]
+                    if not vcf_names:
+                        raise ParseError("No .vcf file found inside ZIP archive")
+                    if len(vcf_names) > 1:
+                        raise ParseError("ZIP archive contains multiple VCF files — please upload a single VCF")
+                    decompressed = zf.read(vcf_names[0])
+                del file_bytes
+                decompressed_mb = len(decompressed) / 1024 / 1024
+                log.info(f"[{analysis_id}] Extracted {vcf_names[0]} ({decompressed_mb:.0f} MB)")
                 if len(decompressed) > settings.max_decompressed_size:
                     raise ParseError("Decompressed file exceeds 10GB size limit")
                 content = decompressed.decode("utf-8", errors="replace")

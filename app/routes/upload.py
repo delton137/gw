@@ -29,6 +29,7 @@ os.makedirs(settings.temp_dir, mode=0o700, exist_ok=True)
 
 # Magic bytes for format validation
 _GZIP_MAGIC = b"\x1f\x8b"
+_ZIP_MAGIC = b"PK\x03\x04"
 
 # Strong references to background tasks — prevents garbage collection
 _background_tasks: set[asyncio.Task] = set()
@@ -37,6 +38,8 @@ _background_tasks: set[asyncio.Task] = set()
 def _validate_magic_bytes(header: bytes) -> None:
     """Check that file is gzip or text, not a disguised executable."""
     if header[:2] == _GZIP_MAGIC:
+        return
+    if header[:4] == _ZIP_MAGIC:
         return
     try:
         header.decode("utf-8")

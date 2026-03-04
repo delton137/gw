@@ -444,7 +444,7 @@ def detect_genome_build(user_df: pl.DataFrame) -> str:
     return "unknown"
 
 
-ALLOWED_EXTENSIONS = {".txt", ".csv", ".tsv", ".vcf", ".vcf.gz", ".txt.gz", ".tsv.gz"}
+ALLOWED_EXTENSIONS = {".txt", ".csv", ".tsv", ".vcf", ".vcf.gz", ".vcf.zip", ".txt.gz", ".tsv.gz"}
 
 
 def validate_filename(filename: str) -> None:
