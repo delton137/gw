@@ -111,7 +111,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs1799950",
-        "fallback": {"chrom": "17", "position": 41245466, "ref_allele": "G", "alt_allele": "A",
+        "fallback": {"chrom": "17", "position": 41246481, "ref_allele": "G", "alt_allele": "A",
                       "gene": "BRCA1", "functional_class": "missense", "maf_global": 0.005},
         "traits": [
             {
@@ -188,7 +188,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs5882",
-        "fallback": {"chrom": "16", "position": 57017293, "ref_allele": "A", "alt_allele": "G",
+        "fallback": {"chrom": "16", "position": 57016092, "ref_allele": "A", "alt_allele": "G",
                       "gene": "CETP", "functional_class": "missense", "maf_global": 0.33},
         "traits": [
             {
@@ -608,7 +608,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs1042725",
-        "fallback": {"chrom": "12", "position": 66368067, "ref_allele": "C", "alt_allele": "T",
+        "fallback": {"chrom": "12", "position": 66358347, "ref_allele": "C", "alt_allele": "T",
                       "gene": "HMGA2", "functional_class": "3_prime_UTR", "maf_global": 0.49},
         "traits": [
             {
@@ -685,7 +685,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs12722489",
-        "fallback": {"chrom": "10", "position": 6099045, "ref_allele": "C", "alt_allele": "T",
+        "fallback": {"chrom": "10", "position": 6102012, "ref_allele": "C", "alt_allele": "T",
                       "gene": "IL2RA", "functional_class": "intronic", "maf_global": 0.15},
         "traits": [
             {
@@ -724,7 +724,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs602662",
-        "fallback": {"chrom": "19", "position": 49206674, "ref_allele": "G", "alt_allele": "A",
+        "fallback": {"chrom": "19", "position": 49206985, "ref_allele": "G", "alt_allele": "A",
                       "gene": "FUT2", "functional_class": "missense", "maf_global": 0.37},
         "traits": [
             {
@@ -1176,7 +1176,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs3135388",
-        "fallback": {"chrom": "6", "position": 32681631, "ref_allele": "A", "alt_allele": "G",
+        "fallback": {"chrom": "6", "position": 32413051, "ref_allele": "A", "alt_allele": "G",
                       "gene": "HLA-DRA", "functional_class": "intron_variant", "maf_global": 0.26},
         "traits": [
             {
@@ -1226,7 +1226,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs2187668",
-        "fallback": {"chrom": "6", "position": 32713854, "ref_allele": "T", "alt_allele": "C",
+        "fallback": {"chrom": "6", "position": 32605884, "ref_allele": "T", "alt_allele": "C",
                       "gene": "HLA-DQA1", "functional_class": "intron_variant", "maf_global": 0.09},
         "traits": [
             {
@@ -1245,7 +1245,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs7454108",
-        "fallback": {"chrom": "6", "position": 32658564, "ref_allele": "T", "alt_allele": "C",
+        "fallback": {"chrom": "6", "position": 32681483, "ref_allele": "T", "alt_allele": "C",
                       "gene": "HLA-DQB1", "functional_class": "intron_variant", "maf_global": 0.17},
         "traits": [
             {
@@ -1283,7 +1283,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs1061235",
-        "fallback": {"chrom": "6", "position": 29942854, "ref_allele": "G", "alt_allele": "A",
+        "fallback": {"chrom": "6", "position": 29913298, "ref_allele": "G", "alt_allele": "A",
                       "gene": "HLA-A", "functional_class": "upstream_gene_variant", "maf_global": 0.07},
         "traits": [
             {
@@ -1302,7 +1302,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs9262570",
-        "fallback": {"chrom": "6", "position": 29568938, "ref_allele": "T", "alt_allele": "G",
+        "fallback": {"chrom": "6", "position": 31012485, "ref_allele": "T", "alt_allele": "G",
                       "gene": "HLA-B", "functional_class": "intergenic_variant", "maf_global": 0.04},
         "traits": [
             {
@@ -1323,7 +1323,7 @@ SEED_SNPS = [
     # ── Longevity / Aging ──────────────────────────────────────────────────
     {
         "rsid": "rs2802292",
-        "fallback": {"chrom": "6", "position": 108975688, "ref_allele": "G", "alt_allele": "T",
+        "fallback": {"chrom": "6", "position": 108908518, "ref_allele": "G", "alt_allele": "T",
                       "gene": "FOXO3", "functional_class": "intron_variant", "maf_global": 0.38},
         "traits": [
             {
@@ -1342,7 +1342,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs1556516",
-        "fallback": {"chrom": "9", "position": 22115503, "ref_allele": "G", "alt_allele": "C",
+        "fallback": {"chrom": "9", "position": 22100176, "ref_allele": "G", "alt_allele": "C",
                       "gene": "CDKN2B-AS1", "functional_class": "intron_variant", "maf_global": 0.48},
         "traits": [
             {
@@ -1361,7 +1361,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs10757278",
-        "fallback": {"chrom": "9", "position": 22124478, "ref_allele": "A", "alt_allele": "G",
+        "fallback": {"chrom": "9", "position": 22124477, "ref_allele": "A", "alt_allele": "G",
                       "gene": "CDKN2B-AS1", "functional_class": "intron_variant", "maf_global": 0.47},
         "traits": [
             {
@@ -1399,7 +1399,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs7025486",
-        "fallback": {"chrom": "9", "position": 124439324, "ref_allele": "A", "alt_allele": "G",
+        "fallback": {"chrom": "9", "position": 124422403, "ref_allele": "A", "alt_allele": "G",
                       "gene": "DAB2IP", "functional_class": "intron_variant", "maf_global": 0.26},
         "traits": [
             {
@@ -1420,7 +1420,7 @@ SEED_SNPS = [
     # ── Athletic Performance / Injury ──────────────────────────────────────
     {
         "rsid": "rs1800012",
-        "fallback": {"chrom": "17", "position": 48262798, "ref_allele": "G", "alt_allele": "T",
+        "fallback": {"chrom": "17", "position": 48277749, "ref_allele": "G", "alt_allele": "T",
                       "gene": "COL1A1", "functional_class": "intron_variant", "maf_global": 0.17},
         "traits": [
             {
@@ -1458,7 +1458,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs4253778",
-        "fallback": {"chrom": "22", "position": 46621854, "ref_allele": "G", "alt_allele": "C",
+        "fallback": {"chrom": "22", "position": 46630634, "ref_allele": "G", "alt_allele": "C",
                       "gene": "PPARA", "functional_class": "intron_variant", "maf_global": 0.14},
         "traits": [
             {
@@ -1477,7 +1477,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs12722",
-        "fallback": {"chrom": "9", "position": 137141870, "ref_allele": "C", "alt_allele": "T",
+        "fallback": {"chrom": "9", "position": 137734416, "ref_allele": "C", "alt_allele": "T",
                       "gene": "COL5A1", "functional_class": "3_prime_UTR_variant", "maf_global": 0.34},
         "traits": [
             {
@@ -2727,7 +2727,7 @@ SEED_SNPS = [
     # ── Nutrition & Metabolism (expanding existing category) ──────────
     {
         "rsid": "rs1049793",
-        "fallback": {"chrom": "7", "position": 150551492, "ref_allele": "C", "alt_allele": "T",
+        "fallback": {"chrom": "7", "position": 150557665, "ref_allele": "C", "alt_allele": "T",
                       "gene": "AOC1", "functional_class": "missense", "maf_global": 0.31},
         "traits": [
             {
@@ -2746,7 +2746,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs11558538",
-        "fallback": {"chrom": "2", "position": 138502965, "ref_allele": "C", "alt_allele": "T",
+        "fallback": {"chrom": "2", "position": 138759649, "ref_allele": "C", "alt_allele": "T",
                       "gene": "HNMT", "functional_class": "missense", "maf_global": 0.11},
         "traits": [
             {
@@ -2803,7 +2803,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs5082",
-        "fallback": {"chrom": "11", "position": 116148917, "ref_allele": "T", "alt_allele": "C",
+        "fallback": {"chrom": "1", "position": 161193683, "ref_allele": "T", "alt_allele": "C",
                       "gene": "APOA2", "functional_class": "upstream_gene_variant", "maf_global": 0.35},
         "traits": [
             {
@@ -2822,7 +2822,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs1799883",
-        "fallback": {"chrom": "4", "position": 120241455, "ref_allele": "G", "alt_allele": "A",
+        "fallback": {"chrom": "4", "position": 120241902, "ref_allele": "G", "alt_allele": "A",
                       "gene": "FABP2", "functional_class": "missense", "maf_global": 0.28},
         "traits": [
             {
@@ -2841,7 +2841,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs10246939",
-        "fallback": {"chrom": "7", "position": 141972984, "ref_allele": "C", "alt_allele": "T",
+        "fallback": {"chrom": "7", "position": 141672604, "ref_allele": "C", "alt_allele": "T",
                       "gene": "TAS2R38", "functional_class": "missense", "maf_global": 0.49},
         "traits": [
             {
@@ -2860,7 +2860,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs35874116",
-        "fallback": {"chrom": "1", "position": 1266351, "ref_allele": "A", "alt_allele": "G",
+        "fallback": {"chrom": "1", "position": 19181393, "ref_allele": "A", "alt_allele": "G",
                       "gene": "TAS1R2", "functional_class": "missense", "maf_global": 0.22},
         "traits": [
             {
@@ -2879,7 +2879,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs307355",
-        "fallback": {"chrom": "1", "position": 1268069, "ref_allele": "C", "alt_allele": "T",
+        "fallback": {"chrom": "1", "position": 1265154, "ref_allele": "C", "alt_allele": "T",
                       "gene": "TAS1R3", "functional_class": "upstream_gene_variant", "maf_global": 0.28},
         "traits": [
             {
@@ -2898,7 +2898,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs1761667",
-        "fallback": {"chrom": "7", "position": 80274400, "ref_allele": "G", "alt_allele": "A",
+        "fallback": {"chrom": "7", "position": 80244939, "ref_allele": "G", "alt_allele": "A",
                       "gene": "CD36", "functional_class": "upstream_gene_variant", "maf_global": 0.42},
         "traits": [
             {
@@ -2917,7 +2917,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs698",
-        "fallback": {"chrom": "4", "position": 100239747, "ref_allele": "A", "alt_allele": "G",
+        "fallback": {"chrom": "4", "position": 100260789, "ref_allele": "A", "alt_allele": "G",
                       "gene": "ADH1C", "functional_class": "missense", "maf_global": 0.37},
         "traits": [
             {
@@ -2937,7 +2937,7 @@ SEED_SNPS = [
     # ── Athletic Performance (expanding existing category) ────────────
     {
         "rsid": "rs4343",
-        "fallback": {"chrom": "17", "position": 61565893, "ref_allele": "G", "alt_allele": "A",
+        "fallback": {"chrom": "17", "position": 61566031, "ref_allele": "G", "alt_allele": "A",
                       "gene": "ACE", "functional_class": "synonymous_variant", "maf_global": 0.43},
         "traits": [
             {
@@ -2956,7 +2956,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs7181866",
-        "fallback": {"chrom": "15", "position": 50767577, "ref_allele": "A", "alt_allele": "G",
+        "fallback": {"chrom": "15", "position": 50610792, "ref_allele": "A", "alt_allele": "G",
                       "gene": "GABPB1", "functional_class": "intron_variant", "maf_global": 0.30},
         "traits": [
             {
@@ -2976,7 +2976,7 @@ SEED_SNPS = [
     # ── Sleep / Circadian (expanding existing category) ───────────────
     {
         "rsid": "rs5751876",
-        "fallback": {"chrom": "22", "position": 24815021, "ref_allele": "T", "alt_allele": "C",
+        "fallback": {"chrom": "22", "position": 24837301, "ref_allele": "T", "alt_allele": "C",
                       "gene": "ADORA2A", "functional_class": "synonymous_variant", "maf_global": 0.47},
         "traits": [
             {
@@ -2996,7 +2996,7 @@ SEED_SNPS = [
     # ── Wellness & Lifestyle (Dante Labs report SNPs) ────────────────
     {
         "rsid": "rs1126742",
-        "fallback": {"chrom": "1", "position": 46932824, "ref_allele": "A", "alt_allele": "G",
+        "fallback": {"chrom": "1", "position": 47398496, "ref_allele": "A", "alt_allele": "G",
                       "gene": "CYP4A11", "functional_class": "missense_variant", "maf_global": 0.15},
         "traits": [
             {
@@ -3034,7 +3034,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs3749474",
-        "fallback": {"chrom": "4", "position": 55434518, "ref_allele": "C", "alt_allele": "T",
+        "fallback": {"chrom": "4", "position": 56300685, "ref_allele": "C", "alt_allele": "T",
                       "gene": "CLOCK", "functional_class": "3_prime_UTR_variant", "maf_global": 0.34},
         "traits": [
             {
@@ -3053,7 +3053,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs806368",
-        "fallback": {"chrom": "6", "position": 88140381, "ref_allele": "T", "alt_allele": "C",
+        "fallback": {"chrom": "6", "position": 88850100, "ref_allele": "T", "alt_allele": "C",
                       "gene": "CNR1", "functional_class": "3_prime_UTR_variant", "maf_global": 0.21},
         "traits": [
             {
@@ -3072,7 +3072,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs12720071",
-        "fallback": {"chrom": "6", "position": 88141462, "ref_allele": "T", "alt_allele": "C",
+        "fallback": {"chrom": "6", "position": 88851181, "ref_allele": "T", "alt_allele": "C",
                       "gene": "CNR1", "functional_class": "3_prime_UTR_variant", "maf_global": 0.11},
         "traits": [
             {
@@ -3091,7 +3091,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs6943555",
-        "fallback": {"chrom": "7", "position": 70341037, "ref_allele": "T", "alt_allele": "A",
+        "fallback": {"chrom": "7", "position": 69806023, "ref_allele": "T", "alt_allele": "A",
                       "gene": "AUTS2", "functional_class": "intron_variant", "maf_global": 0.36},
         "traits": [
             {
@@ -3110,7 +3110,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs17601612",
-        "fallback": {"chrom": "11", "position": 113447023, "ref_allele": "G", "alt_allele": "C",
+        "fallback": {"chrom": "11", "position": 113317745, "ref_allele": "G", "alt_allele": "C",
                       "gene": "DRD2", "functional_class": "intron_variant", "maf_global": 0.28},
         "traits": [
             {
@@ -3129,7 +3129,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs228697",
-        "fallback": {"chrom": "1", "position": 7827519, "ref_allele": "C", "alt_allele": "G",
+        "fallback": {"chrom": "1", "position": 7887579, "ref_allele": "C", "alt_allele": "G",
                       "gene": "PER3", "functional_class": "missense_variant", "maf_global": 0.07},
         "traits": [
             {
@@ -3148,7 +3148,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs17782313",
-        "fallback": {"chrom": "18", "position": 60183864, "ref_allele": "T", "alt_allele": "C",
+        "fallback": {"chrom": "18", "position": 57851097, "ref_allele": "T", "alt_allele": "C",
                       "gene": "MC4R", "functional_class": "intergenic_variant", "maf_global": 0.24},
         "traits": [
             {
@@ -3167,7 +3167,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs16969968",
-        "fallback": {"chrom": "15", "position": 78590583, "ref_allele": "G", "alt_allele": "A",
+        "fallback": {"chrom": "15", "position": 78882925, "ref_allele": "G", "alt_allele": "A",
                       "gene": "CHRNA5", "functional_class": "missense_variant", "maf_global": 0.31},
         "traits": [
             {
@@ -3191,7 +3191,7 @@ SEED_SNPS = [
     # and rs1801131 (MTHFR A1298C, in PGx).
     {
         "rsid": "rs4633",
-        "fallback": {"chrom": "22", "position": 19962712, "ref_allele": "C", "alt_allele": "T",
+        "fallback": {"chrom": "22", "position": 19950235, "ref_allele": "C", "alt_allele": "T",
                       "gene": "COMT", "functional_class": "synonymous_variant", "maf_global": 0.45},
         "traits": [
             {
@@ -3210,7 +3210,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs769224",
-        "fallback": {"chrom": "22", "position": 19964281, "ref_allele": "G", "alt_allele": "A",
+        "fallback": {"chrom": "22", "position": 19951804, "ref_allele": "G", "alt_allele": "A",
                       "gene": "COMT", "functional_class": "synonymous_variant", "maf_global": 0.05},
         "traits": [
             {
@@ -3229,7 +3229,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs1544410",
-        "fallback": {"chrom": "12", "position": 47846052, "ref_allele": "C", "alt_allele": "T",
+        "fallback": {"chrom": "12", "position": 48239835, "ref_allele": "C", "alt_allele": "T",
                       "gene": "VDR", "functional_class": "intron_variant", "maf_global": 0.30},
         "traits": [
             {
@@ -3248,7 +3248,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs731236",
-        "fallback": {"chrom": "12", "position": 47844974, "ref_allele": "A", "alt_allele": "G",
+        "fallback": {"chrom": "12", "position": 48238757, "ref_allele": "A", "alt_allele": "G",
                       "gene": "VDR", "functional_class": "synonymous_variant", "maf_global": 0.34},
         "traits": [
             {
@@ -3267,7 +3267,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs6323",
-        "fallback": {"chrom": "X", "position": 43731789, "ref_allele": "G", "alt_allele": "T",
+        "fallback": {"chrom": "X", "position": 43591036, "ref_allele": "G", "alt_allele": "T",
                       "gene": "MAOA", "functional_class": "synonymous_variant", "maf_global": 0.65},
         "traits": [
             {
@@ -3286,7 +3286,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs3741049",
-        "fallback": {"chrom": "11", "position": 108139200, "ref_allele": "G", "alt_allele": "A",
+        "fallback": {"chrom": "11", "position": 108009927, "ref_allele": "G", "alt_allele": "A",
                       "gene": "ACAT1", "functional_class": "intron_variant", "maf_global": 0.10},
         "traits": [
             {
@@ -3305,7 +3305,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs2066470",
-        "fallback": {"chrom": "1", "position": 11803000, "ref_allele": "G", "alt_allele": "A",
+        "fallback": {"chrom": "1", "position": 11863057, "ref_allele": "G", "alt_allele": "A",
                       "gene": "MTHFR", "functional_class": "synonymous_variant", "maf_global": 0.09},
         "traits": [
             {
@@ -3324,7 +3324,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs1805087",
-        "fallback": {"chrom": "1", "position": 236885200, "ref_allele": "A", "alt_allele": "G",
+        "fallback": {"chrom": "1", "position": 237048500, "ref_allele": "A", "alt_allele": "G",
                       "gene": "MTR", "functional_class": "missense_variant", "maf_global": 0.21},
         "traits": [
             {
@@ -3343,7 +3343,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs1801394",
-        "fallback": {"chrom": "5", "position": 7870860, "ref_allele": "A", "alt_allele": "G",
+        "fallback": {"chrom": "5", "position": 7870973, "ref_allele": "A", "alt_allele": "G",
                       "gene": "MTRR", "functional_class": "missense_variant", "maf_global": 0.45},
         "traits": [
             {
@@ -3362,7 +3362,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs10380",
-        "fallback": {"chrom": "5", "position": 7897078, "ref_allele": "C", "alt_allele": "T",
+        "fallback": {"chrom": "5", "position": 7897191, "ref_allele": "C", "alt_allele": "T",
                       "gene": "MTRR", "functional_class": "missense_variant", "maf_global": 0.18},
         "traits": [
             {
@@ -3381,7 +3381,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs162036",
-        "fallback": {"chrom": "5", "position": 7885846, "ref_allele": "A", "alt_allele": "G",
+        "fallback": {"chrom": "5", "position": 7885959, "ref_allele": "A", "alt_allele": "G",
                       "gene": "MTRR", "functional_class": "missense_variant", "maf_global": 0.21},
         "traits": [
             {
@@ -3400,7 +3400,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs2287780",
-        "fallback": {"chrom": "5", "position": 7889191, "ref_allele": "C", "alt_allele": "T",
+        "fallback": {"chrom": "5", "position": 7889304, "ref_allele": "C", "alt_allele": "T",
                       "gene": "MTRR", "functional_class": "missense_variant", "maf_global": 0.04},
         "traits": [
             {
@@ -3419,7 +3419,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs1802059",
-        "fallback": {"chrom": "5", "position": 7897206, "ref_allele": "G", "alt_allele": "A",
+        "fallback": {"chrom": "5", "position": 7897319, "ref_allele": "G", "alt_allele": "A",
                       "gene": "MTRR", "functional_class": "synonymous_variant", "maf_global": 0.31},
         "traits": [
             {
@@ -3438,7 +3438,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs567754",
-        "fallback": {"chrom": "5", "position": 79120593, "ref_allele": "C", "alt_allele": "T",
+        "fallback": {"chrom": "5", "position": 78416416, "ref_allele": "C", "alt_allele": "T",
                       "gene": "BHMT", "functional_class": "intron_variant", "maf_global": 0.27},
         "traits": [
             {
@@ -3457,7 +3457,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs617219",
-        "fallback": {"chrom": "5", "position": 79133771, "ref_allele": "A", "alt_allele": "C",
+        "fallback": {"chrom": "5", "position": 78429594, "ref_allele": "A", "alt_allele": "C",
                       "gene": "BHMT", "functional_class": "intron_variant", "maf_global": 0.36},
         "traits": [
             {
@@ -3476,7 +3476,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs651852",
-        "fallback": {"chrom": "5", "position": 79113237, "ref_allele": "C", "alt_allele": "T",
+        "fallback": {"chrom": "5", "position": 78409060, "ref_allele": "C", "alt_allele": "T",
                       "gene": "BHMT", "functional_class": "intron_variant", "maf_global": 0.41},
         "traits": [
             {
@@ -3495,7 +3495,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs819147",
-        "fallback": {"chrom": "20", "position": 34301898, "ref_allele": "C", "alt_allele": "T",
+        "fallback": {"chrom": "20", "position": 32889704, "ref_allele": "C", "alt_allele": "T",
                       "gene": "AHCY", "functional_class": "intron_variant", "maf_global": 0.29},
         "traits": [
             {
@@ -3514,7 +3514,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs819134",
-        "fallback": {"chrom": "20", "position": 34285813, "ref_allele": "G", "alt_allele": "A",
+        "fallback": {"chrom": "20", "position": 32873619, "ref_allele": "G", "alt_allele": "A",
                       "gene": "AHCY", "functional_class": "intron_variant", "maf_global": 0.26},
         "traits": [
             {
@@ -3533,7 +3533,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs819171",
-        "fallback": {"chrom": "20", "position": 34280178, "ref_allele": "C", "alt_allele": "T",
+        "fallback": {"chrom": "20", "position": 32867984, "ref_allele": "C", "alt_allele": "T",
                       "gene": "AHCY", "functional_class": "intron_variant", "maf_global": 0.25},
         "traits": [
             {
@@ -3552,7 +3552,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs234706",
-        "fallback": {"chrom": "21", "position": 43065240, "ref_allele": "G", "alt_allele": "A",
+        "fallback": {"chrom": "21", "position": 44485350, "ref_allele": "G", "alt_allele": "A",
                       "gene": "CBS", "functional_class": "synonymous_variant", "maf_global": 0.27},
         "traits": [
             {
@@ -3571,7 +3571,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs1801181",
-        "fallback": {"chrom": "21", "position": 43060506, "ref_allele": "G", "alt_allele": "A",
+        "fallback": {"chrom": "21", "position": 44480616, "ref_allele": "G", "alt_allele": "A",
                       "gene": "CBS", "functional_class": "synonymous_variant", "maf_global": 0.33},
         "traits": [
             {
@@ -3590,7 +3590,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs2298758",
-        "fallback": {"chrom": "21", "position": 43065417, "ref_allele": "G", "alt_allele": "A",
+        "fallback": {"chrom": "21", "position": 44485527, "ref_allele": "G", "alt_allele": "A",
                       "gene": "CBS", "functional_class": "synonymous_variant", "maf_global": 0.001},
         "traits": [
             {
@@ -3609,7 +3609,7 @@ SEED_SNPS = [
     },
     {
         "rsid": "rs1979277",
-        "fallback": {"chrom": "17", "position": 18328782, "ref_allele": "G", "alt_allele": "A",
+        "fallback": {"chrom": "17", "position": 18232096, "ref_allele": "G", "alt_allele": "A",
                       "gene": "SHMT1", "functional_class": "missense_variant", "maf_global": 0.31},
         "traits": [
             {

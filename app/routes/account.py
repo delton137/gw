@@ -170,7 +170,7 @@ async def delete_all_user_data(
     """Delete all stored data for the authenticated user.
 
     Removes all analyses and cascades to all child tables (PRS results, trait hits,
-    variants, PGX results, blood type, carrier status). This is irreversible.
+    variants, PGX results, carrier status). This is irreversible.
     Raw genotype data was never stored, so this fully removes the user's footprint.
     """
     # CASCADE FKs on all child tables handle cleanup automatically

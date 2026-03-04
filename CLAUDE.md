@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-genewizard.net analyzes raw genetic data from DTC genomics companies (23andMe, AncestryDNA) and WGS VCFs. The app auto-detects genetic ancestry, computes polygenic risk scores (PRS) with ancestry-aware normalization, matches user variants against a curated SNP-trait knowledge base, infers pharmacogenomic star alleles with CPIC/DPWG drug guidelines, screens for recessive carrier status, and determines blood type using the RBCeq2 ISBT allele database. It also serves public SEO-friendly pages for every SNP in the database.
+genewizard.net analyzes raw genetic data from DTC genomics companies (23andMe, AncestryDNA) and WGS VCFs. The app auto-detects genetic ancestry, computes polygenic risk scores (PRS) with ancestry-aware normalization, matches user variants against a curated SNP-trait knowledge base, infers pharmacogenomic star alleles with CPIC/DPWG drug guidelines, and screens for recessive carrier status. It also serves public SEO-friendly pages for every SNP in the database.
 
 **Critical design constraint: Raw genetic data is NEVER persisted.** Files are parsed in memory, analysis results are stored, and the raw genotype data is discarded immediately after processing.
 
@@ -56,8 +56,6 @@ No `users` table — Clerk handles auth. `user_id` is String(255) on each user-o
 
 **user_pgx_results** — user_id, analysis_id, gene, diplotype, allele1, allele2, allele1_function, allele2_function, phenotype, activity_score, n_variants_tested, n_variants_total, calling_method, confidence, drugs_affected, clinical_note
 
-**user_blood_type_results** — user_id, analysis_id, abo_genotype, abo_phenotype, rh_c_antigen, rh_e_antigen, rh_cw_antigen, kell_phenotype, mns_phenotype, duffy_phenotype, kidd_phenotype, secretor_status, display_type, systems_json, n_variants_tested, n_variants_total, n_systems_determined, confidence, confidence_note
-
 **user_carrier_status_results** — user_id, analysis_id, results_json (per-gene status/variants), n_genes_screened, n_carrier_genes, n_affected_flags
 
 **genes** — symbol (PK), name, summary, ncbi_gene_id, omim_number, clinvar_total_variants, clinvar_pathogenic_count, clinvar_uncertain_count, clinvar_conflicting_count, clinvar_total_submissions
@@ -69,7 +67,7 @@ No `users` table — Clerk handles auth. `user_id` is String(255) on each user-o
 Two-phase pipeline running as asyncio background task:
 
 1. **Parse** genotype file (status: `parsing`) — detect format, chip type, build
-2. **Fast matching** (status: `matching_fast`) — SNPedia, traits, PGx, carrier screening, blood type
+2. **Fast matching** (status: `matching_fast`) — SNPedia, traits, PGx, carrier screening
 3. Commit fast results → status: `done` (frontend redirects to dashboard)
 4. **Background** — ancestry estimation + PRS scoring (status: `scoring_prs`)
 5. Complete → status: `complete`
@@ -94,9 +92,7 @@ Raw file deleted after parsing. On failure: status `failed` with error_message.
 
 **carrier_matcher.py** — Screen for recessive carrier status across 9 genes. Returns per-gene status (not_detected/carrier/likely_affected/potential_compound_het) with detected variant details.
 
-**blood_type.py** — Blood type determination using RBCeq2 ISBT allele database. ABO, Rh (C/c, E/e, Cw), Kell, MNS, Duffy, Kidd, Secretor, Diego, Dombrock, Colton, Lutheran, and more. Cannot detect RhD+/- (requires gene deletion testing).
-
-**report.py** — General PDF report: carrier screening, trait hits. No PRS or blood type.
+**report.py** — General PDF report: carrier screening, trait hits. No PRS.
 
 **pgx_report.py** — Clinical-style PGx PDF: gene results table, CPIC/DPWG guidelines, drug-gene interactions by therapeutic area, methods, disclaimers.
 
@@ -107,7 +103,6 @@ Raw file deleted after parsing. On failure: status `failed` with error_message.
 **GET /api/v1/results/prs/{user_id}** — PRS results with prs_status (ready/computing/failed), absolute risk when available
 **GET /api/v1/results/pgx/{user_id}** — PGx diplotypes, phenotypes, CPIC/DPWG guidelines
 **GET /api/v1/results/traits/{user_id}** — Trait hits with filters and pagination
-**GET /api/v1/results/blood-type/{user_id}** — Blood type phenotypes and systems
 **GET /api/v1/results/carrier-status/{user_id}** — Carrier screening results
 **GET /api/v1/results/variants/{user_id}** — User SNPedia variant matches
 **GET /api/v1/results/featured-snps/{user_id}** — Notable SNP hits for user
@@ -147,7 +142,7 @@ Raw file deleted after parsing. On failure: status `failed` with error_message.
 
 **/** — Landing page, CTA to upload
 **/upload** — Drag-and-drop upload, ancestry auto-detected (manual override under Advanced)
-**/dashboard** — File summary, ancestry card, PRS status, carrier screening, SNP traits, PGx summary, blood type, report downloads
+**/dashboard** — File summary, ancestry card, PRS status, carrier screening, SNP traits, PGx summary, report downloads
 **/ancestry** — Full ancestry breakdown: superpopulation donut chart, 26-population table, coverage metrics, interpretation guide
 **/prs** — PRS results with distribution charts and absolute risk
 **/pgx** — Pharmacogenomics gene table with expandable CPIC/DPWG guidelines
@@ -171,7 +166,6 @@ Raw file deleted after parsing. On failure: status `failed` with error_message.
 - **population_names.json** (3 KB) — Human-readable names, regions, colors for all 26 populations + 5 superpopulations
 - **carrier_panel.json** (22 KB) — Pathogenic variant panel for carrier screening
 - **cpic_dpwg_guidelines.json** (736 KB) — CPIC/DPWG drug-gene recommendations
-- **rbceq2_db.tsv** (553 KB) — RBCeq2 blood type allele definitions (ISBT)
 - **pgx_alleles.json** (665 KB) — star allele definitions
 
 ## Local Dev
@@ -202,7 +196,6 @@ npm run dev
 - **test_absolute_risk.py** — Liability threshold model
 - **test_pgx_matcher.py** — Star allele calling, diplotypes
 - **test_pgx_report.py** — PGx PDF generation
-- **test_blood_type.py** — Blood type phenotyping (RBCeq2)
 - **test_carrier_matcher.py** — Carrier screening
 - **test_report.py** — General PDF generation
 - **test_analysis_pipeline.py** — Full E2E pipeline

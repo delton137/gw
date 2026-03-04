@@ -145,12 +145,21 @@ Phase D:             Feature 5 (mixture normalization, uses Feature 3)
 Phase E:             Feature 7 (PDF report, uses everything above)
 ```
 
-## What We're NOT Adopting (and Why)
+# What We're NOT Adopting (and Why)
 
 - **Multi-method PRS (LDpred2, PRS-CS, SBayesR, etc.):** Requires PLINK, LD matrices, HPC compute. We use pre-computed PGS Catalog weights, which is the right tradeoff for a web app.
 - **PCA from genotype data:** Full PCA requires a reference panel in PLINK format. The naive Bayes AIM approach (Feature 3) achieves 95%+ accuracy for superpopulation classification without PLINK.
 - **Cross-ancestry transfer learning (PRS-CSx):** Requires running the method on GWAS summary stats. Out of scope for a consumer web app.
 - **K-fold cross-validation:** Relevant for method development, not for scoring individual users.
+
+## Why we're not adopting blood typing
+ABO alone has ~9% error rate (BOOGIE 2015 on 23andMe)
+Extended systems (Kell, Duffy, Kidd, etc.) have zero published validation on DTC data
+RBCeq2's microarray mode is undocumented and unvalidated
+Our partial-match approach skips RBCeq2's core filtering pipeline
+No clinical guidelines endorse DTC-derived blood typing
+Need imputation (major undertaking) to get reliable results
+
 
 ## Verification
 

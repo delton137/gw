@@ -166,31 +166,6 @@ export interface ClinvarResponse {
 }
 
 // ---------------------------------------------------------------------------
-// Blood type
-// ---------------------------------------------------------------------------
-
-export interface BloodTypeResult {
-  display_type: string;
-  abo_genotype: string;
-  abo_phenotype: string;
-  rh_c_antigen: string | null;
-  rh_e_antigen: string | null;
-  rh_cw_antigen: boolean | null;
-  kell_phenotype: string | null;
-  mns_phenotype: string | null;
-  duffy_phenotype: string | null;
-  kidd_phenotype: string | null;
-  secretor_status: string | null;
-  systems: Record<string, { genotype: string; phenotype: string }> | null;
-  n_variants_tested: number;
-  n_variants_total: number;
-  n_systems_determined: number;
-  confidence: string;
-  confidence_note: string | null;
-  computed_at: string | null;
-}
-
-// ---------------------------------------------------------------------------
 // Carrier screening
 // ---------------------------------------------------------------------------
 

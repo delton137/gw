@@ -170,19 +170,21 @@ def parse_scoring_file(content: str) -> list[dict]:
         if normalized:
             col_indices[normalized] = i
 
-    required = {"rsid", "effect_allele", "weight"}
+    required = {"effect_allele", "weight"}
     missing = required - col_indices.keys()
     if missing:
         raise ValueError(f"Missing required columns: {missing}. Available: {header}")
+    # Need either rsid or chrom+position to identify variants
+    if "rsid" not in col_indices and not ("chrom" in col_indices and "position" in col_indices):
+        raise ValueError(f"Need either rsid or chrom+position columns. Available: {header}")
 
     rows = []
+    n_position_only = 0
     for parts in data_lines:
         if len(parts) <= max(col_indices.values()):
             continue
 
-        rsid = parts[col_indices["rsid"]].strip()
-        if not rsid.startswith("rs"):
-            continue
+        rsid = parts[col_indices["rsid"]].strip() if "rsid" in col_indices else ""
 
         effect_allele = parts[col_indices["effect_allele"]].strip()
         weight_str = parts[col_indices["weight"]].strip()
@@ -200,6 +202,15 @@ def parse_scoring_file(content: str) -> list[dict]:
         except ValueError:
             position = 0
 
+        # If no rsID, generate a position-based identifier (e.g., "chr1:838555")
+        # These variants are matched by position during scoring.
+        if not rsid.startswith("rs"):
+            if chrom and position:
+                rsid = f"chr{chrom}:{position}"
+                n_position_only += 1
+            else:
+                continue
+
         other_allele = ""
         if "other_allele" in col_indices:
             other_allele = parts[col_indices["other_allele"]].strip()
@@ -213,6 +224,9 @@ def parse_scoring_file(content: str) -> list[dict]:
             "weight": weight,
         })
 
+    if n_position_only:
+        log.info(f"  {n_position_only} variants use position-based IDs (no rsID in source)")
+
     return rows
 
 
@@ -225,11 +239,26 @@ def merge_builds(
     The merged rows have 'position' (GRCh37) and 'position_grch38' fields.
     """
     if rows_37 and rows_38:
-        # Build a lookup from the GRCh38 rows: (rsid, effect_allele) → grch38_position
-        # We use rsid only since the same rsid should have the same effect_allele and weight
-        pos38_lookup: dict[str, int] = {}
-        for r in rows_38:
-            pos38_lookup[r["rsid"]] = r["position"]
+        # Check if variants have real rsIDs or are position-only
+        has_rsids = any(r["rsid"].startswith("rs") for r in rows_37[:100])
+
+        if has_rsids:
+            # rsID-based merge
+            pos38_lookup: dict[str, int] = {}
+            for r in rows_38:
+                pos38_lookup[r["rsid"]] = r["position"]
+        else:
+            # Position-only variants: merge by row index (same variant order in both files)
+            pos38_lookup = {}
+            if len(rows_37) == len(rows_38):
+                for i, r38 in enumerate(rows_38):
+                    pos38_lookup[rows_37[i]["rsid"]] = r38["position"]
+                log.info(f"  Merging by row index ({len(rows_37)} variants, position-only)")
+            else:
+                log.warning(
+                    f"  Row count mismatch (GRCh37={len(rows_37)}, GRCh38={len(rows_38)}), "
+                    f"skipping GRCh38 positions"
+                )
 
         merged = []
         for r in rows_37:
@@ -359,9 +388,12 @@ async def ingest_score(
     )
     session.add(prs_score)
 
-    # Upsert SNP records for any new rsids
+    # Upsert SNP records for any new rsids (skip position-only variants)
     snp_values = []
     for row in rows:
+        rsid = row["rsid"]
+        if not rsid.startswith("rs"):
+            continue
         chrom = row["chrom"]
         pos_37 = row["position"]
         pos_38 = row.get("position_grch38", 0)

@@ -12,7 +12,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import get_current_user_id, get_verified_user_id
 from app.db import get_session
-from app.models.blood_type import UserBloodTypeResult
 from app.models.carrier_status import UserCarrierStatusResult
 from app.services.pgx_guidelines import match_guidelines
 from app.models.gwas import GwasPrsResult, GwasStudy
@@ -441,51 +440,6 @@ async def get_pgx_gene_detail(
         "gene": gene,
         "gene_description": gene_result.get("gene_description"),
         "user_result": gene_result,
-    }
-
-
-@router.get("/results/blood-type/{user_id}")
-async def get_blood_type_results(
-    user_id: str = Depends(get_verified_user_id),
-    session: AsyncSession = Depends(get_session),
-):
-    """Get blood type results for a user from their most recent completed analysis."""
-
-    analysis = await get_latest_analysis(session, user_id)
-
-    bt_result = await session.execute(
-        select(UserBloodTypeResult).where(
-            UserBloodTypeResult.analysis_id == analysis.id,
-            UserBloodTypeResult.user_id == user_id,
-        )
-    )
-    bt = bt_result.scalar_one_or_none()
-
-    if not bt:
-        return {"analysis_id": str(analysis.id), "result": None}
-
-    return {
-        "analysis_id": str(analysis.id),
-        "result": {
-            "display_type": bt.display_type,
-            "abo_genotype": bt.abo_genotype,
-            "abo_phenotype": bt.abo_phenotype,
-            "rh_c_antigen": bt.rh_c_antigen,
-            "rh_e_antigen": bt.rh_e_antigen,
-            "rh_cw_antigen": bt.rh_cw_antigen,
-            "kell_phenotype": bt.kell_phenotype,
-            "mns_phenotype": bt.mns_phenotype,
-            "duffy_phenotype": bt.duffy_phenotype,
-            "kidd_phenotype": bt.kidd_phenotype,
-            "secretor_status": bt.secretor_status,
-            "systems": bt.systems_json,
-            "n_variants_tested": bt.n_variants_tested,
-            "n_variants_total": bt.n_variants_total,
-            "n_systems_determined": bt.n_systems_determined,
-            "confidence": bt.confidence,
-            "confidence_note": bt.confidence_note,
-            "computed_at": bt.computed_at.isoformat() if bt.computed_at else None,
-        },
     }
 
 

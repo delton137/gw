@@ -291,12 +291,22 @@ def estimate_ancestry(
             else:
                 populations[pop] = 0.0
 
+        # Renormalize after rounding/zeroing so proportions sum to 1.0
+        pop_total = sum(populations.values())
+        if pop_total > 0:
+            populations = {k: round(v / pop_total, 4) for k, v in populations.items()}
+
         # Aggregate to superpopulations
         superpopulations: dict[str, float] = {sp: 0.0 for sp in SUPERPOPULATIONS}
         for pop, frac in populations.items():
             sp = pop_map.get(pop)
             if sp:
                 superpopulations[sp] = round(superpopulations[sp] + frac, 4)
+
+        # Renormalize superpopulations
+        sp_total = sum(superpopulations.values())
+        if sp_total > 0:
+            superpopulations = {k: round(v / sp_total, 4) for k, v in superpopulations.items()}
 
         # Best superpopulation
         best_pop = max(superpopulations, key=lambda k: superpopulations[k])

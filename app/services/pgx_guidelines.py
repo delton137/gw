@@ -151,7 +151,7 @@ def _matches_guideline(gl, phenotype: str, activity_score: float | None,
             if gl.activity_score_max >= 999.0:
                 # "≥X" range — match anything at or above min
                 return rounded >= gl.activity_score_min
-            return math.isclose(rounded, gl.activity_score_min, abs_tol=0.001)
+            return gl.activity_score_min - 0.001 <= rounded <= gl.activity_score_max + 0.001
         return False
 
     elif gl.lookup_type == "phenotype":

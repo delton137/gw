@@ -59,6 +59,7 @@ export default function PgxPage() {
   const [loading, setLoading] = useState(true);
   const { download: downloadPgxReport, loading: downloading } = useReportDownload("/api/v1/report/pgx/download", "genewizard-pgx-report");
   const [expandedGene, setExpandedGene] = useState<string | null>(null);
+  const [guidelinesGene, setGuidelinesGene] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -202,6 +203,8 @@ export default function PgxPage() {
                     {rows.map((r) => {
                       const isExpanded = expandedGene === r.gene;
                       const rowStyle = phenotypeStyle(r.phenotype);
+                      const hasGuidelines = r.guidelines && (r.guidelines.cpic?.length > 0 || r.guidelines.dpwg?.length > 0);
+                      const guidelinesOpen = guidelinesGene === r.gene;
 
                       return (
                         <tr key={r.gene} className="border-b border-border last:border-0">
@@ -249,53 +252,64 @@ export default function PgxPage() {
                                     <span className="text-muted">{r.drugs_affected}</span>
                                   </p>
                                 )}
-                                {r.guidelines && (r.guidelines.cpic?.length > 0 || r.guidelines.dpwg?.length > 0) && (
-                                  <div className="mt-3 mb-3 space-y-2">
-                                    {r.guidelines.cpic?.length > 0 && (
-                                      <div className="text-sm border-l-2 border-blue-400 pl-3 py-1">
-                                        <span className="font-semibold text-blue-700 text-xs uppercase tracking-wide">CPIC Guideline</span>
-                                        {r.guidelines.cpic.map((g, i) => (
-                                          <p key={`${g.drug}-${i}`} className="mt-1 text-sm leading-relaxed">
-                                            <span className="font-medium capitalize">{g.drug}:</span>{" "}
-                                            <span className="text-muted">{g.recommendation}</span>
-                                            {g.strength && (
-                                              <span className="text-xs text-blue-600 ml-1">({g.strength})</span>
-                                            )}
-                                            {g.pmid && (
-                                              <a
-                                                href={`https://pubmed.ncbi.nlm.nih.gov/${g.pmid}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-accent text-xs ml-1 hover:underline"
-                                                onClick={(e) => e.stopPropagation()}
-                                              >
-                                                [PMID]
-                                              </a>
-                                            )}
-                                          </p>
-                                        ))}
-                                      </div>
-                                    )}
-                                    {r.guidelines.dpwg?.length > 0 && (
-                                      <div className="text-sm border-l-2 border-emerald-400 pl-3 py-1">
-                                        <span className="font-semibold text-emerald-700 text-xs uppercase tracking-wide">DPWG Guideline</span>
-                                        {r.guidelines.dpwg.map((g, i) => (
-                                          <p key={`${g.drug}-${i}`} className="mt-1 text-sm leading-relaxed">
-                                            <span className="font-medium capitalize">{g.drug}:</span>{" "}
-                                            <span className="text-muted">{g.recommendation}</span>
-                                            {g.pmid && (
-                                              <a
-                                                href={`https://pubmed.ncbi.nlm.nih.gov/${g.pmid}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-accent text-xs ml-1 hover:underline"
-                                                onClick={(e) => e.stopPropagation()}
-                                              >
-                                                [PMID]
-                                              </a>
-                                            )}
-                                          </p>
-                                        ))}
+                                {hasGuidelines && (
+                                  <div className="mt-3 mb-3">
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); setGuidelinesGene(guidelinesOpen ? null : r.gene); }}
+                                      className="flex items-center gap-1.5 text-xs font-medium text-accent hover:underline"
+                                    >
+                                      <span className={`text-[10px] transition-transform ${guidelinesOpen ? "rotate-90" : ""}`}>&#9654;</span>
+                                      {guidelinesOpen ? "Hide" : "Show"} CPIC/DPWG Guidelines
+                                    </button>
+                                    {guidelinesOpen && (
+                                      <div className="mt-2 space-y-2">
+                                        {r.guidelines!.cpic?.length > 0 && (
+                                          <div className="text-sm border-l-2 border-blue-400 pl-3 py-1">
+                                            <span className="font-semibold text-blue-700 text-xs uppercase tracking-wide">CPIC Guideline</span>
+                                            {r.guidelines!.cpic.map((g, i) => (
+                                              <p key={`${g.drug}-${i}`} className="mt-1 text-sm leading-relaxed">
+                                                <span className="font-medium capitalize">{g.drug}:</span>{" "}
+                                                <span className="text-muted">{g.recommendation}</span>
+                                                {g.strength && (
+                                                  <span className="text-xs text-blue-600 ml-1">({g.strength})</span>
+                                                )}
+                                                {g.pmid && (
+                                                  <a
+                                                    href={`https://pubmed.ncbi.nlm.nih.gov/${g.pmid}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-accent text-xs ml-1 hover:underline"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                  >
+                                                    [PMID]
+                                                  </a>
+                                                )}
+                                              </p>
+                                            ))}
+                                          </div>
+                                        )}
+                                        {r.guidelines!.dpwg?.length > 0 && (
+                                          <div className="text-sm border-l-2 border-emerald-400 pl-3 py-1">
+                                            <span className="font-semibold text-emerald-700 text-xs uppercase tracking-wide">DPWG Guideline</span>
+                                            {r.guidelines!.dpwg.map((g, i) => (
+                                              <p key={`${g.drug}-${i}`} className="mt-1 text-sm leading-relaxed">
+                                                <span className="font-medium capitalize">{g.drug}:</span>{" "}
+                                                <span className="text-muted">{g.recommendation}</span>
+                                                {g.pmid && (
+                                                  <a
+                                                    href={`https://pubmed.ncbi.nlm.nih.gov/${g.pmid}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-accent text-xs ml-1 hover:underline"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                  >
+                                                    [PMID]
+                                                  </a>
+                                                )}
+                                              </p>
+                                            ))}
+                                          </div>
+                                        )}
                                       </div>
                                     )}
                                   </div>

@@ -9,7 +9,6 @@ import { useReportDownload } from "@/hooks/useReportDownload";
 import type {
   Analysis,
   AncestryDetail,
-  BloodTypeResult,
   CarrierStatusResult,
   ClinvarResponse,
   GwasResponse,
@@ -28,7 +27,6 @@ export default function DashboardPage() {
   const [snpediaTotal, setSnpediaTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [pgxResults, setPgxResults] = useState<PgxResult[]>([]);
-  const [bloodType, setBloodType] = useState<BloodTypeResult | null>(null);
   const [carrierStatus, setCarrierStatus] = useState<CarrierStatusResult | null>(null);
   const [clinvarTotal, setClinvarTotal] = useState(0);
   const [prsStatus, setPrsStatus] = useState<"computing" | "failed" | "ready" | null>(null);
@@ -78,11 +76,10 @@ export default function DashboardPage() {
         const userId = user?.id;
         if (!userId) return;
 
-        const [prsData, traitsData, pgxData, btData, csData, cvData, gwasData] = await Promise.all([
+        const [prsData, traitsData, pgxData, csData, cvData, gwasData] = await Promise.all([
           apiFetch<PrsResponse>(`/api/v1/results/prs/${userId}`, {}, token).catch(() => null),
           apiFetch<{ hits: TraitHit[] }>(`/api/v1/results/traits/${userId}`, {}, token).catch(() => null),
           apiFetch<{ results: PgxResult[] }>(`/api/v1/results/pgx/${userId}`, {}, token).catch(() => null),
-          apiFetch<{ result: BloodTypeResult | null }>(`/api/v1/results/blood-type/${userId}`, {}, token).catch(() => null),
           apiFetch<{ result: CarrierStatusResult | null }>(`/api/v1/results/carrier-status/${userId}`, {}, token).catch(() => null),
           apiFetch<ClinvarResponse>(`/api/v1/results/clinvar/${userId}?limit=1`, {}, token).catch(() => null),
           apiFetch<GwasResponse>(`/api/v1/results/gwas/${userId}`, {}, token).catch(() => null),
@@ -95,7 +92,6 @@ export default function DashboardPage() {
         }
         if (traitsData) setTraitHits(traitsData.hits);
         if (pgxData) setPgxResults(pgxData.results);
-        if (btData?.result) setBloodType(btData.result);
         if (csData?.result) setCarrierStatus(csData.result);
         if (cvData) {
           setClinvarTotal(cvData.total);
@@ -167,7 +163,7 @@ export default function DashboardPage() {
     );
   }
 
-  const hasResults = traitHits.length > 0 || pgxResults.length > 0 || bloodType !== null || prsStatus !== null;
+  const hasResults = traitHits.length > 0 || pgxResults.length > 0 || prsStatus !== null;
   const pgxActionableCount = pgxResults.filter((r) => {
     if (!r.phenotype) return false;
     const p = r.phenotype.toLowerCase();
@@ -345,25 +341,6 @@ export default function DashboardPage() {
                   className="inline-block text-sm font-medium text-accent hover:underline"
                 >
                   View carrier status details &rarr;
-                </Link>
-              </div>
-            )}
-
-            {/* Blood Type */}
-            {bloodType && (
-              <div className="border border-border p-5">
-                <h2 className="font-serif text-xl font-semibold mb-2">
-                  Blood Type
-                  <span className="ml-2 align-middle inline-block text-[10px] font-sans font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 uppercase tracking-wide">
-                    Experimental
-                  </span>
-                </h2>
-                <p className="font-serif text-2xl font-bold tracking-tight mb-3">{bloodType.display_type}</p>
-                <Link
-                  href="/bloodtype"
-                  className="inline-block text-sm font-medium text-accent hover:underline"
-                >
-                  View blood type details &rarr;
                 </Link>
               </div>
             )}

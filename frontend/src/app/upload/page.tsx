@@ -197,11 +197,10 @@ export default function UploadPage() {
               pending: "Queued...",
               parsing: "Parsing genotype file...",
               matching_snpedia: "Matching SNPedia variants...",
-              matching_fast: "Analyzing traits, pharmacogenes, blood type, carrier status...",
+              matching_fast: "Analyzing traits, pharmacogenes, carrier status...",
               matching_traits: "Analyzing trait associations...",
               matching_clinvar: "Cross-referencing ClinVar...",
               matching_pgx: "Calling pharmacogenes...",
-              matching_blood: "Determining blood type...",
               matching_carrier: "Screening carrier status...",
               scoring_prs: "Computing polygenic risk scores...",
             } as Record<string, string>)[analysisStage] || "Processing..."}

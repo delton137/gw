@@ -1,5 +1,4 @@
 from app.models.base import Base
-from app.models.blood_type import UserBloodTypeResult
 from app.models.gene import Gene
 from app.models.carrier_status import UserCarrierStatusResult
 from app.models.gwas import GwasAssociation, GwasPrsResult, GwasReferenceDistribution, GwasStudy
@@ -44,8 +43,6 @@ __all__ = [
     "PgxDiplotypePhenotype",
     "PgxDrugGuideline",
     "UserPgxResult",
-    # blood type
-    "UserBloodTypeResult",
     # carrier status
     "UserCarrierStatusResult",
 ]

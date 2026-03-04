@@ -9,7 +9,7 @@ Pipeline order:
   2. Match SNPedia variants (status: matching_snpedia)
   3. Parallel fast matching (status: matching_fast):
      - Trait associations, ClinVar, PGx (DB-bound, separate sessions)
-     - Blood type, carrier status (CPU-only, threaded)
+     - Carrier status (CPU-only, threaded)
   4. Commit fast results → status: done  (frontend redirects to dashboard)
   5. Background: ancestry estimation + PRS scoring (status: scoring_prs)
   6. Complete → status: complete
@@ -33,16 +33,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.db import async_session_factory
-from app.models.blood_type import UserBloodTypeResult
 from app.models.carrier_status import UserCarrierStatusResult
 from app.models.prs import PrsScore, PrsReferenceDistribution
 from app.models.pgx import UserPgxResult
 from app.models.user import Analysis, PrsResult, UserClinvarHit, UserSnpTraitHit, UserVariant
 from app.services.ancestry_estimator import estimate_ancestry
 from app.services.clinvar_matcher import match_clinvar
-from app.services.blood_type import determine_blood_type, BLOOD_TYPE_DELETION_RSIDS
 from app.services.carrier_matcher import determine_carrier_status
-from app.services.parser import parse_genotype_file, extract_raw_genotypes, detect_genome_build, ParseError
+from app.services.parser import parse_genotype_file, detect_genome_build, ParseError
 from app.services.pgx_matcher import match_pgx
 from app.services.scorer import compute_prs
 from app.services.trait_matcher import match_traits
@@ -159,18 +157,16 @@ async def _run_pipeline(
                 del file_bytes
 
             result = parse_genotype_file(content)
-            # Extract deletion genotypes for blood type (rs8176719 on DTC chips)
-            deletion_gts = extract_raw_genotypes(content, result[1], BLOOD_TYPE_DELETION_RSIDS)
             del content
-            return (*result, deletion_gts)
+            return result
 
-        user_df, fmt, chip_version, deletion_genotypes = await asyncio.to_thread(_parse_file)
+        user_df, fmt, chip_version = await asyncio.to_thread(_parse_file)
 
         elapsed_parse = time.perf_counter() - t0
         log.info(f"[{analysis_id}] Parsed {len(user_df)} variants ({fmt}/{chip_version}) in {elapsed_parse:.2f}s")
         await _set_detail(analysis, session, f"Parsed {len(user_df):,} variants ({fmt} format)")
 
-        # Detect genome build (needed for blood type position matching + VCF rsID lookup)
+        # Detect genome build (needed for VCF rsID lookup + position-based matching)
         genome_build = detect_genome_build(user_df)
         if genome_build == "unknown":
             await _fail_analysis(
@@ -319,7 +315,7 @@ async def _run_pipeline(
 
         # ----- Parallel fast matching (DB + CPU tasks) -----
         analysis.status = "matching_fast"
-        analysis.status_detail = "Running trait, ClinVar, PGx, blood type, and carrier matching..."
+        analysis.status_detail = "Running trait, ClinVar, PGx, and carrier matching..."
         await session.commit()
         t0_match = time.perf_counter()
 
@@ -337,15 +333,11 @@ async def _run_pipeline(
                 return await match_pgx(user_df_full, s, genome_build=genome_build, is_vcf=is_vcf)
 
         # CPU-only tasks run in threads
-        trait_hits, clinvar_hits, pgx_results, blood_type_result, carrier_results = (
+        trait_hits, clinvar_hits, pgx_results, carrier_results = (
             await asyncio.gather(
                 _run_traits(),
                 _run_clinvar(),
                 _run_pgx(),
-                asyncio.to_thread(
-                    determine_blood_type, user_df_full,
-                    genome_build=genome_build, deletion_genotypes=deletion_genotypes,
-                ),
                 asyncio.to_thread(determine_carrier_status, user_df_full, genome_build=genome_build, is_vcf=is_vcf),
             )
         )
@@ -406,35 +398,6 @@ async def _run_pipeline(
                 clinical_note=pr.clinical_note,
                 variant_genotypes=pr.variant_genotypes,
             ))
-
-        if blood_type_result:
-            session.add(UserBloodTypeResult(
-                user_id=user_id,
-                analysis_id=analysis_id,
-                abo_genotype=blood_type_result.abo_genotype,
-                abo_phenotype=blood_type_result.abo_phenotype,
-                rh_c_antigen=blood_type_result.rh_c_antigen,
-                rh_e_antigen=blood_type_result.rh_e_antigen,
-                rh_cw_antigen=blood_type_result.rh_cw_antigen,
-                kell_phenotype=blood_type_result.kell_phenotype,
-                mns_phenotype=blood_type_result.mns_phenotype,
-                duffy_phenotype=blood_type_result.duffy_phenotype,
-                kidd_phenotype=blood_type_result.kidd_phenotype,
-                secretor_status=blood_type_result.secretor_status,
-                display_type=blood_type_result.display_type,
-                systems_json=blood_type_result.systems or None,
-                n_variants_tested=blood_type_result.n_variants_tested,
-                n_variants_total=blood_type_result.n_variants_total,
-                n_systems_determined=blood_type_result.n_systems_determined,
-                confidence=blood_type_result.confidence,
-                confidence_note=blood_type_result.confidence_note,
-            ))
-            log.info(
-                f"[{analysis_id}] Blood type: {blood_type_result.display_type} "
-                f"({blood_type_result.confidence}, {blood_type_result.n_variants_tested}/{blood_type_result.n_variants_total} variants)"
-            )
-        else:
-            log.info(f"[{analysis_id}] Blood type: insufficient variants for determination")
 
         n_carrier = sum(1 for r in carrier_results if r.status == "carrier")
         n_affected = sum(1 for r in carrier_results if r.status in ("likely_affected", "potential_compound_het"))
