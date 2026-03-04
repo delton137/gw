@@ -130,6 +130,7 @@ export const GENE_CATEGORIES: Record<string, string> = {
   CYP1A1: "Caffeine / Substances",
   ADH1B: "Caffeine / Substances",
   ALDH2: "Caffeine / Substances",
+  AUTS2: "Caffeine / Substances",
 };
 
 /**

@@ -11,7 +11,6 @@ import type {
   AncestryDetail,
   CarrierStatusResult,
   ClinvarResponse,
-  GwasResponse,
   PgxResult,
   PrsResponse,
   TraitHit,
@@ -33,9 +32,7 @@ export default function DashboardPage() {
   const [prsCount, setPrsCount] = useState(0);
   const [prsError, setPrsError] = useState<string | null>(null);
   const [prsDetail, setPrsDetail] = useState<string | null>(null);
-  const [gwasStatus, setGwasStatus] = useState<"computing" | "failed" | "ready" | null>(null);
-  const [gwasCount, setGwasCount] = useState(0);
-  const [gwasElevated, setGwasElevated] = useState(0);
+
   const { download: downloadReport, loading: downloading } = useReportDownload("/api/v1/report/download", "genewizard-report");
   const { download: downloadPgxReport, loading: downloadingPgx } = useReportDownload("/api/v1/report/pgx/download", "genewizard-pgx-report");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -76,13 +73,12 @@ export default function DashboardPage() {
         const userId = user?.id;
         if (!userId) return;
 
-        const [prsData, traitsData, pgxData, csData, cvData, gwasData] = await Promise.all([
+        const [prsData, traitsData, pgxData, csData, cvData] = await Promise.all([
           apiFetch<PrsResponse>(`/api/v1/results/prs/${userId}`, {}, token).catch(() => null),
           apiFetch<{ hits: TraitHit[] }>(`/api/v1/results/traits/${userId}`, {}, token).catch(() => null),
           apiFetch<{ results: PgxResult[] }>(`/api/v1/results/pgx/${userId}`, {}, token).catch(() => null),
           apiFetch<{ result: CarrierStatusResult | null }>(`/api/v1/results/carrier-status/${userId}`, {}, token).catch(() => null),
           apiFetch<ClinvarResponse>(`/api/v1/results/clinvar/${userId}?limit=1`, {}, token).catch(() => null),
-          apiFetch<GwasResponse>(`/api/v1/results/gwas/${userId}`, {}, token).catch(() => null),
         ]);
 
         setFetchError(null);
@@ -95,12 +91,6 @@ export default function DashboardPage() {
         if (csData?.result) setCarrierStatus(csData.result);
         if (cvData) {
           setClinvarTotal(cvData.total);
-        }
-        if (gwasData) {
-          setGwasStatus(gwasData.gwas_status);
-          setGwasCount(gwasData.total_scores);
-          const allScores = Object.values(gwasData.categories).flat();
-          setGwasElevated(allScores.filter((s) => s.percentile !== null && s.percentile >= 80).length);
         }
         // Start polling if PRS still computing
         if (prsData?.prs_status === "computing") {
@@ -387,40 +377,6 @@ export default function DashboardPage() {
                 </div>
               )}
             </div>
-
-            {/* GWAS Risk Scores Card */}
-            {(gwasStatus === "ready" || gwasStatus === "computing") && (
-              <div className="border border-border p-5">
-                <h2 className="font-serif text-xl font-semibold mb-2">
-                  GWAS Risk Scores
-                  <span className="ml-2 align-middle inline-block text-[10px] font-sans font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 uppercase tracking-wide">
-                    Experimental
-                  </span>
-                </h2>
-                {gwasStatus === "computing" && (
-                  <div className="flex items-center gap-2 text-sm text-muted">
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Computing GWAS risk scores...
-                  </div>
-                )}
-                {gwasStatus === "ready" && (
-                  <div>
-                    <p className="text-sm text-muted mb-3">
-                      <span className="font-semibold text-foreground">{gwasCount}</span> GWAS risk score{gwasCount !== 1 ? "s" : ""} computed
-                    </p>
-                    <Link
-                      href="/gwas"
-                      className="inline-block text-sm font-medium text-accent hover:underline"
-                    >
-                      View GWAS risk scores &rarr;
-                    </Link>
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* Ancestry Card */}
             {analysis?.detected_ancestry && (

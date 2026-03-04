@@ -355,7 +355,7 @@ export default function MySnpsPage() {
                   </h2>
                   <div className="border border-border overflow-x-auto">
                     {/* Header */}
-                    <div className="grid grid-cols-[7rem_5rem_1fr_4.5rem_minmax(8rem,auto)_5.5rem] items-center px-4 py-2 border-b border-border text-sm">
+                    <div className="grid grid-cols-[7rem_5rem_1fr_minmax(8rem,auto)_4.5rem_5.5rem] items-center px-4 py-2 border-b border-border text-sm">
                       <span
                         className="font-medium text-muted cursor-pointer hover:text-foreground select-none"
                         onClick={() => handleSort("rsid")}
@@ -374,13 +374,13 @@ export default function MySnpsPage() {
                       >
                         Trait{sortIndicator("trait")}
                       </span>
-                      <span className="font-medium text-muted text-center" title="Purple alleles are effect alleles associated with the trait">Genotype</span>
                       <span
                         className="font-medium text-muted text-center cursor-pointer hover:text-foreground select-none"
                         onClick={() => handleSort("risk_level")}
                       >
                         Risk / Effect{sortIndicator("risk_level")}
                       </span>
+                      <span className="font-medium text-muted text-center" title="Purple alleles are effect alleles associated with the trait">Genotype</span>
                       <span
                         className="font-medium text-muted text-center cursor-pointer hover:text-foreground select-none"
                         onClick={() => handleSort("evidence_level")}
@@ -396,7 +396,7 @@ export default function MySnpsPage() {
                         <div key={hit.id} className="border-b border-border last:border-0">
                           <button
                             onClick={() => setExpandedId(isExpanded ? null : hit.id)}
-                            className="w-full text-left grid grid-cols-[7rem_5rem_1fr_4.5rem_minmax(8rem,auto)_5.5rem] items-center px-4 py-3 hover:bg-gray-50 transition-colors text-sm"
+                            className="w-full text-left grid grid-cols-[7rem_5rem_1fr_minmax(8rem,auto)_4.5rem_5.5rem] items-center px-4 py-3 hover:bg-gray-50 transition-colors text-sm"
                           >
                             <Link
                               href={`/snp/${hit.rsid}`}
@@ -417,21 +417,24 @@ export default function MySnpsPage() {
                               <span className="font-medium truncate pr-1">—</span>
                             )}
                             <span className="truncate pr-2">{hit.trait}</span>
-                            <span className="font-mono text-xs text-center">
-                              <GenotypeDisplay genotype={hit.user_genotype} riskAllele={hit.risk_allele} />
-                            </span>
                             <span className="text-center">
                               {hit.risk_level === "typical" ? (
                                 <span className="text-xs text-gray-400">Typical</span>
                               ) : hit.effect_summary ? (
                                 <span className={`text-xs ${riskColor(hit.risk_level)}`}>
                                   {hit.effect_summary}
+                                  {hit.risk_level === "moderate" && (
+                                    <span className="text-gray-400 ml-1">(1 copy)</span>
+                                  )}
                                 </span>
                               ) : (
                                 <span className={`text-xs capitalize ${riskColor(hit.risk_level)}`}>
                                   {hit.risk_level}
                                 </span>
                               )}
+                            </span>
+                            <span className="font-mono text-xs text-center">
+                              <GenotypeDisplay genotype={hit.user_genotype} riskAllele={hit.risk_allele} />
                             </span>
                             <span className="text-center">
                               <span className={`inline-block px-2 py-0.5 text-xs rounded-full capitalize ${evidenceBadge(hit.evidence_level)}`}>
@@ -442,6 +445,17 @@ export default function MySnpsPage() {
 
                           {isExpanded && (
                             <div className="px-4 pb-4 pt-1 bg-surface/50 border-t border-border/50">
+                              {hit.risk_allele && (
+                                <p className="text-xs text-muted mb-2">
+                                  Your genotype: <span className="font-mono font-semibold">{hit.user_genotype}</span>
+                                  {" — "}
+                                  {hit.risk_level === "increased"
+                                    ? `two copies of the effect allele (${hit.risk_allele})`
+                                    : hit.risk_level === "moderate"
+                                    ? `one copy of the effect allele (${hit.risk_allele})`
+                                    : `no copies of the effect allele (${hit.risk_allele})`}
+                                </p>
+                              )}
                               {hit.effect_description && (
                                 <p className="text-sm text-muted leading-relaxed">{hit.effect_description}</p>
                               )}

@@ -621,21 +621,23 @@ async def _run_pipeline(
         else:
             log.info(f"[{analysis_id}] PRS scoring disabled (settings.prs_enabled=False)")
 
-        # ----- GWAS-hit PRS scoring (non-fatal) -----
-        try:
-            from app.services.gwas_scorer import score_gwas
-            gwas_results = await score_gwas(
-                user_df=user_df_full,
-                session=session,
-                ancestry_group=ancestry_group,
-                genome_build=genome_build,
-                user_id=user_id,
-                analysis_id=analysis_id,
-            )
-            if gwas_results:
-                log.info(f"[{analysis_id}] Scored {len(gwas_results)} GWAS-hit PRS")
-        except Exception as e:
-            log.error(f"[{analysis_id}] GWAS scoring failed (non-fatal): {e}")
+        # ----- GWAS-hit PRS scoring (disabled) -----
+        # GWAS scoring is temporarily disabled. Code is preserved in
+        # app/services/gwas_scorer.py for future re-enablement.
+        # try:
+        #     from app.services.gwas_scorer import score_gwas
+        #     gwas_results = await score_gwas(
+        #         user_df=user_df_full,
+        #         session=session,
+        #         ancestry_group=ancestry_group,
+        #         genome_build=genome_build,
+        #         user_id=user_id,
+        #         analysis_id=analysis_id,
+        #     )
+        #     if gwas_results:
+        #         log.info(f"[{analysis_id}] Scored {len(gwas_results)} GWAS-hit PRS")
+        # except Exception as e:
+        #     log.error(f"[{analysis_id}] GWAS scoring failed (non-fatal): {e}")
 
         # =================================================================
         # STEP 6: Complete

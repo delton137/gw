@@ -76,6 +76,15 @@ SAMPLE_VCF_MULTIALLELIC = """\
 1\t752566\trs3094315\tA\tG\t100\tPASS\t.\tGT\t0/1
 """
 
+# Haploid genotypes on sex chromosomes (male chrX/chrY)
+SAMPLE_VCF_HAPLOID = """\
+##fileformat=VCFv4.1
+#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE1
+X\t43591036\trs6323\tG\tT\t40\tPASS\t.\tGT:GQ\t1:99
+X\t100000\trs99999\tC\tA\t50\tPASS\t.\tGT:GQ\t0:99
+1\t752566\trs3094315\tA\tG\t100\tPASS\t.\tGT:GQ\t0/1:99
+"""
+
 # Complete Genomics var-ASM format:
 # - Two rows per diploid variant (one per allele)
 # - 0-based half-open coordinates (begin+1 = 1-based position)
@@ -237,6 +246,28 @@ class TestParseVCF:
         df = parse_vcf(SAMPLE_VCF_MULTIALLELIC)
         assert len(df) == 1
         assert df["rsid"][0] == "rs3094315"
+
+    def test_haploid_hemizygous_alt(self):
+        """Hemizygous ALT on chrX (e.g. rs6323 MAOA in males) should be duplicated."""
+        df = parse_vcf(SAMPLE_VCF_HAPLOID)
+        row = df.filter(pl.col("rsid") == "rs6323")
+        assert len(row) == 1
+        assert row["allele1"][0] == "T"
+        assert row["allele2"][0] == "T"
+        assert row["chrom"][0] == "X"
+
+    def test_haploid_hemizygous_ref(self):
+        """Hemizygous REF on chrX should be duplicated."""
+        df = parse_vcf(SAMPLE_VCF_HAPLOID)
+        row = df.filter(pl.col("rsid") == "rs99999")
+        assert len(row) == 1
+        assert row["allele1"][0] == "C"
+        assert row["allele2"][0] == "C"
+
+    def test_haploid_mixed_with_diploid(self):
+        """Haploid and diploid calls in same VCF should both be parsed."""
+        df = parse_vcf(SAMPLE_VCF_HAPLOID)
+        assert len(df) == 3  # 2 haploid + 1 diploid
 
     def test_empty_file_raises(self):
         with pytest.raises(ParseError):

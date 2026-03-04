@@ -307,8 +307,18 @@ def parse_vcf(content: str) -> pl.DataFrame:
     # Normalize phased (|) to unphased (/)
     df = df.with_columns(pl.col("gt").str.replace_all(r"\|", "/"))
 
-    # Filter to valid diploid genotypes (0/0, 0/1, 1/0, 1/1)
-    df = df.filter(pl.col("gt").str.contains(r"^[01]/[01]$"))
+    # Filter to valid genotypes: diploid (0/0, 0/1, 1/0, 1/1) or
+    # haploid (0, 1) for hemizygous calls on chrX/chrY in males
+    df = df.filter(pl.col("gt").str.contains(r"^[01](/[01])?$"))
+
+    # Normalise haploid calls to diploid by duplicating the allele
+    # e.g. "1" -> "1/1", "0" -> "0/0"
+    df = df.with_columns(
+        pl.when(pl.col("gt").str.len_chars() == 1)
+        .then(pl.col("gt") + "/" + pl.col("gt"))
+        .otherwise(pl.col("gt"))
+        .alias("gt")
+    )
 
     # Extract allele indices and map to actual alleles
     df = df.with_columns(

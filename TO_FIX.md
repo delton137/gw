@@ -40,9 +40,6 @@ Also fix docstring: model is a Bayesian mixture (Mars et al. 2020), not GenoPred
 **Bug:** All three MEFV variants show exactly -50000 offset from GRCh37 to GRCh38 (e.g., 3293407 → 3243407). Real liftover offsets are almost never exactly round numbers.
 **Fix:** Verify against dbSNP GRCh38 positions. Correct if wrong.
 
-### 12. ~~Ancestry proportions don't sum to 1.0~~ FIXED
-**Resolution:** Added renormalization after rounding/zeroing for both populations and superpopulations in `ancestry_estimator.py`.
-
 ### 13. DPYD: CPIC now distinguishes within IM (AS=1.0 vs AS=0.5)
 **Files:** `app/services/pgx_matcher.py:64-68`
 **Note:** Both AS=0.5 and AS=1.0 map to "Intermediate Metabolizer" which is correct. But CPIC 2023 update distinguishes these for dosing (AS=0.5 gets more aggressive dose reduction). Not wrong, but a refinement opportunity for guideline matching.
