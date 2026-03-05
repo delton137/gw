@@ -509,9 +509,9 @@ async def _run_pipeline(
             analysis.status_detail = "Ancestry estimation: insufficient markers"
         await session.commit()
 
-        # ----- PRS scoring (disabled via settings.prs_enabled) -----
+        # ----- PRS scoring (disabled via settings.prs_enabled; WGS only) -----
         elapsed_prs = 0.0
-        if settings.prs_enabled:
+        if settings.prs_enabled and is_wgs:
             t0_prs = time.perf_counter()
 
             scores_result = await session.execute(select(PrsScore))
@@ -640,7 +640,10 @@ async def _run_pipeline(
                     coverage_quality=pr.coverage_quality,
                 ))
         else:
-            log.info(f"[{analysis_id}] PRS scoring disabled (settings.prs_enabled=False)")
+            if not settings.prs_enabled:
+                log.info(f"[{analysis_id}] PRS scoring disabled (settings.prs_enabled=False)")
+            else:
+                log.info(f"[{analysis_id}] PRS scoring skipped (SNP chip — WGS only)")
 
         # ----- GWAS-hit PRS scoring (disabled) -----
         # GWAS scoring is temporarily disabled. Code is preserved in

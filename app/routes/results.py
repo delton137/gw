@@ -130,10 +130,21 @@ async def get_trait_hits(
     )
     kb_total = kb_total_result.scalar() or 0
 
+    # Count unique SNPs matched for this user (regardless of pagination)
+    unique_matched_result = await session.execute(
+        text(
+            "SELECT COUNT(DISTINCT rsid) FROM user_snp_trait_hits "
+            "WHERE analysis_id = :aid AND user_id = :uid"
+        ),
+        {"aid": str(analysis.id), "uid": user_id},
+    )
+    unique_snps_matched = unique_matched_result.scalar() or 0
+
     return {
         "analysis_id": str(analysis.id),
         "total": len(rows),
         "total_snps_in_kb": kb_total,
+        "unique_snps_matched": unique_snps_matched,
         "offset": offset,
         "hits": [
             {

@@ -21,6 +21,8 @@ export default function DashboardPage() {
   const { getToken } = useAuth();
   const { user } = useUser();
   const [traitHits, setTraitHits] = useState<TraitHit[]>([]);
+  const [uniqueSnpsMatched, setUniqueSnpsMatched] = useState(0);
+  const [totalSnpsInKb, setTotalSnpsInKb] = useState(0);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [variantsTotal, setVariantsTotal] = useState(0);
   const [snpediaTotal, setSnpediaTotal] = useState(0);
@@ -86,7 +88,11 @@ export default function DashboardPage() {
           setPrsStatus(prsData.prs_status);
           setPrsCount(prsData.results.length);
         }
-        if (traitsData) setTraitHits(traitsData.hits);
+        if (traitsData) {
+          setTraitHits(traitsData.hits);
+          setUniqueSnpsMatched(traitsData.unique_snps_matched);
+          setTotalSnpsInKb(traitsData.total_snps_in_kb);
+        }
         if (pgxData) setPgxResults(pgxData.results);
         if (csData?.result) setCarrierStatus(csData.result);
         if (cvData) {
@@ -219,7 +225,7 @@ export default function DashboardPage() {
                 <h2 className="font-serif text-xl font-semibold mb-2">Curated SNPs</h2>
                 {traitHits.length > 0 && (
                   <p className="text-sm text-muted mb-2">
-                    <span className="font-semibold text-foreground">{traitHits.length}</span> trait associations found
+                    Found <span className="font-semibold text-foreground">{uniqueSnpsMatched}</span> out of <span className="font-semibold text-foreground">{totalSnpsInKb}</span> important SNPs.
                   </p>
                 )}
                 {variantsTotal > 0 && (

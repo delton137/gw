@@ -134,6 +134,7 @@ export interface TraitsResponse {
   analysis_id: string;
   total: number;
   total_snps_in_kb: number;
+  unique_snps_matched: number;
   offset: number;
   hits: TraitHit[];
 }

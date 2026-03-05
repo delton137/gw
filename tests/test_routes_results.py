@@ -335,8 +335,13 @@ class TestGetTraitHits:
         kb_total_result = MagicMock()
         kb_total_result.scalar.return_value = 116
 
+        unique_matched_result = MagicMock()
+        unique_matched_result.scalar.return_value = 1
+
         session = AsyncMock()
-        session.execute = AsyncMock(side_effect=[analysis_result, hits_result, kb_total_result])
+        session.execute = AsyncMock(
+            side_effect=[analysis_result, hits_result, kb_total_result, unique_matched_result]
+        )
 
         async def override():
             return session
@@ -390,8 +395,13 @@ class TestGetTraitHits:
         kb_total_result = MagicMock()
         kb_total_result.scalar.return_value = 116
 
+        unique_matched_result = MagicMock()
+        unique_matched_result.scalar.return_value = 0
+
         session = AsyncMock()
-        session.execute = AsyncMock(side_effect=[analysis_result, hits_result, kb_total_result])
+        session.execute = AsyncMock(
+            side_effect=[analysis_result, hits_result, kb_total_result, unique_matched_result]
+        )
 
         async def override():
             return session
