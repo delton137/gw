@@ -14,6 +14,7 @@ import type {
   PgxResult,
   PrsResponse,
   TraitHit,
+  TraitsResponse,
   VariantsResponse,
 } from "@/lib/types";
 
@@ -77,7 +78,7 @@ export default function DashboardPage() {
 
         const [prsData, traitsData, pgxData, csData, cvData] = await Promise.all([
           apiFetch<PrsResponse>(`/api/v1/results/prs/${userId}`, {}, token).catch(() => null),
-          apiFetch<{ hits: TraitHit[] }>(`/api/v1/results/traits/${userId}`, {}, token).catch(() => null),
+          apiFetch<TraitsResponse>(`/api/v1/results/traits/${userId}`, {}, token).catch(() => null),
           apiFetch<{ results: PgxResult[] }>(`/api/v1/results/pgx/${userId}`, {}, token).catch(() => null),
           apiFetch<{ result: CarrierStatusResult | null }>(`/api/v1/results/carrier-status/${userId}`, {}, token).catch(() => null),
           apiFetch<ClinvarResponse>(`/api/v1/results/clinvar/${userId}?limit=1`, {}, token).catch(() => null),
