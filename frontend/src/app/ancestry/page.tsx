@@ -180,7 +180,7 @@ export default function AncestryPage() {
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value: number | undefined) => [`${value ?? 0}%`, ""]}
+                formatter={(value) => [`${value ?? 0}%`, ""]}
                 labelFormatter={(_, payload) =>
                   payload?.[0]?.payload?.name || ""
                 }

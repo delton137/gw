@@ -131,7 +131,7 @@ Raw file deleted after parsing. On failure: status `failed` with error_message.
 - **compute_empirical_ref_dists.py** — Empirical reference distributions from scored reference panel (PLINK2 .sscore files). Stores sorted score arrays in percentiles_json for empirical percentile lookup. Two modes: `--ref-dir` (score with PLINK2) or `--sscore-dir` (read pre-existing .sscore files)
 - **seed_pgx_definitions.py** — PGx knowledge base (76 genes, 1916 alleles, 1136 guidelines). Idempotent.
 - **extract_cpic_dpwg.py** — ETL from PharmCAT (one-time)
-- **seed_snp_pages.py** — ~214 curated SNPs (high-traffic + pharmacogenomic) with MyVariant.info enrichment
+- **seed_snp_pages.py** — ~237 curated SNPs (high-traffic + pharmacogenomic + methylation cycle) with MyVariant.info enrichment
 - **import_snpedia_rsids.py** — ~109K SNPedia rsids
 - **populate_trait_metadata.py** — PRS trait metadata for absolute risk
 - **build_aeon_reference.py** — Build aeon_reference.parquet from Aeon AF file (one-time). Optional `--with-rsids` for MyVariant.info rsid lookup
@@ -148,7 +148,7 @@ Raw file deleted after parsing. On failure: status `failed` with error_message.
 **/pgx** — Pharmacogenomics gene table with expandable CPIC/DPWG guidelines
 **/pgx/[gene]** — Per-gene PGx detail with star allele info and drug guidelines
 **/carrier** — Carrier screening details per gene
-**/mysnps** — User-specific SNPedia variant matches
+**/mysnps** — User-specific SNPedia variant matches, trait-based category grouping (geneCategories.ts: TRAIT_CATEGORIES overrides GENE_CATEGORIES)
 **/snp** — SNP search/discovery
 **/snp/[rsid]** — Public SNP pages (SSR for SEO): variant info, trait associations, ClinVar, PRS membership, PubMed links
 **/sign-in, /sign-up** — Clerk authentication

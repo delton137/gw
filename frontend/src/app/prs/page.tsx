@@ -276,6 +276,31 @@ export default function PrsPage() {
           <p className="text-muted">No PRS scores were computed for this analysis.</p>
         </div>
       )}
+
+      {/* Explainer */}
+      <section className="border-t border-border mt-12 pt-8">
+        <h2 className="font-serif text-2xl font-semibold mb-4">
+          What is a polygenic risk score?
+        </h2>
+        <p className="text-muted leading-relaxed mb-4">
+          A polygenic risk score (PRS) combines the effects of many genetic variants to
+          estimate your relative risk for a trait or disease. Each variant contributes a
+          small amount — the PRS aggregates thousands of these effects into a single number.
+        </p>
+        <p className="text-muted leading-relaxed">
+          GeneWizard uses scores from the{" "}
+          <a
+            href="https://www.pgscatalog.org"
+            className="text-accent hover:text-accent-hover underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            PGS Catalog
+          </a>
+          , the largest open database of published polygenic scores, and normalizes your
+          result against reference populations so you can see where you fall.
+        </p>
+      </section>
     </div>
   );
 }

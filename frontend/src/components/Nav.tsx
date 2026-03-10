@@ -1,20 +1,40 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { Show, UserButton } from "@clerk/nextjs";
 
 export default function Nav() {
   return (
     <nav className="border-b border-border">
       <div className="mx-auto max-w-4xl px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="font-serif text-xl font-semibold tracking-tight">
+        <Link href="/" className="flex items-center gap-2 font-serif text-xl font-semibold tracking-tight">
+          <Image src="/gene_wizard_logo.jpg" alt="" width={32} height={32} className="rounded-full" />
           GeneWizard
         </Link>
         <div className="flex items-center gap-6 text-sm text-muted">
           <Link href="/snp" className="hover:text-foreground transition-colors">
             Browse SNPs
           </Link>
-          <SignedIn>
+          <Link href="/demo" className="hover:text-foreground transition-colors">
+            Demo
+          </Link>
+          <Show
+            when="signed-in"
+            fallback={
+              <>
+                <Link href="/sign-in" className="hover:text-foreground transition-colors">
+                  Sign in
+                </Link>
+                <Link
+                  href="/sign-up"
+                  className="text-accent hover:text-accent-hover transition-colors"
+                >
+                  Get started
+                </Link>
+              </>
+            }
+          >
             <Link href="/dashboard" className="hover:text-foreground transition-colors">
               My Genome
             </Link>
@@ -22,18 +42,7 @@ export default function Nav() {
               Upload
             </Link>
             <UserButton />
-          </SignedIn>
-          <SignedOut>
-            <Link href="/sign-in" className="hover:text-foreground transition-colors">
-              Sign in
-            </Link>
-            <Link
-              href="/sign-up"
-              className="text-accent hover:text-accent-hover transition-colors"
-            >
-              Get started
-            </Link>
-          </SignedOut>
+          </Show>
         </div>
       </div>
     </nav>
