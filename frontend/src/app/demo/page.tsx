@@ -44,6 +44,7 @@ export default function DemoPage() {
         prsError={null}
         variantsTotal={DEMO_VARIANTS_SUMMARY.total}
         snpediaTotal={DEMO_VARIANTS_SUMMARY.snpedia_total}
+        linkPrefix="/demo"
       />
 
       {/* CTA footer */}

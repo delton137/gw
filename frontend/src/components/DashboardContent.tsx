@@ -22,6 +22,8 @@ interface DashboardContentProps {
   prsError: string | null;
   variantsTotal: number;
   snpediaTotal: number;
+  // Link prefix for demo mode — defaults to "" (e.g., "/demo" makes links go to /demo/pgx)
+  linkPrefix?: string;
   // Dashboard-only actions — omit to hide the actions section
   onDownloadReport?: () => void;
   downloadingReport?: boolean;
@@ -44,6 +46,7 @@ export default function DashboardContent({
   prsError,
   variantsTotal,
   snpediaTotal,
+  linkPrefix = "",
   onDownloadReport,
   downloadingReport,
   onDownloadPgxReport,
@@ -101,7 +104,7 @@ export default function DashboardContent({
               </p>
             )}
             <Link
-              href="/mysnps"
+              href={`${linkPrefix}/mysnps`}
               className="inline-block text-sm font-medium text-accent hover:underline mt-1"
             >
               View all SNP results &rarr;
@@ -119,7 +122,7 @@ export default function DashboardContent({
               <span className="font-semibold text-foreground">{pgxResults.length}</span> genes analyzed
             </p>
             <Link
-              href="/pgx"
+              href={`${linkPrefix}/pgx`}
               className="inline-block text-sm font-medium text-accent hover:underline"
             >
               View pharmacogenomics results &rarr;
@@ -135,7 +138,7 @@ export default function DashboardContent({
               <span className="font-semibold text-foreground">{clinvarTotal.toLocaleString()}</span> of your variants have ClinVar annotations
             </p>
             <Link
-              href="/clinvar"
+              href={`${linkPrefix}/clinvar`}
               className="inline-block text-sm font-medium text-accent hover:underline mt-1"
             >
               View ClinVar annotations &rarr;
@@ -196,7 +199,7 @@ export default function DashboardContent({
               </div>
             )}
             <Link
-              href="/carrier"
+              href={`${linkPrefix}/carrier`}
               className="inline-block text-sm font-medium text-accent hover:underline"
             >
               View carrier status details &rarr;
@@ -238,7 +241,7 @@ export default function DashboardContent({
                 <span className="font-semibold text-foreground">{prsCount}</span> polygenic risk score{prsCount !== 1 ? "s" : ""} computed
               </p>
               <Link
-                href="/prs"
+                href={`${linkPrefix}/prs`}
                 className="inline-block text-sm font-medium text-accent hover:underline"
               >
                 View PRS results &rarr;
@@ -287,7 +290,7 @@ export default function DashboardContent({
                   ))}
                 </div>
                 <Link
-                  href="/ancestry"
+                  href={`${linkPrefix}/ancestry`}
                   className="inline-block text-sm font-medium text-accent hover:underline"
                 >
                   View full ancestry breakdown &rarr;
