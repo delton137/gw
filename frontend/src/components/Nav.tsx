@@ -11,7 +11,7 @@ export default function Nav() {
     <nav className="border-b border-border">
       <div className="mx-auto max-w-4xl px-6 py-4 flex items-center justify-between">
         <Link href="/" className="font-serif text-xl font-semibold tracking-tight">
-          GeneWizard
+          Gene Wizard
         </Link>
 
         {/* Mobile hamburger */}

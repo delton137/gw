@@ -20,7 +20,7 @@ function ObfuscatedEmail() {
         onClick={handleClick}
         className="text-accent hover:text-accent-hover underline font-medium cursor-pointer"
       >
-        Click to reveal email address
+        here
       </button>
     );
   }
@@ -47,7 +47,7 @@ export default function PrivacyPolicy() {
 
       <section className="py-10 border-t border-border">
         <p className="text-muted leading-relaxed mb-4">
-          GeneWizard (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;)
+          Gene Wizard (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;)
           analyzes raw genetic data from direct-to-consumer genomics companies
           (23andMe, AncestryDNA) and whole-genome sequencing VCF files. This
           Privacy Policy describes how we collect, use, and protect your
@@ -66,7 +66,7 @@ export default function PrivacyPolicy() {
           raw genotype file at any point.
         </p>
         <p className="text-muted leading-relaxed">
-          This is a core design principle of GeneWizard, not an afterthought. We
+          This is a core design principle of Gene Wizard, not an afterthought. We
           believe raw genetic data is too sensitive to persist, so the system was
           built from the ground up to operate without storing it.
         </p>
@@ -237,7 +237,7 @@ export default function PrivacyPolicy() {
         <p className="text-muted leading-relaxed">
           The Service is not intended for individuals under the age of 18. We do
           not knowingly collect personal information from minors. If you believe
-          a minor has provided us with personal information, please contact us
+          a minor has provided us with personal information, Gene Wizard
           and we will delete it.
         </p>
       </section>
@@ -258,7 +258,7 @@ export default function PrivacyPolicy() {
         <h2 className="font-serif text-2xl font-semibold mb-6">Contact Us</h2>
         <p className="text-muted leading-relaxed">
           If you have questions about this Privacy Policy or your data, please
-          contact us at <ObfuscatedEmail />.
+          contact us <ObfuscatedEmail />.
         </p>
       </section>
     </div>

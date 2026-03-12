@@ -7,7 +7,7 @@ Technical documentation for the genewizard.net genomic analysis platform. This c
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [What GeneWizard Does](#what-genewizard-does)
+2. [What Gene Wizard Does](#what-genewizard-does)
 3. [The Analysis Pipeline](#the-analysis-pipeline)
 4. [File Parsing](#1-file-parsing)
 5. [Polygenic Risk Scoring](#2-polygenic-risk-scoring)
@@ -22,7 +22,7 @@ Technical documentation for the genewizard.net genomic analysis platform. This c
 
 ## Overview
 
-GeneWizard analyzes raw genetic data from direct-to-consumer (DTC) genomics companies — 23andMe, AncestryDNA, Dante Labs, etc. — and produces two kinds of results:
+Gene Wizard analyzes raw genetic data from direct-to-consumer (DTC) genomics companies — 23andMe, AncestryDNA, Dante Labs, etc. — and produces two kinds of results:
 
 1. **Polygenic Risk Scores (PRS):** Aggregate genetic risk for complex traits like heart disease, diabetes, Alzheimer's, etc.
 2. **Trait Associations:** Individual SNP variants linked to specific traits from published research.
@@ -33,7 +33,7 @@ The entire analysis runs in under 2 minutes, even for whole-genome sequencing fi
 
 ---
 
-## What GeneWizard Does
+## What Gene Wizard Does
 
 ### Polygenic Risk Scores (PRS)
 
@@ -47,7 +47,7 @@ The raw score alone doesn't mean much — it needs context. That's where **refer
 
 Beyond the aggregate PRS, individual SNP variants are sometimes strongly linked to specific traits. For example, rs429358 (in the APOE gene) is one of the strongest single-variant predictors of Alzheimer's risk.
 
-GeneWizard matches your variants against a curated knowledge base of SNP-trait associations from published research, and classifies each match by risk level:
+Gene Wizard matches your variants against a curated knowledge base of SNP-trait associations from published research, and classifies each match by risk level:
 
 - **Increased:** You carry two copies of the risk allele (homozygous)
 - **Moderate:** You carry one copy (heterozygous)
@@ -180,7 +180,7 @@ Coverage quality is classified as:
 
 ## Ancestry Estimation & Mixture Normalization
 
-GeneWizard auto-detects genetic ancestry using a naive Bayes classifier on ~500 ancestry-informative markers, then uses the detected proportions to compute a weighted mixture of reference distributions for PRS normalization. This eliminates the need for users to manually select their ancestry group and provides more accurate percentiles for admixed individuals.
+Gene Wizard auto-detects genetic ancestry using a naive Bayes classifier on ~500 ancestry-informative markers, then uses the detected proportions to compute a weighted mixture of reference distributions for PRS normalization. This eliminates the need for users to manually select their ancestry group and provides more accurate percentiles for admixed individuals.
 
 **See [ANCESTRY_ESTIMATION.md](ANCESTRY_ESTIMATION.md) for full technical details.**
 

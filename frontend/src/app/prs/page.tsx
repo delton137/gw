@@ -288,7 +288,7 @@ export default function PrsPage() {
           small amount — the PRS aggregates thousands of these effects into a single number.
         </p>
         <p className="text-muted leading-relaxed">
-          GeneWizard uses scores from the{" "}
+          Gene Wizard uses scores from the{" "}
           <a
             href="https://www.pgscatalog.org"
             className="text-accent hover:text-accent-hover underline"

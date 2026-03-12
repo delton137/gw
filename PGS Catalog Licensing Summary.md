@@ -42,7 +42,7 @@ All 7 are "GPS" (Genome-wide Polygenic Score) series scores from the Broad Insti
 - **Scoring file headers**: License details are embedded in the downloaded `.txt.gz` files
 - **FAQ**: https://www.pgscatalog.org/docs/faq/#access_how
 
-## Impact on GeneWizard
+## Impact on Gene Wizard
 
 PGS000013 and PGS000296 were removed from `scripts/ingest_pgs.py` PRIORITY_SCORES on 2026-02-28. Both were CAD scores redundant with PGS000001 (which is unrestricted). Current priority scores are all commercially licensed under EBI Terms of Use:
 

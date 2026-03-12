@@ -2,7 +2,7 @@
 
 ## Overview
 
-GeneWizard estimates genetic ancestry using Maximum Likelihood Estimation (MLE)
+Gene Wizard estimates genetic ancestry using Maximum Likelihood Estimation (MLE)
 on 128,097 ancestry-informative loci (AILs) from the 1000 Genomes Phase 3 project.
 This provides admixture fractions across 26 fine-grained populations, which are
 aggregated into 5 continental superpopulations.

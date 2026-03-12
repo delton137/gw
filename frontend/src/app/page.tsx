@@ -14,7 +14,7 @@ export default function Home() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/gene_wizard_logo.jpg"
-            alt="GeneWizard"
+            alt="Gene Wizard"
             width={280}
             height={280}
             className="rounded-2xl w-48 sm:w-[280px]"

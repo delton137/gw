@@ -51,7 +51,7 @@ def _fetch_json(url: str, params: dict) -> dict:
     """Make a GET request and return parsed JSON."""
     query = urllib.parse.urlencode(params)
     full_url = f"{url}?{query}"
-    req = urllib.request.Request(full_url, headers={"User-Agent": "GeneWizard/1.0"})
+    req = urllib.request.Request(full_url, headers={"User-Agent": "Gene Wizard/1.0"})
     resp: HTTPResponse = urllib.request.urlopen(req, timeout=30)
     return json.loads(resp.read())
 

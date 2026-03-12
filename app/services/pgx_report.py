@@ -456,7 +456,7 @@ def generate_pgx_report_pdf(
     story.append(Paragraph("Methods", styles["SectionHead"]))
 
     story.append(Paragraph(
-        "GeneWizard performs pharmacogenomic analysis by comparing user genotype data against "
+        "Gene Wizard performs pharmacogenomic analysis by comparing user genotype data against "
         "curated star allele definitions. Diplotypes are "
         "inferred from detected star alleles using a greedy matching algorithm. Metabolizer "
         "phenotypes are assigned based on CPIC consensus function-pair mappings.",
@@ -508,7 +508,7 @@ def generate_pgx_report_pdf(
         "status if the variant was not tested.<br/><br/>"
         "Please consult a healthcare provider or pharmacist for medical interpretation "
         "of these results.<br/><br/>"
-        "GeneWizard",
+        "Gene Wizard",
         styles["Disclaimer"],
     ))
 

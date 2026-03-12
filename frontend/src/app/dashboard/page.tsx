@@ -163,7 +163,7 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 pt-8 pb-16">
-      <h1 className="font-serif text-3xl font-semibold mb-8">My Genome Dashboard</h1>
+      <h1 className="font-serif text-3xl font-semibold mb-8">Your Genome Dashboard</h1>
 
       {fetchError && !hasResults ? (
         <div className="border border-red-300 bg-red-50 p-12 text-center">

@@ -342,7 +342,7 @@ export default function DashboardContent({
 
       {/* Version info — only for authenticated dashboard */}
       {onDownloadReport && (
-        <p className="mt-8 text-center text-[11px] text-gray-400">GeneWizard v0.9.0 &middot; Updated {process.env.NEXT_PUBLIC_BUILD_DATE}</p>
+        <p className="mt-8 text-center text-[11px] text-gray-400">Gene Wizard v0.9.0 &middot; Updated {process.env.NEXT_PUBLIC_BUILD_DATE}</p>
       )}
     </>
   );

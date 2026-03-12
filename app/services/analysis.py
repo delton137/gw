@@ -192,7 +192,7 @@ async def _run_pipeline(
         if genome_build == "unknown":
             await _fail_analysis(
                 session, analysis,
-                "Unable to determine genome build. GeneWizard supports GRCh37 (hg19) and "
+                "Unable to determine genome build. Gene Wizard supports GRCh37 (hg19) and "
                 "GRCh38 (hg38) only. Please verify your file was generated against a "
                 "standard human reference genome and try again.",
                 tmp_path=tmp_path,

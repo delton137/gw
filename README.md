@@ -1,4 +1,4 @@
-# GeneWizard
+# Gene Wizard
 
 Whole genome interpretation platform. Analyzes raw genetic data from 23andMe, AncestryDNA, and WGS VCFs.
 

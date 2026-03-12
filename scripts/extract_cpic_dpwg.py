@@ -1,7 +1,7 @@
 """Extract CPIC and DPWG drug-gene guidelines from PharmCAT prescribing_guidance.json.
 
 Parses the PharmCAT data into a flat JSON file suitable for seeding into
-GeneWizard's pgx_drug_guidelines table.
+Gene Wizard's pgx_drug_guidelines table.
 
 Usage:
     python -m scripts.extract_cpic_dpwg [--dry-run]
