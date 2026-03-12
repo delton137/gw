@@ -1,3 +1,40 @@
+"use client";
+
+import { useCallback, useState } from "react";
+
+function ObfuscatedEmail() {
+  const [revealed, setRevealed] = useState(false);
+  const parts = ["info", "genewizard", "net"];
+
+  const handleClick = useCallback(() => {
+    if (!revealed) {
+      setRevealed(true);
+      return;
+    }
+    window.location.href = `mailto:${parts[0]}@${parts[1]}.${parts[2]}`;
+  }, [revealed]);
+
+  if (!revealed) {
+    return (
+      <button
+        onClick={handleClick}
+        className="text-accent hover:text-accent-hover underline font-medium cursor-pointer"
+      >
+        Click to reveal email address
+      </button>
+    );
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      className="text-accent hover:text-accent-hover underline font-medium cursor-pointer"
+    >
+      {parts[0]}&#64;{parts[1]}.{parts[2]}
+    </button>
+  );
+}
+
 export default function PrivacyPolicy() {
   return (
     <div className="mx-auto max-w-3xl px-6">
@@ -221,8 +258,7 @@ export default function PrivacyPolicy() {
         <h2 className="font-serif text-2xl font-semibold mb-6">Contact Us</h2>
         <p className="text-muted leading-relaxed">
           If you have questions about this Privacy Policy or your data, please
-          contact us at{" "}
-          <span className="text-foreground font-medium">[email]</span>.
+          contact us at <ObfuscatedEmail />.
         </p>
       </section>
     </div>
