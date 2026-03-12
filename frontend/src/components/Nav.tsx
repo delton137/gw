@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Show, UserButton } from "@clerk/nextjs";
 
@@ -8,8 +7,7 @@ export default function Nav() {
   return (
     <nav className="border-b border-border">
       <div className="mx-auto max-w-4xl px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 font-serif text-xl font-semibold tracking-tight">
-          <Image src="/gene_wizard_logo.jpg" alt="" width={32} height={32} className="rounded-full" />
+        <Link href="/" className="font-serif text-xl font-semibold tracking-tight">
           GeneWizard
         </Link>
         <div className="flex items-center gap-6 text-sm text-muted">
