@@ -6,18 +6,22 @@ import ObfuscatedEmail from "@/components/ObfuscatedEmail";
 export default function AboutPage() {
   return (
     <div className="mx-auto max-w-3xl px-6 pt-12 pb-16">
-      <h1 className="font-serif text-3xl font-semibold mb-8">About Gene Wizard</h1>
+      <h1 className="font-serif text-3xl font-semibold mb-8">About</h1>
 
       <div className="space-y-6 text-sm text-foreground leading-relaxed">
         <p>
           Hello! My name is Dan Elton. I originally studied physics (Ph.D., 2016), and later
-          spent time as a Staff Scientist at the National Human Genome Research Institute.
+          was a Staff Scientist at the National Human Genome Research Institute.
         </p>
         <p>
-          I was first inspired to create Gene Wizard after realizing that Promethease and SNPedia
-          have not been updated since late 2019. My long term vision for Gene Wizard is to create a
+          I was first inspired to create Gene Wizard after realizing that{" "}
+          <a href="https://www.promethease.com" className="text-accent hover:underline" target="_blank" rel="noopener noreferrer">Promethease</a>
+          {" "}and{" "}
+          <a href="https://www.snpedia.com" className="text-accent hover:underline" target="_blank" rel="noopener noreferrer">SNPedia</a>
+          {" "}have not been updated since late 2019. My long term vision for Gene Wizard is to create a
           replacement for both. In addition, Gene Wizard moves beyond SNPs to polygenic analysis,
-          including polygenic scores from the Polygenic Score Catalog.
+          including polygenic scores from the{" "}
+          <a href="https://www.pgscatalog.org/" className="text-accent hover:underline" target="_blank" rel="noopener noreferrer">Polygenic Score Catalog</a>.
         </p>
 
         <h2 className="font-serif text-xl font-semibold text-foreground pt-4">Core values</h2>

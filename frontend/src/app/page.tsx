@@ -25,18 +25,18 @@ export default function Home() {
             Pioneering the future of whole genome interpretation
           </h1>
           <p className="text-base sm:text-lg text-muted leading-relaxed mb-6 sm:mb-8">
-            Become a beta tester today.
+            Become a beta tester today by uploading your 23andme genotype file or whole genome sequence file.
           </p>
           <div className="flex justify-center sm:justify-start gap-4">
             <Link
               href={isSignedIn ? "/upload" : "/sign-up"}
-              className="inline-block bg-accent text-white px-6 py-3 text-sm font-medium hover:bg-accent-hover transition-colors"
+              className="inline-block rounded bg-accent text-white px-6 py-3 text-sm font-medium hover:bg-accent-hover transition-colors"
             >
               {isSignedIn ? "Upload your genome" : "Get started"}
             </Link>
             <Link
               href="/demo"
-              className="inline-block border border-border px-6 py-3 text-sm font-medium hover:bg-gray-50 transition-colors"
+              className="inline-block rounded border border-border px-6 py-3 text-sm font-medium hover:bg-gray-50 transition-colors"
             >
               See demo results
             </Link>
