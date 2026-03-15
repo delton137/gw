@@ -2,6 +2,7 @@ from app.models.base import Base
 from app.models.gene import Gene
 from app.models.carrier_status import UserCarrierStatusResult
 from app.models.gwas import GwasAssociation, GwasPrsResult, GwasReferenceDistribution, GwasStudy
+from app.models.newsletter import EmailSubscriber
 from app.models.pgx import (
     PgxDiplotypePhenotype,
     PgxDrugGuideline,
@@ -45,4 +46,6 @@ __all__ = [
     "UserPgxResult",
     # carrier status
     "UserCarrierStatusResult",
+    # newsletter
+    "EmailSubscriber",
 ]

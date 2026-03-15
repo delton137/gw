@@ -42,12 +42,115 @@ from app.models.user import Analysis, PrsResult, UserClinvarHit, UserSnpTraitHit
 from app.services.ancestry_estimator import estimate_ancestry
 from app.services.clinvar_matcher import match_clinvar
 from app.services.carrier_matcher import determine_carrier_status
-from app.services.parser import parse_genotype_file, detect_genome_build, ParseError
+from app.services.parser import extract_vcf_header_meta, parse_genotype_file, detect_genome_build, ParseError
 from app.services.pgx_matcher import match_pgx
 from app.services.scorer import compute_prs
 from app.services.trait_matcher import match_traits
 
 log = logging.getLogger(__name__)
+
+import re
+
+# Chromosome sort key: chr1..22 numerically, then X=23, Y=24, M/MT=25
+_CHR_ORDER = {str(i): i for i in range(1, 23)}
+_CHR_ORDER.update({"X": 23, "Y": 24, "M": 25, "MT": 25})
+
+
+def _chr_sort_key(filename: str) -> int:
+    """Extract chromosome number from filename for sorting."""
+    m = re.search(r'\.chr(\d+|X|Y|M|MT)[._]', filename, re.IGNORECASE)
+    if m:
+        return _CHR_ORDER.get(m.group(1).upper(), 99)
+    return 99
+
+
+def _is_hom_ref_line(line: str) -> bool:
+    """Check if a VCF data line has a homozygous-reference genotype (0/0 or 0|0).
+
+    The sample column (last tab-delimited field) starts with the GT field.
+    Hom-ref lines are useless for all downstream analyses and can be dropped
+    early to avoid building a multi-GB merged string for imputed genomes.
+    """
+    # Find the last tab — sample field starts there
+    idx = line.rfind("\t")
+    if idx < 0:
+        return False
+    sample_start = line[idx + 1 : idx + 4]
+    return sample_start in ("0/0", "0|0")
+
+
+def _merge_multi_vcf_zip(
+    zf: zipfile.ZipFile,
+    vcf_names: list[str],
+    analysis_id: str,
+) -> str:
+    """Merge per-chromosome VCF files from a ZIP into a single content string.
+
+    Keeps the full header from the first file (sorted by chromosome),
+    strips headers from subsequent files, and concatenates data lines.
+    Handles .vcf.gz files inside the ZIP (two-level decompression).
+    Drops hom-ref (0/0, 0|0) variants during merge to avoid OOM on imputed
+    genomes where ~87% of variants are hom-ref.
+    """
+    sorted_names = sorted(vcf_names, key=_chr_sort_key)
+    log.info(f"[{analysis_id}] Merging {len(sorted_names)} per-chromosome VCFs from ZIP")
+
+    chunks: list[str] = []
+    total_size = 0
+    total_variants = 0
+    kept_variants = 0
+
+    for i, name in enumerate(sorted_names):
+        raw = zf.read(name)
+        if raw[:2] == b"\x1f\x8b":
+            raw = gzip.decompress(raw)
+        total_size += len(raw)
+        if total_size > settings.max_decompressed_size:
+            raise ParseError("Decompressed file exceeds 10GB size limit")
+
+        text_content = raw.decode("utf-8", errors="replace")
+        del raw
+
+        if i == 0:
+            # First file: keep header, filter data lines
+            header_lines = []
+            data_lines = []
+            for line in text_content.split("\n"):
+                if line.startswith("#"):
+                    header_lines.append(line)
+                elif line:
+                    total_variants += 1
+                    if not _is_hom_ref_line(line):
+                        data_lines.append(line)
+                        kept_variants += 1
+            chunks.append("\n".join(header_lines))
+            if data_lines:
+                chunks.append("\n".join(data_lines))
+        else:
+            # Subsequent files: strip header lines, filter hom-ref
+            data_lines = []
+            for line in text_content.split("\n"):
+                if line.startswith("#"):
+                    continue
+                if line:
+                    total_variants += 1
+                    if not _is_hom_ref_line(line):
+                        data_lines.append(line)
+                        kept_variants += 1
+            if data_lines:
+                chunks.append("\n".join(data_lines))
+        del text_content
+
+    content = "\n".join(chunks)
+    del chunks
+    dropped = total_variants - kept_variants
+    log.info(
+        f"[{analysis_id}] Merged {len(sorted_names)} VCFs "
+        f"({total_size / 1024 / 1024:.0f} MB decompressed, "
+        f"{kept_variants:,} variants kept, {dropped:,} hom-ref dropped)"
+    )
+    return content
+
 
 # Limit concurrent parse+score operations to avoid OOM on 8GB servers.
 _analysis_semaphore = asyncio.Semaphore(1)
@@ -159,29 +262,39 @@ async def _run_pipeline(
                 with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
                     vcf_names = [
                         n for n in zf.namelist()
-                        if n.lower().endswith(".vcf") and not n.startswith("__MACOSX")
+                        if (n.lower().endswith(".vcf") or n.lower().endswith(".vcf.gz"))
+                        and not n.startswith("__MACOSX")
+                        and not n.split("/")[-1].startswith(".")
                     ]
                     if not vcf_names:
-                        raise ParseError("No .vcf file found inside ZIP archive")
-                    if len(vcf_names) > 1:
-                        raise ParseError("ZIP archive contains multiple VCF files — please upload a single VCF")
-                    decompressed = zf.read(vcf_names[0])
+                        raise ParseError("No .vcf or .vcf.gz file found inside ZIP archive")
+                    if len(vcf_names) == 1:
+                        decompressed = zf.read(vcf_names[0])
+                        if decompressed[:2] == b"\x1f\x8b":
+                            decompressed = gzip.decompress(decompressed)
+                        decompressed_mb = len(decompressed) / 1024 / 1024
+                        log.info(f"[{analysis_id}] Extracted {vcf_names[0]} ({decompressed_mb:.0f} MB)")
+                        if len(decompressed) > settings.max_decompressed_size:
+                            raise ParseError("Decompressed file exceeds 10GB size limit")
+                        content = decompressed.decode("utf-8", errors="replace")
+                        del decompressed
+                    else:
+                        content = _merge_multi_vcf_zip(zf, vcf_names, analysis_id)
                 del file_bytes
-                decompressed_mb = len(decompressed) / 1024 / 1024
-                log.info(f"[{analysis_id}] Extracted {vcf_names[0]} ({decompressed_mb:.0f} MB)")
-                if len(decompressed) > settings.max_decompressed_size:
-                    raise ParseError("Decompressed file exceeds 10GB size limit")
-                content = decompressed.decode("utf-8", errors="replace")
-                del decompressed
             else:
                 content = file_bytes.decode("utf-8", errors="replace")
                 del file_bytes
 
+            # Extract VCF header metadata before parsing (for imputation detection)
+            vcf_header_meta = None
+            if content.startswith("##fileformat=VCF"):
+                vcf_header_meta = extract_vcf_header_meta(content)
+
             result = parse_genotype_file(content)
             del content
-            return result
+            return (*result, vcf_header_meta)
 
-        user_df, fmt, chip_version = await asyncio.to_thread(_parse_file)
+        user_df, fmt, chip_version, vcf_header_meta = await asyncio.to_thread(_parse_file)
 
         elapsed_parse = time.perf_counter() - t0
         log.info(f"[{analysis_id}] Parsed {len(user_df)} variants ({fmt}/{chip_version}) in {elapsed_parse:.2f}s")
@@ -297,10 +410,14 @@ async def _run_pipeline(
         analysis.variant_count = len(user_df_full) if has_dot_rsids else len(user_df)
         analysis.file_format = fmt
         analysis.selected_ancestry = ancestry_group
+        if vcf_header_meta and vcf_header_meta.get("is_imputed"):
+            analysis.is_imputed = True
         await session.commit()
 
         is_vcf = fmt in ("vcf", "cgi") if fmt else False
         is_wgs = is_vcf and chip_version == "wgs"
+        if is_wgs and analysis.variant_count and analysis.variant_count < 3_000_000:
+            log.info(f"[{analysis_id}] WGS confirmed via VCF header metadata ({analysis.variant_count} variants)")
 
         # =================================================================
         # STEP 2: Fast matching (individual status per sub-step)

@@ -35,6 +35,7 @@ export interface Analysis {
   filename: string | null;
   genome_build: string | null;
   pipeline_fast_seconds: number | null;
+  is_imputed: boolean | null;
   status_detail?: string;
 }
 

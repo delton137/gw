@@ -109,7 +109,32 @@ export default function PrsPage() {
         &larr; Back to dashboard
       </Link>
 
-      <h1 className="font-serif text-3xl font-semibold mb-8">Polygenic Risk Scores — EXPERIMENTAL — <span className="text-red-600">may have errors</span></h1>
+      <h1 className="font-serif text-3xl font-semibold mb-6">Polygenic Risk Scores — EXPERIMENTAL — <span className="text-red-600">may have errors</span></h1>
+
+      {/* Explainer */}
+      <section className="border border-border p-5 mb-8">
+        <h2 className="font-serif text-lg font-semibold mb-2">
+          What is a polygenic risk score?
+        </h2>
+        <p className="text-muted text-sm leading-relaxed mb-3">
+          A polygenic risk score (PRS) combines the effects of many genetic variants to
+          estimate your relative risk for a trait or disease. Each variant contributes a
+          small amount — the PRS aggregates thousands of these effects into a single number.
+        </p>
+        <p className="text-muted text-sm leading-relaxed">
+          Gene Wizard uses scores from the{" "}
+          <a
+            href="https://www.pgscatalog.org"
+            className="text-accent hover:text-accent-hover underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            PGS Catalog
+          </a>
+          , the largest open database of published polygenic scores, and normalizes your
+          result against reference populations so you can see where you fall.
+        </p>
+      </section>
 
       {/* Ancestry panel */}
       <div className="border border-border p-5 mb-8">
@@ -135,11 +160,9 @@ export default function PrsPage() {
                   .sort(([, a], [, b]) => b - a)
                   .map(([pop, pct]) => `${Math.round(pct * 100)}% ${SUPERPOP_META[pop]?.name || pop}`)
                   .join(", ")}
-                {analysis.ancestry_confidence !== null && (
-                  <span className="text-muted ml-1">
-                    ({Math.round(analysis.ancestry_confidence * 100)}% confidence)
-                  </span>
-                )}
+                <Link href="/ancestry" className="text-accent hover:underline ml-2 text-xs">
+                  more info
+                </Link>
               </p>
             ) : analysis?.ancestry_method === "computed_failed" ? (
               <p className="text-sm text-muted italic">Could not estimate (too few markers)</p>
@@ -243,31 +266,76 @@ export default function PrsPage() {
 
       {/* Summary table */}
       {prsData.prs_status === "ready" && prsData.results.length > 0 && (
-        <div className="mt-12 border border-border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-left text-xs text-muted">
-                <th className="px-4 py-2 font-medium">ID</th>
-                <th className="px-4 py-2 font-medium">Trait</th>
-                <th className="px-4 py-2 font-medium text-right">Variants</th>
-                <th className="px-4 py-2 font-medium text-right">Raw Score</th>
-                <th className="px-4 py-2 font-medium text-right">Percentile</th>
-              </tr>
-            </thead>
-            <tbody>
-              {prsData.results.map((prs) => (
-                <tr key={prs.pgs_id} className="border-b border-border last:border-b-0">
-                  <td className="px-4 py-2">
-                    <a href={`https://www.pgscatalog.org/score/${prs.pgs_id}/`} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">{prs.pgs_id}</a>
-                  </td>
-                  <td className="px-4 py-2">{prs.trait_name}</td>
-                  <td className="px-4 py-2 text-right">{prs.n_variants_total.toLocaleString()}</td>
-                  <td className="px-4 py-2 text-right font-mono">{prs.raw_score.toPrecision(4)}</td>
-                  <td className="px-4 py-2 text-right">{formatPercentile(prs.percentile)}</td>
+        <div className="mt-12">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-medium text-muted">Summary</h2>
+            <button
+              onClick={() => {
+                const header = "PGS_ID,Trait,Variants_Matched,Variants_Total,Raw_Score,Percentile,Relative_Risk,Ancestry_Group\n";
+                const rows = prsData.results.map((prs) => {
+                  const rr = prs.absolute_risk != null && prs.population_risk
+                    ? (prs.absolute_risk / prs.population_risk).toFixed(2)
+                    : "";
+                  return [
+                    prs.pgs_id,
+                    `"${prs.trait_name.replace(/"/g, '""')}"`,
+                    prs.n_variants_matched,
+                    prs.n_variants_total,
+                    prs.raw_score,
+                    Math.round(prs.percentile),
+                    rr,
+                    prs.ancestry_group_used,
+                  ].join(",");
+                }).join("\n");
+                const blob = new Blob([header + rows], { type: "text/csv" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                const base = (analysis?.filename || "genewizard")
+                  .replace(/\.(txt|csv|vcf|tsv)(\.gz)?$/i, "");
+                const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+                a.href = url;
+                a.download = `${base}_${ts}_polygenic_scores.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="text-xs text-accent hover:underline"
+            >
+              Download CSV
+            </button>
+          </div>
+          <div className="border border-border">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-left text-xs text-muted">
+                  <th className="px-4 py-2 font-medium">ID</th>
+                  <th className="px-4 py-2 font-medium">Trait</th>
+                  <th className="px-4 py-2 font-medium text-right">Variants</th>
+                  <th className="px-4 py-2 font-medium text-right">Raw Score</th>
+                  <th className="px-4 py-2 font-medium text-right">Percentile</th>
+                  <th className="px-4 py-2 font-medium text-right">RR</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {prsData.results.map((prs) => {
+                  const rr = prs.absolute_risk != null && prs.population_risk
+                    ? prs.absolute_risk / prs.population_risk
+                    : null;
+                  return (
+                  <tr key={prs.pgs_id} className="border-b border-border last:border-b-0">
+                    <td className="px-4 py-2">
+                      <a href={`https://www.pgscatalog.org/score/${prs.pgs_id}/`} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">{prs.pgs_id}</a>
+                    </td>
+                    <td className="px-4 py-2">{prs.trait_name}</td>
+                    <td className="px-4 py-2 text-right">{prs.n_variants_total.toLocaleString()}</td>
+                    <td className="px-4 py-2 text-right font-mono">{prs.raw_score.toPrecision(4)}</td>
+                    <td className="px-4 py-2 text-right">{formatPercentile(prs.percentile)}</td>
+                    <td className="px-4 py-2 text-right font-mono">{rr != null ? rr.toFixed(2) + "x" : "\u2014"}</td>
+                  </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -277,30 +345,6 @@ export default function PrsPage() {
         </div>
       )}
 
-      {/* Explainer */}
-      <section className="border-t border-border mt-12 pt-8">
-        <h2 className="font-serif text-2xl font-semibold mb-4">
-          What is a polygenic risk score?
-        </h2>
-        <p className="text-muted leading-relaxed mb-4">
-          A polygenic risk score (PRS) combines the effects of many genetic variants to
-          estimate your relative risk for a trait or disease. Each variant contributes a
-          small amount — the PRS aggregates thousands of these effects into a single number.
-        </p>
-        <p className="text-muted leading-relaxed">
-          Gene Wizard uses scores from the{" "}
-          <a
-            href="https://www.pgscatalog.org"
-            className="text-accent hover:text-accent-hover underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            PGS Catalog
-          </a>
-          , the largest open database of published polygenic scores, and normalizes your
-          result against reference populations so you can see where you fall.
-        </p>
-      </section>
     </div>
   );
 }

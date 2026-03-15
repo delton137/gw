@@ -1,8 +1,6 @@
 import Link from "next/link";
-import { SUPERPOP_COLORS, SUPERPOP_NAMES } from "@/lib/populations";
 import type {
   Analysis,
-  AncestryDetail,
   CarrierStatusResult,
   PgxResult,
   TraitHit,
@@ -75,6 +73,12 @@ export default function DashboardContent({
           <p className="text-xs text-muted mb-0.5">Genome Build</p>
           <p className="text-sm font-medium">{analysis?.genome_build || "\u2014"}</p>
         </div>
+        {analysis?.is_imputed && (
+          <div>
+            <p className="text-xs text-muted mb-0.5">Data Type</p>
+            <p className="text-sm font-medium">Imputed genome</p>
+          </div>
+        )}
         {analysis?.pipeline_fast_seconds != null && (
           <div>
             <p className="text-xs text-muted mb-0.5">Pipeline Runtime</p>
@@ -250,56 +254,6 @@ export default function DashboardContent({
           )}
         </div>
 
-        {/* Ancestry Card */}
-        {analysis?.detected_ancestry && (
-          <div className="border border-border p-5">
-          <h2 className="font-serif text-xl font-semibold mb-2">
-            Genetic Ancestry
-            <span className="ml-2 align-middle inline-block text-[10px] font-sans font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 uppercase tracking-wide">
-              Experimental
-            </span>
-          </h2>
-          {(() => {
-            const data = analysis.detected_ancestry;
-            const isNew = "superpopulations" in data;
-            const superPops = isNew
-              ? (data as AncestryDetail).superpopulations
-              : (data as Record<string, number>);
-            const sorted = Object.entries(superPops)
-              .sort(([, a], [, b]) => b - a)
-              .filter(([, v]) => v >= 0.02);
-            const superColors = SUPERPOP_COLORS;
-            const superNames = SUPERPOP_NAMES;
-            return (
-              <>
-                <div className="space-y-1.5 mb-3">
-                  {sorted.map(([code, frac]) => (
-                    <div key={code} className="flex items-center gap-2 text-sm">
-                      <span className={`inline-block w-2.5 h-2.5 rounded-full ${superColors[code] || "bg-gray-400"}`} />
-                      <span className="font-medium w-24">{superNames[code] || code}</span>
-                      <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${superColors[code] || "bg-gray-400"}`}
-                          style={{ width: `${Math.max(frac * 100, 1)}%` }}
-                        />
-                      </div>
-                      <span className="text-xs font-mono text-muted w-12 text-right">
-                        {(frac * 100).toFixed(1)}%
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <Link
-                  href={`${linkPrefix}/ancestry`}
-                  className="inline-block text-sm font-medium text-accent hover:underline"
-                >
-                  View full ancestry breakdown &rarr;
-                </Link>
-              </>
-            );
-          })()}
-          </div>
-        )}
       </div>
 
       {/* Actions: Download Report & Delete Data — only when callbacks provided */}

@@ -115,6 +115,7 @@ from app.routes.results import router as results_router  # noqa: E402
 from app.routes.snp import router as snp_router  # noqa: E402
 from app.routes.gene import router as gene_router  # noqa: E402
 from app.routes.account import router as account_router  # noqa: E402
+from app.routes.newsletter import router as newsletter_router  # noqa: E402
 
 app.include_router(health_router)
 app.include_router(upload_router, prefix="/api/v1")
@@ -122,3 +123,4 @@ app.include_router(results_router, prefix="/api/v1")
 app.include_router(snp_router, prefix="/api/v1")
 app.include_router(gene_router, prefix="/api/v1")
 app.include_router(account_router, prefix="/api/v1")
+app.include_router(newsletter_router, prefix="/api/v1")

@@ -27,6 +27,7 @@ def _mock_analysis(analysis_id=None):
     analysis.genome_build = None
     analysis.file_format = None
     analysis.completed_at = None
+    analysis.is_imputed = None
     return analysis
 
 
@@ -116,7 +117,7 @@ class TestFastStepsSetDone:
 
         with patch("app.services.analysis.asyncio.to_thread") as mock_thread:
             mock_thread.side_effect = [
-                (user_df, "23andme", "23andme_v5"),  # parse
+                (user_df, "23andme", "23andme_v5", None),  # parse
                 [],     # determine_carrier_status (in gather)
                 None,   # estimate_ancestry
             ]
@@ -149,7 +150,7 @@ class TestFastStepsSetDone:
 
         with patch("app.services.analysis.asyncio.to_thread") as mock_thread:
             mock_thread.side_effect = [
-                (user_df, "23andme", "23andme_v5"),
+                (user_df, "23andme", "23andme_v5", None),
                 [],     # carrier
                 None,   # ancestry
             ]
@@ -194,7 +195,7 @@ class TestFullPipelineSetsComplete:
 
         with patch("app.services.analysis.asyncio.to_thread") as mock_thread:
             mock_thread.side_effect = [
-                (user_df, "23andme", "23andme_v5"),
+                (user_df, "23andme", "23andme_v5", None),
                 [],               # carrier
                 ancestry_result,  # estimate_ancestry
             ]
@@ -234,7 +235,7 @@ class TestSelectedAncestryPersisted:
 
         with patch("app.services.analysis.asyncio.to_thread") as mock_thread:
             mock_thread.side_effect = [
-                (user_df, "23andme", "23andme_v5"),
+                (user_df, "23andme", "23andme_v5", None),
                 [],    # carrier
                 None,  # ancestry
             ]
@@ -278,7 +279,7 @@ class TestAncestryEstimatorRunsInBackground:
 
         with patch("app.services.analysis.asyncio.to_thread") as mock_thread:
             mock_thread.side_effect = [
-                (user_df, "23andme", "23andme_v5"),
+                (user_df, "23andme", "23andme_v5", None),
                 [],               # carrier
                 ancestry_result,  # estimate_ancestry
             ]
@@ -313,7 +314,7 @@ class TestAncestryEstimatorRunsInBackground:
 
         with patch("app.services.analysis.asyncio.to_thread") as mock_thread:
             mock_thread.side_effect = [
-                (user_df, "23andme", "23andme_v5"),
+                (user_df, "23andme", "23andme_v5", None),
                 [],    # carrier
                 None,  # ancestry estimation fails (too few AIMs)
             ]
@@ -365,7 +366,7 @@ class TestPrsFailureKeepsDone:
 
         with patch("app.services.analysis.asyncio.to_thread") as mock_thread:
             mock_thread.side_effect = [
-                (user_df, "23andme", "23andme_v5"),
+                (user_df, "23andme", "23andme_v5", None),
                 [],    # carrier
             ]
             with patch("app.services.analysis.async_session_factory", _mock_session_factory()):

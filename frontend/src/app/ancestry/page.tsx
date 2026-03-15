@@ -29,7 +29,6 @@ export default function AncestryPage() {
   const [ancestry, setAncestry] = useState<AncestryDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [method, setMethod] = useState<string | null>(null);
-  const [showInterpretation, setShowInterpretation] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -137,28 +136,36 @@ export default function AncestryPage() {
       <p className="text-sm text-amber-700 mb-3">
         May not be very accurate!
       </p>
-      <p className="text-xs text-muted mb-10 border border-border/50 bg-gray-50/50 p-3 rounded">
-        This analysis uses techniques from the{" "}
-        <a
-          href="https://doi.org/10.1101/2024.06.18.599246"
-          className="text-accent hover:underline"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          AEon ancestry estimation tool
-        </a>{" "}
-        (Warren &amp; Pinese 2024), which estimates admixture fractions via maximum
-        likelihood on 128,097 ancestry-informative loci from the{" "}
-        <a
-          href="https://doi.org/10.1038/nature15393"
-          className="text-accent hover:underline"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          1000 Genomes Project Phase 3
-        </a>
-        . Our implementation reimplements the core algorithm in scipy for lightweight deployment.
-      </p>
+      <div className="text-xs text-muted mb-10 border border-border/50 bg-gray-50/50 p-3 rounded space-y-2">
+        <p>
+          This analysis uses techniques from the{" "}
+          <a
+            href="https://doi.org/10.1101/2024.06.18.599246"
+            className="text-accent hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            AEon ancestry estimation tool
+          </a>{" "}
+          (Warren &amp; Pinese 2024), which estimates admixture fractions via maximum
+          likelihood on 128,097 ancestry-informative loci from the{" "}
+          <a
+            href="https://doi.org/10.1038/nature15393"
+            className="text-accent hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            1000 Genomes Project Phase 3
+          </a>{" "}
+          (2,504 unrelated individuals across 26 populations).
+        </p>
+        <p>
+          Genetic ancestry estimation reflects statistical patterns in DNA, not ethnic, cultural,
+          or national identity. These results should not be used for medical decisions or legal
+          purposes. The 1000 Genomes reference populations represent specific sampled groups, not
+          entire regions or ethnicities.
+        </p>
+      </div>
 
       {/* Summary + Donut Chart */}
       <div className="border border-border p-6 mb-10 flex flex-col sm:flex-row gap-8 items-center">
@@ -272,67 +279,6 @@ export default function AncestryPage() {
             </p>
           </div>
         </div>
-      </div>
-
-      {/* Interpretation Guide */}
-      <div className="border border-border mb-10">
-        <button
-          onClick={() => setShowInterpretation(!showInterpretation)}
-          className="w-full px-5 py-3 flex items-center justify-between text-left hover:bg-gray-50/50 transition-colors"
-        >
-          <span className="font-serif text-lg font-semibold">How to interpret these results</span>
-          <span className="text-muted text-sm">{showInterpretation ? "▲" : "▼"}</span>
-        </button>
-        {showInterpretation && (
-          <div className="px-5 pb-5 text-sm text-muted space-y-3">
-            <p>
-              These estimates represent the statistical similarity between your genetic variants and 26
-              reference populations from the 1000 Genomes Project Phase 3. They are probabilistic estimates,
-              not definitive statements about your heritage.
-            </p>
-            <div>
-              <p className="font-medium text-foreground mb-1">Score interpretation:</p>
-              <ul className="list-disc list-inside space-y-0.5">
-                <li><span className="font-medium">&gt; 10%</span> &mdash; Significant ancestry component</li>
-                <li><span className="font-medium">5&ndash;10%</span> &mdash; Likely significant</li>
-                <li><span className="font-medium">2&ndash;5%</span> &mdash; Possible but uncertain</li>
-                <li><span className="font-medium">&lt; 2%</span> &mdash; Likely statistical noise</li>
-              </ul>
-            </div>
-            <div>
-              <p className="font-medium text-foreground mb-1">Limitations:</p>
-              <ul className="list-disc list-inside space-y-0.5">
-                <li>
-                  The model assumes all ancestry can be explained by 26 reference populations.
-                  Ancestry from unrepresented groups will be attributed to the closest match.
-                </li>
-                <li>
-                  The model uses 5 broad continental groupings (superpopulations) aggregated from
-                  26 reference populations. Fine-grained within-continent distinctions are not shown.
-                </li>
-                <li>
-                  Coverage depends on your genotyping platform. DTC arrays typically match
-                  10&ndash;35% of the 128K reference markers; WGS VCFs match more.
-                </li>
-              </ul>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Disclaimer */}
-      <div className="text-xs text-muted space-y-2 border-t border-border pt-6">
-        <p>
-          <strong>Important:</strong> Genetic ancestry estimation reflects statistical patterns in DNA,
-          not ethnic, cultural, or national identity. These results should not be used for medical decisions
-          or legal purposes. The 1000 Genomes Project reference populations represent specific sampled
-          groups, not entire regions or ethnicities.
-        </p>
-        <p>
-          This analysis uses a maximum likelihood model applied to{" "}
-          {ancestry.n_markers_total.toLocaleString()} ancestry-informative loci curated from
-          1000 Genomes Phase 3 (Pinese et al. 2020), with allele frequencies from 2,504 unrelated individuals.
-        </p>
       </div>
     </div>
   );

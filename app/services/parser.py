@@ -11,10 +11,13 @@ from __future__ import annotations
 
 import gzip
 import io
+import logging
 
 import polars as pl
 
 from app.config import settings
+
+log = logging.getLogger(__name__)
 
 # Chip version detection by approximate variant count
 CHIP_VERSIONS = [
@@ -58,11 +61,62 @@ def detect_format(header_lines: list[str]) -> str:
     raise ParseError("Unable to detect genotype file format from header lines")
 
 
-def detect_chip_version(variant_count: int) -> str:
-    """Guess chip version from total variant count."""
+_WGS_SOURCES = frozenset({
+    "gatk", "deepvariant", "strelka", "dragen",
+    "haplotypecaller", "octopus", "freebayes",
+})
+
+_IMPUTATION_SOURCES = frozenset({
+    "beagle", "minimac", "minimac3", "minimac4",
+    "impute2", "impute4", "impute5", "pbwt",
+})
+
+
+def extract_vcf_header_meta(content: str) -> dict:
+    """Extract metadata from VCF header lines for WGS and imputation detection.
+
+    Scans ## lines (typically <1 KB even for large VCFs) and returns:
+    - contig_count: number of ##contig= lines
+    - has_wgs_source: whether ##source= mentions a known WGS variant caller
+    - is_imputed: whether the VCF was produced by imputation software
+    """
+    contig_count = 0
+    has_wgs_source = False
+    is_imputed = False
+
+    for line in content.split("\n"):
+        if not line.startswith("##"):
+            break
+        if line.startswith("##contig="):
+            contig_count += 1
+        elif line.startswith("##source="):
+            source_lower = line.lower()
+            if any(s in source_lower for s in _WGS_SOURCES):
+                has_wgs_source = True
+            if any(s in source_lower for s in _IMPUTATION_SOURCES):
+                is_imputed = True
+        elif line.startswith("##INFO=<ID=IMP,") or line.startswith("##INFO=<ID=DR2,"):
+            is_imputed = True
+
+    return {"contig_count": contig_count, "has_wgs_source": has_wgs_source, "is_imputed": is_imputed}
+
+
+def detect_chip_version(variant_count: int, vcf_meta: dict | None = None) -> str:
+    """Guess chip version from total variant count.
+
+    For VCF files, optional header metadata (contig count, source caller)
+    can confirm WGS status at lower variant counts (1.1M–3M range).
+    """
     for low, high, name in CHIP_VERSIONS:
         if low <= variant_count < high:
             return name
+
+    # Header-confirmed WGS: variant count in the 1.1M–3M gap with
+    # VCF header evidence (≥22 contigs or known WGS caller)
+    if vcf_meta and variant_count >= 1_100_000:
+        if vcf_meta.get("contig_count", 0) >= 22 or vcf_meta.get("has_wgs_source"):
+            return "wgs"
+
     return "unknown"
 
 
@@ -331,6 +385,15 @@ def parse_vcf(content: str) -> pl.DataFrame:
         pl.when(pl.col("idx2") == 0).then(pl.col("ref")).otherwise(pl.col("alt")).alias("allele2"),
     )
 
+    # Drop homozygous-reference variants (0/0) — they carry no information for any
+    # downstream analysis (traits, PGx, PRS, carrier, ancestry) and can balloon
+    # memory for imputed genomes (87% of variants are hom-ref, ~27M rows).
+    # PRS scoring and ancestry estimation already treat missing = hom-ref.
+    pre_filter = len(df)
+    df = df.filter(~((pl.col("idx1") == 0) & (pl.col("idx2") == 0)))
+    if len(df) < pre_filter:
+        log.info(f"Filtered {pre_filter - len(df):,} hom-ref variants ({len(df):,} remaining)")
+
     # Strip chr prefix, cast position
     df = df.with_columns(
         pl.col("chrom").str.replace(r"^chr", "").alias("chrom"),
@@ -444,7 +507,7 @@ def detect_genome_build(user_df: pl.DataFrame) -> str:
     return "unknown"
 
 
-ALLOWED_EXTENSIONS = {".txt", ".csv", ".tsv", ".vcf", ".vcf.gz", ".vcf.zip", ".txt.gz", ".tsv.gz"}
+ALLOWED_EXTENSIONS = {".txt", ".csv", ".tsv", ".vcf", ".vcf.gz", ".vcf.zip", ".zip", ".txt.gz", ".tsv.gz"}
 
 
 def validate_filename(filename: str) -> None:
@@ -478,18 +541,20 @@ def parse_genotype_file(content: str | bytes) -> tuple[pl.DataFrame, str, str]:
     header_lines = content.split("\n", 50)[:50]
     fmt = detect_format(header_lines)
 
+    vcf_meta = None
     if fmt == "23andme":
         df = parse_23andme(content)
     elif fmt == "ancestrydna":
         df = parse_ancestrydna(content)
     elif fmt == "vcf":
         df = parse_vcf(content)
+        vcf_meta = extract_vcf_header_meta(content)
     elif fmt == "cgi":
         df = parse_cgi(content)
     else:
         raise ParseError(f"Unsupported format: {fmt}")
 
-    chip_version = detect_chip_version(len(df))
+    chip_version = detect_chip_version(len(df), vcf_meta=vcf_meta)
     return df, fmt, chip_version
 
 

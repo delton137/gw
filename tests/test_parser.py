@@ -7,6 +7,7 @@ from app.services.parser import (
     ParseError,
     detect_chip_version,
     detect_format,
+    extract_vcf_header_meta,
     parse_23andme,
     parse_ancestrydna,
     parse_cgi,
@@ -58,7 +59,7 @@ SAMPLE_VCF = """\
 ##fileformat=VCFv4.1
 ##source=test
 #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE1
-1\t82154\trs4477212\tA\tG\t100\tPASS\t.\tGT:GQ\t0/0:99
+1\t82154\trs4477212\tA\tG\t100\tPASS\t.\tGT:GQ\t0/1:99
 1\t752566\trs3094315\tA\tG\t100\tPASS\t.\tGT:GQ\t0/1:99
 1\t752721\trs3131972\tA\tG\t100\tPASS\t.\tGT:GQ\t1/1:99
 """
@@ -215,11 +216,17 @@ class TestParseVCF:
         df = parse_vcf(SAMPLE_VCF)
         assert len(df) == 3
 
-    def test_homref(self):
-        df = parse_vcf(SAMPLE_VCF)
-        row = df.filter(pl.col("rsid") == "rs4477212")
-        assert row["allele1"][0] == "A"
-        assert row["allele2"][0] == "A"
+    def test_homref_filtered(self):
+        """Hom-ref (0/0) variants are dropped — they carry no information."""
+        vcf = """\
+##fileformat=VCFv4.1
+#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE1
+1\t100\trs100\tA\tG\t.\tPASS\t.\tGT\t0/0
+1\t200\trs200\tC\tT\t.\tPASS\t.\tGT\t0/1
+"""
+        df = parse_vcf(vcf)
+        assert len(df) == 1
+        assert df["rsid"][0] == "rs200"
 
     def test_het(self):
         df = parse_vcf(SAMPLE_VCF)
@@ -256,18 +263,16 @@ class TestParseVCF:
         assert row["allele2"][0] == "T"
         assert row["chrom"][0] == "X"
 
-    def test_haploid_hemizygous_ref(self):
-        """Hemizygous REF on chrX should be duplicated."""
+    def test_haploid_hemizygous_ref_filtered(self):
+        """Hemizygous REF on chrX (haploid 0 → 0/0) is filtered as hom-ref."""
         df = parse_vcf(SAMPLE_VCF_HAPLOID)
         row = df.filter(pl.col("rsid") == "rs99999")
-        assert len(row) == 1
-        assert row["allele1"][0] == "C"
-        assert row["allele2"][0] == "C"
+        assert len(row) == 0
 
     def test_haploid_mixed_with_diploid(self):
-        """Haploid and diploid calls in same VCF should both be parsed."""
+        """Haploid and diploid calls in same VCF should both be parsed (hom-ref filtered)."""
         df = parse_vcf(SAMPLE_VCF_HAPLOID)
-        assert len(df) == 3  # 2 haploid + 1 diploid
+        assert len(df) == 2  # 1 haploid ALT + 1 diploid het (haploid REF filtered)
 
     def test_empty_file_raises(self):
         with pytest.raises(ParseError):
@@ -346,6 +351,72 @@ class TestParseCGI:
 # Chip version detection
 # ---------------------------------------------------------------------------
 
+class TestExtractVcfHeaderMeta:
+    def test_wgs_header_with_contigs_and_source(self):
+        lines = ["##fileformat=VCFv4.2", "##source=HaplotypeCaller"]
+        lines += [f"##contig=<ID=chr{i},length=100000>" for i in range(1, 25)]
+        lines += ["#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE"]
+        content = "\n".join(lines)
+        meta = extract_vcf_header_meta(content)
+        assert meta["contig_count"] == 24
+        assert meta["has_wgs_source"] is True
+
+    def test_minimal_header_no_contigs(self):
+        content = "##fileformat=VCFv4.1\n#CHROM\tPOS\tID\n"
+        meta = extract_vcf_header_meta(content)
+        assert meta["contig_count"] == 0
+        assert meta["has_wgs_source"] is False
+
+    def test_non_wgs_source(self):
+        content = "##fileformat=VCFv4.1\n##source=Illumina GenCall\n#CHROM\n"
+        meta = extract_vcf_header_meta(content)
+        assert meta["has_wgs_source"] is False
+
+    def test_deepvariant_source(self):
+        content = "##fileformat=VCFv4.2\n##source=DeepVariant-1.6.0\n#CHROM\n"
+        meta = extract_vcf_header_meta(content)
+        assert meta["has_wgs_source"] is True
+
+    def test_beagle_imputation_detected(self):
+        content = '##fileformat=VCFv4.2\n##source="beagle.25Nov19.28d.jar"\n#CHROM\n'
+        meta = extract_vcf_header_meta(content)
+        assert meta["is_imputed"] is True
+        assert meta["has_wgs_source"] is False
+
+    def test_minimac_imputation_detected(self):
+        content = "##fileformat=VCFv4.2\n##source=Minimac4\n#CHROM\n"
+        meta = extract_vcf_header_meta(content)
+        assert meta["is_imputed"] is True
+
+    def test_imp_info_flag_detected(self):
+        content = (
+            '##fileformat=VCFv4.2\n'
+            '##INFO=<ID=IMP,Number=0,Type=Flag,Description="Imputed marker">\n'
+            '#CHROM\n'
+        )
+        meta = extract_vcf_header_meta(content)
+        assert meta["is_imputed"] is True
+
+    def test_dr2_info_detected(self):
+        content = (
+            '##fileformat=VCFv4.2\n'
+            '##INFO=<ID=DR2,Number=1,Type=Float,Description="Dosage R-Squared">\n'
+            '#CHROM\n'
+        )
+        meta = extract_vcf_header_meta(content)
+        assert meta["is_imputed"] is True
+
+    def test_normal_wgs_not_imputed(self):
+        content = "##fileformat=VCFv4.2\n##source=HaplotypeCaller\n#CHROM\n"
+        meta = extract_vcf_header_meta(content)
+        assert meta["is_imputed"] is False
+
+    def test_gatk_not_imputed(self):
+        content = "##fileformat=VCFv4.2\n##source=GATK\n#CHROM\n"
+        meta = extract_vcf_header_meta(content)
+        assert meta["is_imputed"] is False
+
+
 class TestDetectChipVersion:
     def test_23andme_v5(self):
         assert detect_chip_version(950_000) == "23andme_v5"
@@ -355,6 +426,28 @@ class TestDetectChipVersion:
 
     def test_unknown(self):
         assert detect_chip_version(50) == "unknown"
+
+    def test_wgs_high_count_no_meta_needed(self):
+        assert detect_chip_version(4_500_000) == "wgs"
+
+    def test_wgs_header_confirmed_with_contigs(self):
+        meta = {"contig_count": 24, "has_wgs_source": False}
+        assert detect_chip_version(1_800_000, vcf_meta=meta) == "wgs"
+
+    def test_wgs_header_confirmed_with_source(self):
+        meta = {"contig_count": 0, "has_wgs_source": True}
+        assert detect_chip_version(1_500_000, vcf_meta=meta) == "wgs"
+
+    def test_gap_without_meta_stays_unknown(self):
+        assert detect_chip_version(1_800_000) == "unknown"
+
+    def test_gap_with_weak_meta_stays_unknown(self):
+        meta = {"contig_count": 5, "has_wgs_source": False}
+        assert detect_chip_version(1_800_000, vcf_meta=meta) == "unknown"
+
+    def test_below_floor_with_meta_not_promoted(self):
+        meta = {"contig_count": 24, "has_wgs_source": True}
+        assert detect_chip_version(60_000, vcf_meta=meta) == "unknown"
 
 
 # ---------------------------------------------------------------------------
@@ -392,3 +485,101 @@ rs300\t1\t300\tAA
 """
         df, fmt, _ = parse_genotype_file(content)
         assert len(df) == 2
+
+
+# ---------------------------------------------------------------------------
+# Multi-VCF ZIP merge
+# ---------------------------------------------------------------------------
+
+import gzip as _gzip
+import io
+import zipfile
+
+from app.services.analysis import _merge_multi_vcf_zip, _chr_sort_key
+
+
+class TestChrSortKey:
+    def test_chr1(self):
+        assert _chr_sort_key("sample.chr1_imputed.vcf.gz") == 1
+
+    def test_chr22(self):
+        assert _chr_sort_key("sample.chr22_imputed.vcf.gz") == 22
+
+    def test_chrX(self):
+        assert _chr_sort_key("sample.chrX.imputed.vcf.gz") == 23
+
+    def test_no_chr_pattern(self):
+        assert _chr_sort_key("random_file.vcf.gz") == 99
+
+
+class TestMergeMultiVcfZip:
+    VCF_HEADER = (
+        "##fileformat=VCFv4.2\n"
+        '##source="beagle.25Nov19.28d.jar"\n'
+        "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE\n"
+    )
+    CHR1_DATA = "1\t100\trs1\tA\tG\t.\tPASS\t.\tGT\t0/1\n1\t200\trs2\tC\tT\t.\tPASS\t.\tGT\t1/1\n"
+    CHR2_DATA = "2\t100\trs3\tG\tA\t.\tPASS\t.\tGT\t0/1\n"
+
+    def _make_zip(self, files: dict[str, str], compress_inner: bool = False) -> zipfile.ZipFile:
+        """Create in-memory ZIP with VCF files."""
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as zf:
+            for name, content in files.items():
+                data = content.encode()
+                if compress_inner:
+                    data = _gzip.compress(data)
+                zf.writestr(name, data)
+        buf.seek(0)
+        return zipfile.ZipFile(buf, "r")
+
+    def test_merges_two_vcfs(self):
+        files = {
+            "sample.chr1.vcf": self.VCF_HEADER + self.CHR1_DATA,
+            "sample.chr2.vcf": self.VCF_HEADER + self.CHR2_DATA,
+        }
+        with self._make_zip(files) as zf:
+            content = _merge_multi_vcf_zip(zf, list(files.keys()), "test-id")
+
+        # Header should appear once
+        assert content.count("##fileformat=VCFv4.2") == 1
+        # All data lines present
+        assert "rs1" in content
+        assert "rs2" in content
+        assert "rs3" in content
+
+    def test_merges_gzipped_vcfs(self):
+        files = {
+            "sample.chr1.vcf.gz": self.VCF_HEADER + self.CHR1_DATA,
+            "sample.chr2.vcf.gz": self.VCF_HEADER + self.CHR2_DATA,
+        }
+        with self._make_zip(files, compress_inner=True) as zf:
+            content = _merge_multi_vcf_zip(zf, list(files.keys()), "test-id")
+
+        assert content.count("##fileformat=VCFv4.2") == 1
+        assert "rs1" in content
+        assert "rs3" in content
+
+    def test_sorts_by_chromosome(self):
+        files = {
+            "sample.chr2.vcf": self.VCF_HEADER + self.CHR2_DATA,
+            "sample.chr1.vcf": self.VCF_HEADER + self.CHR1_DATA,
+        }
+        with self._make_zip(files) as zf:
+            content = _merge_multi_vcf_zip(zf, list(files.keys()), "test-id")
+
+        # chr1 data should come before chr2 data
+        assert content.index("rs1") < content.index("rs3")
+
+    def test_header_from_first_file_only(self):
+        header2 = "##fileformat=VCFv4.2\n##source=different\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE\n"
+        files = {
+            "sample.chr1.vcf": self.VCF_HEADER + self.CHR1_DATA,
+            "sample.chr2.vcf": header2 + self.CHR2_DATA,
+        }
+        with self._make_zip(files) as zf:
+            content = _merge_multi_vcf_zip(zf, list(files.keys()), "test-id")
+
+        # Only the beagle source header should be present
+        assert "beagle" in content
+        assert "different" not in content

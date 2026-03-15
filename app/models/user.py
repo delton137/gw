@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Float, ForeignKey, Index, Integer, String, Text, text
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text, text
 from sqlalchemy.dialects.postgresql import JSON, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -32,6 +32,7 @@ class Analysis(Base):
     selected_ancestry: Mapped[str | None] = mapped_column(String(3))  # "EUR" | "AFR" | "EAS" | "SAS" | "AMR"
     status_detail: Mapped[str | None] = mapped_column(Text)  # human-readable progress message
     pipeline_fast_seconds: Mapped[float | None] = mapped_column(Float)
+    is_imputed: Mapped[bool | None] = mapped_column(Boolean)
 
     # Relationships to child tables (CASCADE handled at DB level)
     prs_results: Mapped[list["PrsResult"]] = relationship(back_populates="analysis", cascade="all, delete-orphan", passive_deletes=True)
