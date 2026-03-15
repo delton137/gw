@@ -8,7 +8,7 @@ export default function AboutPage() {
     <div className="mx-auto max-w-3xl px-6 pt-12 pb-16">
       <h1 className="font-serif text-3xl font-semibold mb-8">About Gene Wizard</h1>
 
-      <div className="space-y-6 text-sm text-muted leading-relaxed">
+      <div className="space-y-6 text-sm text-foreground leading-relaxed">
         <p>
           Hello! My name is Dan Elton. I originally studied physics (Ph.D., 2016), and later
           spent time as a Staff Scientist at the National Human Genome Research Institute.

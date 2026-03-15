@@ -36,6 +36,9 @@ export default function Nav() {
           <Link href="/demo" className="hover:text-foreground transition-colors">
             Demo
           </Link>
+          <Link href="/about" className="hover:text-foreground transition-colors">
+            About
+          </Link>
           <Show
             when="signed-in"
             fallback={
@@ -68,6 +71,7 @@ export default function Nav() {
         <div className="sm:hidden border-t border-border px-6 py-3 flex flex-col gap-3 text-sm text-muted">
           <Link href="/snp" className="hover:text-foreground" onClick={() => setOpen(false)}>Browse SNPs</Link>
           <Link href="/demo" className="hover:text-foreground" onClick={() => setOpen(false)}>Demo</Link>
+          <Link href="/about" className="hover:text-foreground" onClick={() => setOpen(false)}>About</Link>
           <Show
             when="signed-in"
             fallback={

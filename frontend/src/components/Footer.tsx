@@ -71,11 +71,8 @@ export default function Footer() {
           </form>
 
           <div className="flex gap-6 text-sm text-muted">
-            <Link href="/about" className="hover:text-foreground transition-colors">
-              About
-            </Link>
             <Link href="/privacy" className="hover:text-foreground transition-colors">
-              Privacy
+              Privacy Policy
             </Link>
           </div>
         </div>
