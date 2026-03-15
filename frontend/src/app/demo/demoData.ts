@@ -64,6 +64,7 @@ export const DEMO_ANALYSIS: Analysis = {
   "filename": "sample_wgs.vcf.gz",
   "genome_build": "GRCh37",
   "pipeline_fast_seconds": 122.18,
+  "is_imputed": false,
   "status_detail": "Computing PRS 17/17: Standing height"
 };
 
