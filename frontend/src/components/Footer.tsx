@@ -59,7 +59,7 @@ export default function Footer() {
                 <button
                   type="submit"
                   disabled={state === "submitting"}
-                  className="h-8 rounded bg-foreground px-3 text-sm text-background transition-opacity hover:opacity-80 disabled:opacity-50"
+                  className="h-8 rounded border border-foreground bg-background px-3 text-sm text-foreground transition-opacity hover:opacity-80 disabled:opacity-50"
                 >
                   {state === "submitting" ? "..." : "Subscribe"}
                 </button>
