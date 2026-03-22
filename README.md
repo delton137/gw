@@ -20,6 +20,8 @@ python -m scripts.seed_pgx_definitions
 uvicorn app.main:app --reload --port 8000
 ```
 
+User data takes up about 8 Mb per user in database.
+
 ### Frontend
 
 ```bash
