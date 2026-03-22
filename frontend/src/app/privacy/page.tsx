@@ -48,7 +48,6 @@ export default function PrivacyPolicy() {
           <li>Polygenic risk scores (PRS) with percentiles and confidence intervals</li>
           <li>Pharmacogenomic (PGx) diplotypes, phenotypes, and drug guidelines</li>
           <li>SNP-trait association matches</li>
-          <li>Blood type determination</li>
           <li>Carrier screening results</li>
           <li>SNPedia variant matches</li>
           <li>Estimated genetic ancestry</li>
@@ -158,10 +157,10 @@ export default function PrivacyPolicy() {
       <section className="py-10 border-t border-border">
         <h2 className="font-serif text-2xl font-semibold mb-6">Security</h2>
         <p className="text-muted leading-relaxed">
-          All data in transit is encrypted via HTTPS/TLS. Our backend is HIPPA compliant.
-           Authentication is handled by Clerk with  industry-standard security practices. 
-           While no system is perfectly secure, we take reasonable measures to protect
-           your information and minimize the data we store in the first place.
+          All data in transit is encrypted via HTTPS/TLS. Our backend is HIPAA compliant.
+          Authentication is handled by Clerk with industry-standard security practices.
+          While no system is perfectly secure, we take reasonable measures to protect
+          your information and minimize the data we store in the first place.
         </p>
       </section>
 
