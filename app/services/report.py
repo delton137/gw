@@ -81,6 +81,8 @@ def generate_report_pdf(
         bottomMargin=0.75 * inch,
         leftMargin=0.75 * inch,
         rightMargin=0.75 * inch,
+        title="Gene Wizard — Genetic Report",
+        author="genewizard.net",
     )
 
     styles = getSampleStyleSheet()

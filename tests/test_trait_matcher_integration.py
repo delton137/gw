@@ -27,7 +27,7 @@ def _user_df(variants: list[tuple[str, str, int, str, str]]) -> pl.DataFrame:
     )
 
 
-def _make_assoc_row(rsid, trait, risk_allele, evidence="high"):
+def _make_assoc_row(rsid, trait, risk_allele, evidence="high", odds_ratio=None):
     """Create a mock DB row for snp_trait_associations."""
     return (
         str(uuid.uuid4()),  # id
@@ -36,6 +36,7 @@ def _make_assoc_row(rsid, trait, risk_allele, evidence="high"):
         risk_allele,
         f"Effect of {trait}",  # effect_description
         evidence,
+        odds_ratio,
     )
 
 
@@ -186,7 +187,7 @@ class TestMatchTraitsVcfImputation:
         # Imputed row: risk_allele=T, ref_allele=C → 0 copies of T → typical
         imputed_row = (
             str(uuid.uuid4()), "rs7412", "Cholesterol", "T",
-            "Cholesterol effect", "high", "C",  # ref_allele
+            "Cholesterol effect", "high", None, "C",  # odds_ratio, ref_allele
         )
         session = self._mock_session_two_queries([matched_row], [imputed_row])
 
@@ -211,7 +212,7 @@ class TestMatchTraitsVcfImputation:
         # Imputed: risk_allele=G = ref_allele → 2 copies → increased
         imputed_row = (
             str(uuid.uuid4()), "rs999", "Heart Disease", "G",
-            "Effect", "high", "G",  # ref_allele = risk_allele
+            "Effect", "high", None, "G",  # odds_ratio, ref_allele = risk_allele
         )
         session = self._mock_session_two_queries([matched_row], [imputed_row])
 
@@ -243,7 +244,7 @@ class TestMatchTraitsVcfImputation:
         # ref_allele is None → should be skipped
         imputed_row = (
             str(uuid.uuid4()), "rs2", "Trait2", "C",
-            "Effect", "high", None,  # no ref_allele
+            "Effect", "high", None, None,  # odds_ratio, no ref_allele
         )
         session = self._mock_session_two_queries([matched_row], [imputed_row])
 
@@ -259,7 +260,7 @@ class TestMatchTraitsVcfImputation:
         # No matched query needed (empty rsids), but imputation query returns results
         imputed_row = (
             str(uuid.uuid4()), "rs7412", "Cholesterol", "T",
-            "Effect", "medium", "C",
+            "Effect", "medium", None, "C",  # odds_ratio, ref_allele
         )
         session = AsyncMock()
         result = MagicMock()

@@ -30,25 +30,41 @@ class TraitHit:
     risk_level: str  # increased / moderate / typical
     evidence_level: str
     association_id: str  # UUID as string
+    odds_ratio: float | None = None
 
 
 def classify_risk(
     allele1: str,
     allele2: str,
     risk_allele: str,
+    odds_ratio: float | None = None,
 ) -> str:
-    """Classify risk based on copies of the risk allele.
+    """Classify risk based on copies of the risk allele and effect size.
 
-    2 copies → increased
-    1 copy → moderate
-    0 copies → typical
+    When odds_ratio is available, uses effect-size-aware thresholds:
+      - OR >= 2.0 with 2 copies → increased
+      - OR >= 1.5 with 1+ copies, or OR 1.2–2.0 with 2 copies → moderate
+      - OR < 1.2 → typical (regardless of copies)
+    When odds_ratio is unavailable, falls back to allele-count logic.
     """
     copies = (allele1 == risk_allele) + (allele2 == risk_allele)
+    if copies == 0:
+        return "typical"
+
+    if odds_ratio is not None and odds_ratio > 0:
+        if odds_ratio >= 2.0 and copies == 2:
+            return "increased"
+        if odds_ratio >= 1.5 and copies >= 1:
+            return "moderate"
+        if odds_ratio >= 1.2 and copies == 2:
+            return "moderate"
+        if odds_ratio < 1.2:
+            return "typical"
+
+    # Fallback: allele-count only (when OR unavailable)
     if copies == 2:
         return "increased"
-    elif copies == 1:
-        return "moderate"
-    return "typical"
+    return "moderate"
 
 
 async def match_traits(
@@ -90,7 +106,8 @@ async def match_traits(
         batch = user_rsids[i : i + BATCH_SIZE]
         result = await session.execute(
             text("""
-                SELECT id, rsid, trait, risk_allele, effect_description, evidence_level
+                SELECT id, rsid, trait, risk_allele, effect_description,
+                       evidence_level, odds_ratio
                 FROM snp_trait_associations
                 WHERE rsid = ANY(:rsids)
             """),
@@ -98,14 +115,14 @@ async def match_traits(
         )
 
         for row in result:
-            assoc_id, rsid, trait, risk_allele, effect_desc, evidence = row
+            assoc_id, rsid, trait, risk_allele, effect_desc, evidence, or_val = row
             alleles = user_lookup.get(rsid)
             if not alleles:
                 continue
 
             matched_assoc_rsids.add(rsid)
             a1, a2 = alleles
-            risk_level = classify_risk(a1, a2, risk_allele)
+            risk_level = classify_risk(a1, a2, risk_allele, odds_ratio=or_val)
 
             hits.append(TraitHit(
                 rsid=rsid,
@@ -115,6 +132,7 @@ async def match_traits(
                 risk_level=risk_level,
                 evidence_level=evidence,
                 association_id=str(assoc_id),
+                odds_ratio=or_val,
             ))
 
     # For variant-only VCFs: impute missing positions as REF/REF
@@ -122,7 +140,8 @@ async def match_traits(
         imputed_result = await session.execute(
             text("""
                 SELECT sta.id, sta.rsid, sta.trait, sta.risk_allele,
-                       sta.effect_description, sta.evidence_level, s.ref_allele
+                       sta.effect_description, sta.evidence_level,
+                       sta.odds_ratio, s.ref_allele
                 FROM snp_trait_associations sta
                 JOIN snps s ON s.rsid = sta.rsid
                 WHERE sta.rsid != ALL(:matched)
@@ -132,10 +151,10 @@ async def match_traits(
 
         n_imputed = 0
         for row in imputed_result:
-            assoc_id, rsid, trait, risk_allele, effect_desc, evidence, ref_allele = row
+            assoc_id, rsid, trait, risk_allele, effect_desc, evidence, or_val, ref_allele = row
             if not ref_allele or len(ref_allele) != 1:
                 continue  # skip indels / multi-base alleles
-            risk_level = classify_risk(ref_allele, ref_allele, risk_allele)
+            risk_level = classify_risk(ref_allele, ref_allele, risk_allele, odds_ratio=or_val)
             hits.append(TraitHit(
                 rsid=rsid,
                 user_genotype=f"{ref_allele}{ref_allele}",
@@ -144,6 +163,7 @@ async def match_traits(
                 risk_level=risk_level,
                 evidence_level=evidence,
                 association_id=str(assoc_id),
+                odds_ratio=or_val,
             ))
             n_imputed += 1
 

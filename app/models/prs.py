@@ -20,6 +20,8 @@ class PrsScore(Base):
     development_ancestry: Mapped[str | None] = mapped_column(String(255))
     validation_ancestry: Mapped[str | None] = mapped_column(String(255))
     reported_auc: Mapped[float | None] = mapped_column(Float)
+    scoring_file_hash: Mapped[str | None] = mapped_column(String(64))  # SHA-256 hex
+    scoring_file_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     imported_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )

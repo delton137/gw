@@ -165,3 +165,67 @@ class TestComputeAbsoluteRisk:
         assert result is not None
         # Even at z=2, risk shouldn't change dramatically for low AUC
         assert 0.05 < result.absolute_risk < 0.30
+
+
+class TestAbsoluteRiskCI:
+    """Tests for confidence interval computation on absolute risk."""
+
+    def test_ci_bounds_returned_when_z_bounds_given(self):
+        """CI bounds should be returned when z-score CI is provided."""
+        result = compute_absolute_risk(
+            z_score=1.0, prevalence=0.10, auc=0.65,
+            z_score_lower=0.5, z_score_upper=1.5,
+        )
+        assert result is not None
+        assert result.absolute_risk_lower is not None
+        assert result.absolute_risk_upper is not None
+
+    def test_ci_lower_less_than_upper(self):
+        """Lower risk bound should be less than upper bound."""
+        result = compute_absolute_risk(
+            z_score=1.0, prevalence=0.10, auc=0.65,
+            z_score_lower=0.5, z_score_upper=1.5,
+        )
+        assert result is not None
+        assert result.absolute_risk_lower < result.absolute_risk_upper
+
+    def test_point_estimate_within_ci(self):
+        """Point estimate should fall within the CI bounds."""
+        result = compute_absolute_risk(
+            z_score=1.0, prevalence=0.10, auc=0.65,
+            z_score_lower=0.5, z_score_upper=1.5,
+        )
+        assert result is not None
+        assert result.absolute_risk_lower <= result.absolute_risk <= result.absolute_risk_upper
+
+    def test_ci_none_when_z_bounds_missing(self):
+        """No CI bounds when z-score bounds not provided."""
+        result = compute_absolute_risk(z_score=1.0, prevalence=0.10, auc=0.65)
+        assert result is not None
+        assert result.absolute_risk_lower is None
+        assert result.absolute_risk_upper is None
+
+    def test_wider_z_ci_gives_wider_risk_ci(self):
+        """Wider z-score CI should produce wider risk CI."""
+        narrow = compute_absolute_risk(
+            z_score=1.0, prevalence=0.10, auc=0.65,
+            z_score_lower=0.8, z_score_upper=1.2,
+        )
+        wide = compute_absolute_risk(
+            z_score=1.0, prevalence=0.10, auc=0.65,
+            z_score_lower=0.2, z_score_upper=1.8,
+        )
+        assert narrow is not None and wide is not None
+        narrow_width = narrow.absolute_risk_upper - narrow.absolute_risk_lower
+        wide_width = wide.absolute_risk_upper - wide.absolute_risk_lower
+        assert wide_width > narrow_width
+
+    def test_ci_bounds_between_0_and_1(self):
+        """CI bounds should always be valid probabilities."""
+        result = compute_absolute_risk(
+            z_score=3.0, prevalence=0.05, auc=0.70,
+            z_score_lower=1.5, z_score_upper=4.5,
+        )
+        assert result is not None
+        assert 0 <= result.absolute_risk_lower <= 1
+        assert 0 <= result.absolute_risk_upper <= 1

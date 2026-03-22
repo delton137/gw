@@ -80,6 +80,8 @@ export default function DemoPrsPage() {
                 publicationPmid={prs.publication_pmid}
                 publicationDoi={prs.publication_doi}
                 pgsId={prs.pgs_id}
+                absoluteRiskLower={prs.absolute_risk_lower}
+                absoluteRiskUpper={prs.absolute_risk_upper}
               />
             ) : (
               <div key={prs.pgs_id} className="border border-border p-4">

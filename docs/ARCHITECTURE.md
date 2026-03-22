@@ -338,7 +338,7 @@ user_snp_trait_hits          Trait matches
 
 ## Privacy & Security
 
-- **Raw data is never stored.** Uploaded files are streamed to a temp file, parsed into memory, and the temp file is deleted immediately after parsing. If the analysis crashes, the temp file is still deleted (guaranteed by try/finally).
+- **The file uploaded is never stored, but results are.** Uploaded files are streamed to a temp file, parsed into memory, and the temp file is deleted immediately after parsing. If the analysis crashes, the temp file is still deleted (guaranteed by try/finally).
 - **No User table.** Authentication is handled by Clerk. We only store a Clerk user ID string on each result record — no emails, names, or passwords.
 - **Results are user-scoped.** Every API endpoint verifies the authenticated user matches the data owner.
 - **Temp files are restricted.** Created with mode `0o600` (owner read/write only).

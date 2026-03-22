@@ -27,6 +27,9 @@ interface DashboardContentProps {
   downloadingReport?: boolean;
   onDownloadPgxReport?: () => void;
   downloadingPgxReport?: boolean;
+  onDownloadHtmlReport?: () => void;
+  downloadingHtmlReport?: boolean;
+  downloadError?: string | null;
   onDeleteData?: () => void;
 }
 
@@ -49,6 +52,9 @@ export default function DashboardContent({
   downloadingReport,
   onDownloadPgxReport,
   downloadingPgxReport,
+  onDownloadHtmlReport,
+  downloadingHtmlReport,
+  downloadError,
   onDeleteData,
 }: DashboardContentProps) {
   return (
@@ -278,6 +284,16 @@ export default function DashboardContent({
               </button>
             )}
 
+            {onDownloadHtmlReport && (
+              <button
+                onClick={onDownloadHtmlReport}
+                disabled={downloadingHtmlReport}
+                className="px-5 py-2.5 text-sm font-medium border border-border hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {downloadingHtmlReport ? "Generating Report..." : "Download Full Report (HTML)"}
+              </button>
+            )}
+
             {onDeleteData && (
               <button
                 onClick={onDeleteData}
@@ -287,6 +303,9 @@ export default function DashboardContent({
               </button>
             )}
           </div>
+          {downloadError && (
+            <p className="text-sm text-red-600 mt-3">{downloadError}</p>
+          )}
           <p className="text-xs text-muted mt-3">
             Your raw genetic file was never stored. Deleting your data removes all
             analysis results, scores, and trait matches from our servers permanently.

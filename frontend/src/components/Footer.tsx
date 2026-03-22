@@ -22,8 +22,6 @@ export default function Footer() {
       if (res.ok) {
         setState("success");
         setEmail("");
-      } else if (res.status === 429) {
-        setState("error");
       } else {
         setState("error");
       }
@@ -70,9 +68,12 @@ export default function Footer() {
             )}
           </form>
 
-          <div className="flex gap-6 text-sm text-muted">
-            <Link href="/privacy" className="hover:text-foreground transition-colors">
+          <div className="flex items-center gap-3 text-sm">
+            <Link href="/privacy" className="text-muted hover:text-foreground transition-colors">
               Privacy Policy
+            </Link>
+            <Link href="/donate" className="text-muted hover:text-foreground transition-colors">
+              Donate
             </Link>
           </div>
         </div>

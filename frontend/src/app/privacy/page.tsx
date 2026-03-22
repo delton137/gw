@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import ObfuscatedEmail from "@/components/ObfuscatedEmail";
 
 export default function PrivacyPolicy() {
@@ -24,18 +25,14 @@ export default function PrivacyPolicy() {
 
       <section className="py-10 border-t border-border">
         <h2 className="font-serif text-2xl font-semibold mb-6">
-          Genetic Data &mdash; Raw Files Are Never Stored
+          The file you upload is never stored, but your results are
         </h2>
         <p className="text-muted leading-relaxed mb-4">
           When you upload a genotype file, it is parsed entirely in memory. Your
           raw genetic data is never written to disk, never stored in a database,
-          and is discarded immediately after processing. We do not retain your
-          raw genotype file at any point.
-        </p>
-        <p className="text-muted leading-relaxed">
-          This is a core design principle of Gene Wizard, not an afterthought. We
-          believe raw genetic data is too sensitive to persist, so the system was
-          built from the ground up to operate without storing it.
+          and is discarded immediately after processing. However, results are saved to our 
+          database. Your results can be deleted at any time by clicking the "Delete All My Data"
+          button at the bottom of the <Link href="/dashboard" className="text-accent hover:underline">dashboard page</Link>.
         </p>
       </section>
 
@@ -89,10 +86,10 @@ export default function PrivacyPolicy() {
           Device &amp; Usage Information
         </h2>
         <p className="text-muted leading-relaxed mb-4">
-          We use Vercel Analytics to collect anonymous usage data, including page
+          We use a web analytics provider to collect anonymous usage data, including page
           views and general device information. This data does not include any
           genetic information and is used solely to understand how people use the
-          Service and improve the experience.
+          service.
         </p>
         <p className="text-muted leading-relaxed">
           We do not use third-party advertising trackers or sell usage data.
@@ -110,7 +107,7 @@ export default function PrivacyPolicy() {
           </li>
           <li>
             <strong>Communicate with you</strong> &mdash; to respond to support
-            requests.
+            requests, when given permission to look at your data.
           </li>
         </ul>
       </section>
@@ -156,56 +153,24 @@ export default function PrivacyPolicy() {
           Deletion is immediate and irreversible &mdash; we do not retain backup
           copies of individual user data.
         </p>
-        <p className="text-muted leading-relaxed">
-          Raw genetic data is never retained. It is discarded from memory as
-          soon as your analysis completes or fails.
-        </p>
       </section>
 
       <section className="py-10 border-t border-border">
         <h2 className="font-serif text-2xl font-semibold mb-6">Security</h2>
         <p className="text-muted leading-relaxed">
-          All data in transit is encrypted via HTTPS/TLS. Our database is
-          encrypted at rest. Authentication is handled by Clerk with
-          industry-standard security practices. While no system is perfectly
-          secure, we take reasonable measures to protect your information and
-          minimize the data we store in the first place.
-        </p>
-      </section>
-
-      <section className="py-10 border-t border-border">
-        <h2 className="font-serif text-2xl font-semibold mb-6">Your Rights</h2>
-        <p className="text-muted leading-relaxed mb-4">You have the right to:</p>
-        <ul className="list-disc pl-6 text-muted leading-relaxed space-y-2 mb-4">
-          <li>
-            <strong>Delete all your data</strong> &mdash; available at any time
-            from your dashboard
-          </li>
-          <li>
-            <strong>Access your results</strong> &mdash; all of your analysis
-            results are available to you through the Service
-          </li>
-          <li>
-            <strong>Download your results</strong> &mdash; PDF reports can be
-            downloaded from your dashboard
-          </li>
-        </ul>
-        <p className="text-muted leading-relaxed">
-          If you are a resident of the European Economic Area, the United
-          Kingdom, or California, you may have additional rights under GDPR or
-          CCPA, including the right to request access to, correction of, or
-          deletion of your personal information. To exercise these rights, please
-          contact us at the address below.
+          All data in transit is encrypted via HTTPS/TLS. Our backend is HIPPA compliant.
+           Authentication is handled by Clerk with  industry-standard security practices. 
+           While no system is perfectly secure, we take reasonable measures to protect
+           your information and minimize the data we store in the first place.
         </p>
       </section>
 
       <section className="py-10 border-t border-border">
         <h2 className="font-serif text-2xl font-semibold mb-6">Children</h2>
         <p className="text-muted leading-relaxed">
-          The Service is not intended for individuals under the age of 18. We do
+          This service is not intended for individuals under the age of 18. We do
           not knowingly collect personal information from minors. If you believe
-          a minor has provided us with personal information, Gene Wizard
-          and we will delete it.
+          a minor has provided us with personal information, contact us and we will delete it.
         </p>
       </section>
 
@@ -224,7 +189,7 @@ export default function PrivacyPolicy() {
       <section className="py-10 border-t border-border mb-16">
         <h2 className="font-serif text-2xl font-semibold mb-6">Contact Us</h2>
         <p className="text-muted leading-relaxed">
-          If you have questions about this Privacy Policy or your data, please
+          If you have questions about this Privacy Policy or anything else, please
           contact us <ObfuscatedEmail />.
         </p>
       </section>

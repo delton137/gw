@@ -22,6 +22,8 @@ interface PrsDistributionChartProps {
   publicationPmid?: string | null;
   publicationDoi?: string | null;
   pgsId?: string | null;
+  absoluteRiskLower?: number | null;
+  absoluteRiskUpper?: number | null;
 }
 
 
@@ -80,6 +82,8 @@ export default function PrsDistributionChart({
   publicationPmid,
   publicationDoi,
   pgsId,
+  absoluteRiskLower,
+  absoluteRiskUpper,
 }: PrsDistributionChartProps) {
   const [showDist, setShowDist] = useState(false);
   const risk = riskCategory(percentile);
@@ -141,12 +145,16 @@ export default function PrsDistributionChart({
                 </div>
                 <div className="text-left text-sm">
                   <p style={{ color: "#22c55e" }} className="font-medium">
-                    {((1 - absoluteRisk) * 100).toFixed(1)}%
+                    {absoluteRiskLower != null && absoluteRiskUpper != null
+                      ? `${((1 - absoluteRiskUpper) * 100).toFixed(1)}–${((1 - absoluteRiskLower) * 100).toFixed(1)}%`
+                      : `${((1 - absoluteRisk) * 100).toFixed(1)}%`}
                   </p>
                   <p className="text-muted text-xs">do not have trait</p>
                   <div className="mt-3" />
                   <p style={{ color: "#1d4ed8" }} className="font-medium">
-                    {(absoluteRisk * 100).toFixed(1)}%
+                    {absoluteRiskLower != null && absoluteRiskUpper != null
+                      ? `${(absoluteRiskLower * 100).toFixed(1)}–${(absoluteRiskUpper * 100).toFixed(1)}%`
+                      : `${(absoluteRisk * 100).toFixed(1)}%`}
                   </p>
                   <p className="text-muted text-xs">have trait</p>
                 </div>

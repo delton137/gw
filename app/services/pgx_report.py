@@ -44,6 +44,12 @@ _ROW_ALT = colors.HexColor("#f9f9f9")
 _HEADER_BG = colors.HexColor("#f5f5f5")
 _HIGHLIGHT_PM = colors.HexColor("#fef2f2")   # faint red for PM/Positive
 _HIGHLIGHT_IM = colors.HexColor("#fffbeb")   # faint amber for IM
+_WARN_BG = colors.HexColor("#fffbeb")        # amber background for warnings
+_WARN_BORDER = colors.HexColor("#fcd34d")    # amber border
+_CPIC_BLUE = colors.HexColor("#60a5fa")      # blue for CPIC guidelines
+_DPWG_GREEN = colors.HexColor("#34d399")     # emerald for DPWG guidelines
+_INFO_BG = colors.HexColor("#eff6ff")        # light blue for info boxes
+_INFO_BORDER = colors.HexColor("#bfdbfe")    # blue border for info boxes
 
 # Phenotypes that warrant highlighting
 _ACTIONABLE_KEYWORDS = {
@@ -204,6 +210,8 @@ def generate_pgx_report_pdf(
         bottomMargin=0.75 * inch,
         leftMargin=0.75 * inch,
         rightMargin=0.75 * inch,
+        title="Gene Wizard — Pharmacogenomics Report",
+        author="genewizard.net",
     )
 
     styles = getSampleStyleSheet()
@@ -255,6 +263,113 @@ def generate_pgx_report_pdf(
     ))
     story.append(Spacer(1, 12))
     story.append(HRFlowable(width="100%", color=_LIGHT_GREY))
+    story.append(Spacer(1, 8))
+
+    # --- Educational / Important Information (before results) ---
+    edu_style = ParagraphStyle(
+        "EduBody", parent=styles["Body"],
+        fontSize=8.5, leading=11, spaceBefore=2, spaceAfter=2,
+    )
+    edu_heading = ParagraphStyle(
+        "EduHeading", parent=styles["Body"],
+        fontSize=9, leading=12, spaceBefore=10, spaceAfter=2,
+        textColor=_DARK,
+    )
+
+    story.append(Paragraph(
+        "<b>This report is for informational purposes only and is not a clinical "
+        "pharmacogenomics test</b>",
+        edu_heading,
+    ))
+    story.append(Paragraph(
+        "Results should be confirmed with a clinical-grade test and discussed with "
+        "a healthcare provider before making prescribing decisions. Do not alter or "
+        "discontinue any medication based solely on this report.",
+        edu_style,
+    ))
+
+    story.append(Paragraph(
+        "<b>SNP chips don't work well here!</b>",
+        edu_heading,
+    ))
+    story.append(Paragraph(
+        "SNP chips (from 23andMe, AncestryDNA, etc.) only test a pre-selected subset "
+        "of genomic positions. Many key pharmacogenomic variants are missing from "
+        "consumer SNP chips. Pay close attention to the Variants Found column. When "
+        "not all variants can be found using your file, results will be unreliable.",
+        edu_style,
+    ))
+
+    story.append(Paragraph(
+        "<b>Consumer WGS and SNP chip data does not measure copy number variation</b>",
+        edu_heading,
+    ))
+    story.append(Paragraph(
+        "We do not report on SULT1A1 and GSTM1 enzyme function since they are "
+        "commonly affected by copy number variation (CNV), which standard consumer "
+        "data does not detect. CNV in CYP2D6 is present in 12% of Americans and up "
+        "to 29% in some East African populations. [PMC4704658; PMID: 8764380] "
+        "However, in a study of 15,000 patients receiving clinical pharmacogenomic "
+        "testing in the United States, CNV only changed CYP2D6 phenotype in about "
+        "2% of patients. [Bousman et al. 2024, doi: 10.1038/s41380-024-02588-4] "
+        "This is why some consumer companies predict CYP2D6 function without "
+        "measuring CNV. We also present a CYP2D6 prediction here, but bear in mind "
+        "that you may be in the subset of people where that prediction is inaccurate. "
+        "CNV in CYP2A6 is very rare overall but appears in 15-20% of East Asians. "
+        "[PMID: 23164804; PMID: 32131765; PMC5600063] "
+        "For CYP2B6, CYP2C19, CYP1A2, and CYP2E1, CNV is important in about 2% or "
+        "less of cases. For the remaining genes in this report, significant CNV has "
+        "not been reported in the scientific literature as far as we can tell.",
+        edu_style,
+    ))
+
+    story.append(Paragraph(
+        "<b>Phenoconversion: when taking a medication changes your metabolizer status</b>",
+        edu_heading,
+    ))
+    story.append(Paragraph(
+        "Genetic information can give you information about your inherited enzyme "
+        "function, but medications can inhibit or induce those enzymes, shifting actual "
+        "phenotype. For example, a CYP2D6 \"Normal Metabolizer\" taking fluoxetine (a "
+        "strong CYP2D6 inhibitor) effectively becomes a Poor Metabolizer for other "
+        "CYP2D6 substrates. In a study of 15,000 psychiatric patients, 42% had CYP2D6 "
+        "phenoconversion from drug interactions. [Bousman et al. 2024, "
+        "doi: 10.1038/s41380-024-02588-4] No genetic test — including clinical-grade "
+        "tests — accounts for this.",
+        edu_style,
+    ))
+
+    story.append(Paragraph(
+        "<b>Pharmacogenomic prediction is a continually improving field</b>",
+        edu_heading,
+    ))
+    story.append(Paragraph(
+        'In pharmacogenomics, the "star alleles" that define pharmacogenomic haplotypes '
+        "are defined using a fixed set of genomic positions. It is worth bearing in mind "
+        "that panel-based calling has limitations — variants that haven't been cataloged "
+        "yet aren't considered. In 2018, researchers sequenced complete CYP2C genes and "
+        "discovered novel haplotypes not in any standard panel, leading to phenotype "
+        "reassignment in ~20% of subjects. [Botton et al. 2018, PMID: 29352760] "
+        "The limitations of panel-based calling are present in all current consumer "
+        "pharmacogenomic tests (e.g., from 23andMe, Color, Nebula, Invitae). As "
+        "pharmacogenomic variant databases grow and panel sizes increase, the accuracy "
+        "of pharmacogenetic testing will improve.",
+        edu_style,
+    ))
+
+    story.append(Paragraph(
+        "<b>Data sources</b>",
+        edu_heading,
+    ))
+    story.append(Paragraph(
+        "Star allele definitions and clinical function assignments were sourced from the "
+        "scientific literature and from CPIC (cpicpgx.org) and DPWG "
+        "(knmp.nl/dossiers/pharmacogenetics) guidelines.",
+        edu_style,
+    ))
+
+    story.append(Spacer(1, 12))
+    story.append(HRFlowable(width="100%", color=_LIGHT_GREY))
     story.append(Spacer(1, 12))
 
     # --- Analysis Summary ---
@@ -275,6 +390,33 @@ def generate_pgx_report_pdf(
     ]))
     story.append(summary_table)
     story.append(Spacer(1, 16))
+
+    # --- SNP chip warning (conditional) ---
+    chip_type = analysis.get("chip_type") or ""
+    if chip_type and chip_type.lower() != "wgs":
+        warn_text = (
+            f"<b>Your data is from a SNP chip ({escape(chip_type)}), so pharmacogenomic "
+            "results must be interpreted with caution.</b> Pay close attention to the "
+            "Variants Found column. When not all variants can be determined from your "
+            "file, results will be unreliable.<br/><br/>"
+            "SNP chips only test a small subset of pharmacogenomic variants. Whole genome "
+            "sequencing (WGS) data is required to test all variants."
+        )
+        warn_para = Paragraph(warn_text, ParagraphStyle(
+            "WarnText", parent=styles["Body"],
+            fontSize=9, leading=12, spaceBefore=0, spaceAfter=0,
+        ))
+        warn_tbl = Table([[warn_para]], colWidths=[6.0 * inch])
+        warn_tbl.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), _WARN_BG),
+            ("BOX", (0, 0), (-1, -1), 1, _WARN_BORDER),
+            ("TOPPADDING", (0, 0), (-1, -1), 8),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+            ("LEFTPADDING", (0, 0), (-1, -1), 10),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+        ]))
+        story.append(warn_tbl)
+        story.append(Spacer(1, 12))
 
     # --- Split into metabolism vs response ---
     metabolism = [r for r in pgx_results if r["gene"] not in _DRUG_RESPONSE_GENES]
@@ -391,6 +533,58 @@ def generate_pgx_report_pdf(
                 f"<i>{escape(note)}</i>", styles["Body"],
             ))
 
+        # Gene-specific info boxes
+        if gene == "CYP3A5":
+            info_text = (
+                '<b>Understanding "Expressor":</b> CYP3A5 uses "Expressor" terminology '
+                'instead of the usual "Normal/Poor Metabolizer" because the non-functional '
+                "*3 allele is actually the most common variant in many populations (85-95% "
+                "of Europeans carry at least one copy). Having a fully functional enzyme "
+                '("Expressor") is the less common state. If you are an Expressor, you '
+                "metabolize tacrolimus faster than most people and may need a higher "
+                "starting dose — adjusted with therapeutic drug monitoring."
+            )
+            info_para = Paragraph(info_text, ParagraphStyle(
+                "InfoText", parent=styles["Body"],
+                fontSize=8, leading=11, spaceBefore=0, spaceAfter=0,
+            ))
+            info_tbl = Table([[info_para]], colWidths=[5.8 * inch])
+            info_tbl.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, -1), _INFO_BG),
+                ("BOX", (0, 0), (-1, -1), 0.5, _INFO_BORDER),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ]))
+            gene_elements.append(info_tbl)
+            gene_elements.append(Spacer(1, 4))
+
+        if gene == "CYP2B6":
+            info_text = (
+                "<b>A note on phase ambiguity:</b> CYP2B6 *6 is defined by two SNPs "
+                "(rs3745274 + rs2279343). Without phasing, unphased data cannot distinguish "
+                "*1/*6 (both variants on one chromosome) from *4/*9 (one variant on each "
+                "chromosome), which may give a different phenotype. In a study of 1,583 "
+                "individuals, 1.5% of CYP2B6 phenotype assignments were corrected after "
+                "experimental phasing. [van der Lee et al. 2020, PMID: 31594036]"
+            )
+            info_para = Paragraph(info_text, ParagraphStyle(
+                "InfoText2", parent=styles["Body"],
+                fontSize=8, leading=11, spaceBefore=0, spaceAfter=0,
+            ))
+            info_tbl = Table([[info_para]], colWidths=[5.8 * inch])
+            info_tbl.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, -1), _INFO_BG),
+                ("BOX", (0, 0), (-1, -1), 0.5, _INFO_BORDER),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ]))
+            gene_elements.append(info_tbl)
+            gene_elements.append(Spacer(1, 4))
+
         # Activity score + coverage on same line
         info_parts = []
         act = r.get("activity_score")
@@ -412,6 +606,63 @@ def generate_pgx_report_pdf(
             gene_elements.append(Paragraph(
                 f"<b>Drugs affected:</b> {escape(drugs)}", styles["Body"],
             ))
+
+        # CPIC/DPWG Guidelines
+        guidelines = r.get("guidelines")
+        if guidelines:
+            cpic_list = guidelines.get("cpic") or []
+            dpwg_list = guidelines.get("dpwg") or []
+
+            if cpic_list:
+                cpic_parts = ['<font color="#1d4ed8"><b>CPIC GUIDELINE</b></font><br/>']
+                for g in cpic_list:
+                    drug_name = escape(g.get("drug", ""))
+                    rec = escape(g.get("recommendation", ""))
+                    line = f"<b>{drug_name}:</b> {rec}"
+                    strength = g.get("strength")
+                    if strength:
+                        line += f' <font color="#2563eb">({escape(strength)})</font>'
+                    pmid = g.get("pmid")
+                    if pmid:
+                        line += f" [PMID: {escape(str(pmid))}]"
+                    cpic_parts.append(line + "<br/>")
+                cpic_para = Paragraph("".join(cpic_parts), ParagraphStyle(
+                    "CpicText", parent=styles["Body"],
+                    fontSize=8, leading=11, spaceBefore=0, spaceAfter=0,
+                ))
+                cpic_tbl = Table([[cpic_para]], colWidths=[5.8 * inch])
+                cpic_tbl.setStyle(TableStyle([
+                    ("LINEBEFOREDECOR", (0, 0), (0, -1), 2, _CPIC_BLUE),
+                    ("TOPPADDING", (0, 0), (-1, -1), 4),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                ]))
+                gene_elements.append(cpic_tbl)
+                gene_elements.append(Spacer(1, 4))
+
+            if dpwg_list:
+                dpwg_parts = ['<font color="#047857"><b>DPWG GUIDELINE</b></font><br/>']
+                for g in dpwg_list:
+                    drug_name = escape(g.get("drug", ""))
+                    rec = escape(g.get("recommendation", ""))
+                    line = f"<b>{drug_name}:</b> {rec}"
+                    pmid = g.get("pmid")
+                    if pmid:
+                        line += f" [PMID: {escape(str(pmid))}]"
+                    dpwg_parts.append(line + "<br/>")
+                dpwg_para = Paragraph("".join(dpwg_parts), ParagraphStyle(
+                    "DpwgText", parent=styles["Body"],
+                    fontSize=8, leading=11, spaceBefore=0, spaceAfter=0,
+                ))
+                dpwg_tbl = Table([[dpwg_para]], colWidths=[5.8 * inch])
+                dpwg_tbl.setStyle(TableStyle([
+                    ("LINEBEFOREDECOR", (0, 0), (0, -1), 2, _DPWG_GREEN),
+                    ("TOPPADDING", (0, 0), (-1, -1), 4),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                ]))
+                gene_elements.append(dpwg_tbl)
+                gene_elements.append(Spacer(1, 4))
 
         # Defining variants (the specific SNPs that led to the function call)
         gene_dv = defining_variants.get(gene)
@@ -491,23 +742,14 @@ def generate_pgx_report_pdf(
     ))
 
     # =====================================================================
-    # Disclaimers
+    # Final disclaimer
     # =====================================================================
     story.append(Spacer(1, 12))
     story.append(HRFlowable(width="100%", color=_LIGHT_GREY))
     story.append(Paragraph(
-        "<b>Important Disclaimers</b><br/><br/>"
-        "This report is for informational purposes only and is NOT a clinical "
-        "pharmacogenomics test. Results have not been validated in a CLIA-certified "
-        "laboratory.<br/><br/>"
-        "Results should be confirmed with a clinical-grade pharmacogenomic test before "
-        "making any prescribing decisions. Do not alter or discontinue any medication "
-        "based solely on this report.<br/><br/>"
-        "CYP2D6 gene deletions and duplications cannot be detected from SNP array or "
-        "standard VCF data. The absence of a detected variant does not confirm wild-type "
-        "status if the variant was not tested.<br/><br/>"
         "Please consult a healthcare provider or pharmacist for medical interpretation "
-        "of these results.<br/><br/>"
+        "of these results. This report has not been validated in a CLIA-certified "
+        "laboratory.<br/><br/>"
         "Gene Wizard",
         styles["Disclaimer"],
     ))

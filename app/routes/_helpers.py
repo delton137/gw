@@ -134,6 +134,8 @@ async def fetch_prs_results(
             "population_risk": None,
             "risk_category": None,
             "prevalence_source": None,
+            "absolute_risk_lower": None,
+            "absolute_risk_upper": None,
         }
 
         if (
@@ -142,16 +144,28 @@ async def fetch_prs_results(
             and row.prevalence is not None
             and row.trait_type == "binary"
         ):
+            # Derive z-score CI bounds from percentile CI bounds
+            z_lower = None
+            z_upper = None
+            if row.percentile_lower is not None and row.percentile_upper is not None:
+                from app.services.absolute_risk import _norm_ppf
+                z_lower = _norm_ppf(row.percentile_lower / 100.0)
+                z_upper = _norm_ppf(row.percentile_upper / 100.0)
+
             risk = compute_absolute_risk(
                 z_score=row.z_score,
                 prevalence=row.prevalence,
                 auc=row.reported_auc,
+                z_score_lower=z_lower,
+                z_score_upper=z_upper,
             )
             if risk is not None:
                 entry["absolute_risk"] = round(risk.absolute_risk, 4)
                 entry["population_risk"] = round(risk.population_risk, 4)
                 entry["risk_category"] = risk.risk_category
                 entry["prevalence_source"] = row.prevalence_source
+                entry["absolute_risk_lower"] = round(risk.absolute_risk_lower, 4) if risk.absolute_risk_lower is not None else None
+                entry["absolute_risk_upper"] = round(risk.absolute_risk_upper, 4) if risk.absolute_risk_upper is not None else None
 
         result_list.append(entry)
 

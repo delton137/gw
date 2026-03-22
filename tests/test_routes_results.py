@@ -490,3 +490,77 @@ class TestGetClinvarHits:
 
         response = client.get("/api/v1/results/clinvar/user_someone_else")
         assert response.status_code == 403
+
+
+class TestGetGwasResults:
+    def test_returns_gwas_results(self, client):
+        """Returns GWAS results grouped by category."""
+        analysis = _mock_analysis(status="complete")
+
+        analysis_result = MagicMock()
+        analysis_result.scalar_one_or_none.return_value = analysis
+
+        # Mock GWAS result + study row
+        gwas_row = MagicMock()
+        gwas_row.raw_score = 0.003
+        gwas_row.percentile = 65.0
+        gwas_row.z_score = 0.39
+        gwas_row.ref_mean = 0.002
+        gwas_row.ref_std = 0.001
+        gwas_row.ancestry_group_used = "EUR"
+        gwas_row.n_variants_matched = 200
+        gwas_row.n_variants_total = 250
+
+        study = MagicMock()
+        study.study_id = "GWAS001"
+        study.trait = "Type 2 Diabetes"
+        study.category = "metabolic"
+        study.citation = "Smith et al. 2023"
+        study.pmid = "99999"
+        study.n_snps = 250
+
+        gwas_result = MagicMock()
+        gwas_result.all.return_value = [(gwas_row, study)]
+
+        session = AsyncMock()
+        session.execute = AsyncMock(side_effect=[analysis_result, gwas_result])
+
+        async def override():
+            return session
+
+        _app.dependency_overrides[get_session] = override
+
+        response = client.get(f"/api/v1/results/gwas/{TEST_USER_ID}")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["gwas_status"] == "ready"
+        assert data["total_scores"] == 1
+        assert "metabolic" in data["categories"]
+        assert data["categories"]["metabolic"][0]["trait"] == "Type 2 Diabetes"
+
+    def test_no_analysis_returns_404(self, client):
+        """No completed analysis → 404."""
+        session = AsyncMock()
+        result = MagicMock()
+        result.scalar_one_or_none.return_value = None
+        session.execute = AsyncMock(return_value=result)
+
+        async def override():
+            return session
+
+        _app.dependency_overrides[get_session] = override
+
+        response = client.get(f"/api/v1/results/gwas/{TEST_USER_ID}")
+        assert response.status_code == 404
+
+    def test_wrong_user_returns_403(self, client):
+        """Accessing another user's GWAS results → 403."""
+        session = AsyncMock()
+
+        async def override():
+            return session
+
+        _app.dependency_overrides[get_session] = override
+
+        response = client.get("/api/v1/results/gwas/user_someone_else")
+        assert response.status_code == 403

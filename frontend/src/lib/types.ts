@@ -64,6 +64,8 @@ export interface PrsResult {
   percentile_lower: number | null;
   percentile_upper: number | null;
   coverage_quality: string | null;
+  absolute_risk_lower: number | null;
+  absolute_risk_upper: number | null;
 }
 
 export interface PrsResponse {

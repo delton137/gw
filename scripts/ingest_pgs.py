@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import gzip
+import hashlib
 import logging
 import re
 from datetime import datetime, timezone
@@ -145,15 +146,24 @@ async def download_scoring_file(
         return None
 
 
-def parse_scoring_file(content: str) -> list[dict]:
-    """Parse a PGS Catalog harmonized scoring TSV file into normalized rows."""
+def parse_scoring_file(content: str) -> tuple[list[dict], str | None]:
+    """Parse a PGS Catalog harmonized scoring TSV file into normalized rows.
+
+    Returns (rows, file_date_str) where file_date_str is from the #date header.
+    """
     lines = content.splitlines()
 
-    # Skip comment/header lines starting with #
+    # Skip comment/header lines starting with #, but extract date
     data_lines = []
     header = None
+    file_date_str = None
     for line in lines:
         if line.startswith("#"):
+            if line.lower().startswith("#date"):
+                # Format: #date=2024-01-15 or #date_release=2024-01-15
+                match = re.search(r"(\d{4}-\d{2}-\d{2})", line)
+                if match:
+                    file_date_str = match.group(1)
             continue
         if header is None:
             header = line.strip().split("\t")
@@ -227,7 +237,7 @@ def parse_scoring_file(content: str) -> list[dict]:
     if n_position_only:
         log.info(f"  {n_position_only} variants use position-based IDs (no rsID in source)")
 
-    return rows
+    return rows, file_date_str
 
 
 def merge_builds(
@@ -345,8 +355,28 @@ async def ingest_score(
         raise RuntimeError(f"Could not download any scoring file for {pgs_id}")
 
     # Parse both builds
-    rows_37 = parse_scoring_file(content_37) if content_37 else None
-    rows_38 = parse_scoring_file(content_38) if content_38 else None
+    file_date_str = None
+    if content_37:
+        rows_37, file_date_str = parse_scoring_file(content_37)
+    else:
+        rows_37 = None
+    if content_38:
+        rows_38, date_38 = parse_scoring_file(content_38)
+        if not file_date_str:
+            file_date_str = date_38
+    else:
+        rows_38 = None
+
+    # Compute SHA-256 of the primary scoring file content for version tracking
+    primary_content = content_37 or content_38
+    scoring_file_hash = hashlib.sha256(primary_content.encode("utf-8")).hexdigest() if primary_content else None
+
+    scoring_file_date = None
+    if file_date_str:
+        try:
+            scoring_file_date = datetime.strptime(file_date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        except ValueError:
+            log.warning(f"  Could not parse scoring file date: {file_date_str}")
 
     # Merge to get both position sets
     rows = merge_builds(rows_37, rows_38)
@@ -385,6 +415,8 @@ async def ingest_score(
         n_variants_total=len(rows),
         development_ancestry=dev_ancestry,
         reported_auc=auc,
+        scoring_file_hash=scoring_file_hash,
+        scoring_file_date=scoring_file_date,
     )
     session.add(prs_score)
 

@@ -95,6 +95,8 @@ export const DEMO_PRS: PrsResponse = {
       "absolute_risk": 0.3252,
       "population_risk": 0.113,
       "risk_category": "high",
+      "absolute_risk_lower": null,
+      "absolute_risk_upper": null,
       "prevalence_source": "CDC National Diabetes Statistics Report 2022: 11.3% of US adults. https://www.cdc.gov/diabetes/php/data-research/index.html"
     },
     {
@@ -117,6 +119,8 @@ export const DEMO_PRS: PrsResponse = {
       "absolute_risk": null,
       "population_risk": null,
       "risk_category": null,
+      "absolute_risk_lower": null,
+      "absolute_risk_upper": null,
       "prevalence_source": null
     },
     {
@@ -139,6 +143,8 @@ export const DEMO_PRS: PrsResponse = {
       "absolute_risk": 0.1218,
       "population_risk": 0.107,
       "risk_category": "average",
+      "absolute_risk_lower": null,
+      "absolute_risk_upper": null,
       "prevalence_source": "Alzheimer's Association 2024: 10.7% of Americans aged 65+ have Alzheimer's. https://www.alz.org/alzheimers-dementia/facts-figures"
     },
     {
@@ -161,6 +167,8 @@ export const DEMO_PRS: PrsResponse = {
       "absolute_risk": 0.1114,
       "population_risk": 0.107,
       "risk_category": "average",
+      "absolute_risk_lower": null,
+      "absolute_risk_upper": null,
       "prevalence_source": "Alzheimer's Association 2024: 10.7% of Americans aged 65+ have Alzheimer's. https://www.alz.org/alzheimers-dementia/facts-figures"
     },
     {
@@ -183,6 +191,8 @@ export const DEMO_PRS: PrsResponse = {
       "absolute_risk": 0.1174,
       "population_risk": 0.107,
       "risk_category": "average",
+      "absolute_risk_lower": null,
+      "absolute_risk_upper": null,
       "prevalence_source": "Alzheimer's Association 2024: 10.7% of Americans aged 65+ have Alzheimer's. https://www.alz.org/alzheimers-dementia/facts-figures"
     },
     {
@@ -205,6 +215,8 @@ export const DEMO_PRS: PrsResponse = {
       "absolute_risk": 0.1422,
       "population_risk": 0.132,
       "risk_category": "average",
+      "absolute_risk_lower": null,
+      "absolute_risk_upper": null,
       "prevalence_source": "NCI SEER: 13.2% lifetime risk of female breast cancer (2018-2020 data). https://seer.cancer.gov/statfacts/html/breast.html"
     },
     {
@@ -227,6 +239,8 @@ export const DEMO_PRS: PrsResponse = {
       "absolute_risk": null,
       "population_risk": null,
       "risk_category": null,
+      "absolute_risk_lower": null,
+      "absolute_risk_upper": null,
       "prevalence_source": null
     },
     {
@@ -249,6 +263,8 @@ export const DEMO_PRS: PrsResponse = {
       "absolute_risk": 0.126,
       "population_risk": 0.132,
       "risk_category": "average",
+      "absolute_risk_lower": null,
+      "absolute_risk_upper": null,
       "prevalence_source": "NCI SEER: 13.2% lifetime risk of female breast cancer (2018-2020 data). https://seer.cancer.gov/statfacts/html/breast.html"
     },
     {
@@ -271,6 +287,8 @@ export const DEMO_PRS: PrsResponse = {
       "absolute_risk": null,
       "population_risk": null,
       "risk_category": null,
+      "absolute_risk_lower": null,
+      "absolute_risk_upper": null,
       "prevalence_source": null
     },
     {
@@ -293,6 +311,8 @@ export const DEMO_PRS: PrsResponse = {
       "absolute_risk": 0.0574,
       "population_risk": 0.107,
       "risk_category": "reduced",
+      "absolute_risk_lower": null,
+      "absolute_risk_upper": null,
       "prevalence_source": "Alzheimer's Association 2024: 10.7% of Americans aged 65+ have Alzheimer's/dementia. https://www.alz.org/alzheimers-dementia/facts-figures"
     },
     {
@@ -315,6 +335,8 @@ export const DEMO_PRS: PrsResponse = {
       "absolute_risk": null,
       "population_risk": null,
       "risk_category": null,
+      "absolute_risk_lower": null,
+      "absolute_risk_upper": null,
       "prevalence_source": null
     },
     {
@@ -337,6 +359,8 @@ export const DEMO_PRS: PrsResponse = {
       "absolute_risk": null,
       "population_risk": null,
       "risk_category": null,
+      "absolute_risk_lower": null,
+      "absolute_risk_upper": null,
       "prevalence_source": null
     },
     {
@@ -359,6 +383,8 @@ export const DEMO_PRS: PrsResponse = {
       "absolute_risk": null,
       "population_risk": null,
       "risk_category": null,
+      "absolute_risk_lower": null,
+      "absolute_risk_upper": null,
       "prevalence_source": null
     },
     {
@@ -381,6 +407,8 @@ export const DEMO_PRS: PrsResponse = {
       "absolute_risk": 0.0095,
       "population_risk": 0.128,
       "risk_category": "reduced",
+      "absolute_risk_lower": null,
+      "absolute_risk_upper": null,
       "prevalence_source": "NCI SEER: 12.8% lifetime risk of prostate cancer (2018-2020 data). https://seer.cancer.gov/statfacts/html/prost.html"
     },
     {
@@ -403,6 +431,8 @@ export const DEMO_PRS: PrsResponse = {
       "absolute_risk": 0.0856,
       "population_risk": 0.132,
       "risk_category": "reduced",
+      "absolute_risk_lower": null,
+      "absolute_risk_upper": null,
       "prevalence_source": "NCI SEER: 13.2% lifetime risk of female breast cancer (2018-2020 data). https://seer.cancer.gov/statfacts/html/breast.html"
     },
     {
@@ -425,6 +455,8 @@ export const DEMO_PRS: PrsResponse = {
       "absolute_risk": 0.0039,
       "population_risk": 0.065,
       "risk_category": "reduced",
+      "absolute_risk_lower": null,
+      "absolute_risk_upper": null,
       "prevalence_source": "CDC NHANES 2017-2020: 6.5% of US adults aged 20+ have CHD. https://www.cdc.gov/heart-disease/data-research/facts-stats/"
     },
     {
@@ -447,6 +479,8 @@ export const DEMO_PRS: PrsResponse = {
       "absolute_risk": 0.0055,
       "population_risk": 0.03,
       "risk_category": "reduced",
+      "absolute_risk_lower": null,
+      "absolute_risk_upper": null,
       "prevalence_source": "AHA 2023: ~3.0% of US adults have had a stroke. https://www.ahajournals.org/doi/10.1161/CIR.0000000000001123"
     }
   ]

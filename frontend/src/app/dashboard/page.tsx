@@ -35,10 +35,12 @@ export default function DashboardPage() {
   const [prsError, setPrsError] = useState<string | null>(null);
   const [prsDetail, setPrsDetail] = useState<string | null>(null);
 
-  const { download: downloadReport, loading: downloading } = useReportDownload("/api/v1/report/download", "genewizard-report");
-  const { download: downloadPgxReport, loading: downloadingPgx } = useReportDownload("/api/v1/report/pgx/download", "genewizard-pgx-report");
+  const { download: downloadReport, loading: downloading, error: reportError } = useReportDownload("/api/v1/report/download", "genewizard-report");
+  const { download: downloadPgxReport, loading: downloadingPgx, error: pgxReportError } = useReportDownload("/api/v1/report/pgx/download", "genewizard-pgx-report");
+  const { download: downloadHtmlReport, loading: downloadingHtml, error: htmlReportError } = useReportDownload("/api/v1/report/html/download", "genewizard-comprehensive-report", ".html");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -108,7 +110,7 @@ export default function DashboardPage() {
           try {
             const [analysisData, variantsData] = await Promise.all([
               apiFetch<Analysis>(
-                `/api/v1/results/analysis/${prsData!.analysis_id}`,
+                `/api/v1/results/analysis/${prsData.analysis_id}`,
                 {},
                 token
               ),
@@ -141,12 +143,13 @@ export default function DashboardPage() {
 
   const handleDeleteData = async () => {
     setDeleting(true);
+    setDeleteError(null);
     try {
       const token = await getToken();
       await apiDelete("/api/v1/account/data", token);
       window.location.href = "/upload";
     } catch {
-      alert("Failed to delete data. Please try again.");
+      setDeleteError("Failed to delete data. Please try again.");
       setDeleting(false);
     }
   };
@@ -202,13 +205,16 @@ export default function DashboardPage() {
             downloadingReport={downloading}
             onDownloadPgxReport={() => downloadPgxReport(analysis?.filename ?? undefined)}
             downloadingPgxReport={downloadingPgx}
+            onDownloadHtmlReport={() => downloadHtmlReport(analysis?.filename ?? undefined)}
+            downloadingHtmlReport={downloadingHtml}
+            downloadError={reportError || pgxReportError || htmlReportError}
             onDeleteData={() => setShowDeleteConfirm(true)}
           />
 
           {/* Delete confirmation modal */}
           {showDeleteConfirm && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-              <div className="bg-white max-w-md w-full mx-4 p-6 shadow-lg">
+              <div className="bg-background max-w-md w-full mx-4 p-6 shadow-lg">
                 <h3 className="font-serif text-lg font-semibold mb-3">
                   Delete all your data?
                 </h3>
@@ -224,6 +230,9 @@ export default function DashboardPage() {
                 <p className="text-sm font-medium mb-6">
                   This action cannot be undone.
                 </p>
+                {deleteError && (
+                  <p className="text-sm text-red-600 mb-3">{deleteError}</p>
+                )}
                 <div className="flex gap-3 justify-end">
                   <button
                     onClick={() => setShowDeleteConfirm(false)}

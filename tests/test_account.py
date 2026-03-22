@@ -91,3 +91,64 @@ class TestDownloadEndpoint:
         response = client.get("/api/v1/report/download")
         assert response.status_code == 404
         assert "No completed analysis" in response.json()["detail"]
+
+
+class TestHtmlDownloadEndpoint:
+    def test_no_analysis_returns_404(self, client):
+        """Returns 404 when no completed analysis exists."""
+        response = client.get("/api/v1/report/html/download")
+        assert response.status_code == 404
+        assert "No completed analysis" in response.json()["detail"]
+
+    def test_html_download_success(self, client, monkeypatch):
+        """Returns HTML report with correct content type and headers."""
+        import uuid
+        from datetime import datetime, timezone
+
+        analysis = MagicMock()
+        analysis.id = uuid.uuid4()
+        analysis.user_id = TEST_USER_ID
+        analysis.status = "complete"
+        analysis.chip_type = "23andme_v5"
+        analysis.variant_count = 640000
+        analysis.filename = "genome.txt"
+        analysis.genome_build = "GRCh37"
+        analysis.file_format = "23andme"
+        analysis.created_at = datetime(2025, 1, 15, tzinfo=timezone.utc)
+        analysis.detected_ancestry = None
+        analysis.pipeline_fast_seconds = 10.0
+        analysis.is_imputed = False
+
+        # Mock session: get_latest_analysis query, then all subsequent queries return empty
+        analysis_result = MagicMock()
+        analysis_result.scalar_one_or_none.return_value = analysis
+
+        empty_scalars = MagicMock()
+        empty_scalars.all.return_value = []
+
+        empty_result = MagicMock()
+        empty_result.scalars.return_value = empty_scalars
+        empty_result.scalar_one_or_none.return_value = None
+        empty_result.scalar.return_value = 0
+        empty_result.all.return_value = []
+        empty_result.__iter__ = MagicMock(return_value=iter([]))
+
+        session = AsyncMock()
+        session.execute = AsyncMock(side_effect=[analysis_result] + [empty_result] * 20)
+
+        async def override():
+            return session
+
+        _app.dependency_overrides[get_session] = override
+
+        # Patch generate_html_report to avoid template dependency
+        monkeypatch.setattr(
+            "app.routes.account.generate_html_report",
+            lambda **kw: "<!DOCTYPE html><html><body>Report</body></html>",
+        )
+
+        response = client.get("/api/v1/report/html/download")
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("text/html")
+        assert "genewizard-comprehensive-report.html" in response.headers["content-disposition"]
+        assert "<!DOCTYPE html>" in response.text

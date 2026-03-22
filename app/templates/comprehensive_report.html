@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GeneWizard — Genomic Analysis Report</title>
+<style>
+:root {
+  --dark: #1a1a2e;
+  --grey: #555;
+  --muted: #6b7280;
+  --border: #e5e5e5;
+  --bg: #fafaf9;
+  --header-bg: #f5f5f5;
+  --row-alt: #f9f9f9;
+  --accent: #2563eb;
+  --red-bg: #fef2f2;
+  --red-text: #991b1b;
+  --amber-bg: #fffbeb;
+  --amber-text: #92400e;
+  --green-bg: #f0fdf4;
+  --green-text: #166534;
+  --blue-bg: #eff6ff;
+  --blue-text: #1e40af;
+  --superpop-afr: #10b981;
+  --superpop-eur: #f59e0b;
+  --superpop-eas: #8b5cf6;
+  --superpop-sas: #f43f5e;
+  --superpop-amr: #0ea5e9;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color: var(--dark);
+  background: var(--bg);
+  line-height: 1.6;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  font-size: 14px;
+}
+h1, h2, h3 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 600;
+}
+h1 { font-size: 1.8rem; color: var(--dark); margin-bottom: 0.25rem; }
+h2 { font-size: 1.3rem; color: var(--dark); margin: 2rem 0 0.75rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+h3 { font-size: 1.05rem; color: var(--dark); margin: 1.25rem 0 0.5rem; }
+p { margin-bottom: 0.5rem; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Header */
+.report-header { text-align: center; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+.report-header .subtitle { color: var(--muted); font-size: 0.9rem; }
+
+/* TOC */
+.toc { background: var(--header-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.5rem; margin-bottom: 2rem; }
+.toc h2 { margin: 0 0 0.5rem; border: none; font-size: 1rem; padding: 0; }
+.toc ul { list-style: none; padding: 0; columns: 2; column-gap: 2rem; }
+.toc li { margin-bottom: 0.25rem; }
+.toc a { font-size: 0.9rem; }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; font-size: 0.85rem; }
+th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border); }
+th { background: var(--header-bg); font-weight: 600; color: #333; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; }
+tr:nth-child(even) { background: var(--row-alt); }
+
+/* Key-value table (analysis summary) */
+.kv-table td:first-child { font-weight: 600; width: 200px; color: var(--grey); }
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.badge-red { background: var(--red-bg); color: var(--red-text); }
+.badge-amber { background: var(--amber-bg); color: var(--amber-text); }
+.badge-green { background: var(--green-bg); color: var(--green-text); }
+.badge-blue { background: var(--blue-bg); color: var(--blue-text); }
+.badge-grey { background: #f3f4f6; color: var(--muted); }
+
+/* Ancestry bars */
+.ancestry-bar { display: flex; align-items: center; margin-bottom: 6px; }
+.ancestry-bar .pop-name { width: 160px; font-size: 0.85rem; font-weight: 500; }
+.ancestry-bar .bar-track { flex: 1; height: 20px; background: #f3f4f6; border-radius: 4px; overflow: hidden; margin: 0 12px; }
+.ancestry-bar .bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+.ancestry-bar .pop-pct { width: 55px; text-align: right; font-size: 0.85rem; font-weight: 600; }
+
+/* Details/summary (PGx gene details, collapsible sections) */
+details { margin-bottom: 0.5rem; }
+summary { cursor: pointer; font-weight: 500; padding: 4px 0; color: var(--dark); }
+summary:hover { color: var(--accent); }
+.gene-detail { padding: 0.75rem 1rem; background: var(--header-bg); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 0.75rem; }
+.gene-detail p { margin-bottom: 0.3rem; font-size: 0.85rem; }
+.gene-detail .label { font-weight: 600; color: var(--grey); }
+
+/* Guideline cards */
+.guideline { padding: 0.5rem 0.75rem; margin-bottom: 0.4rem; border-radius: 4px; font-size: 0.85rem; border-left: 3px solid; }
+.guideline-cpic { background: var(--blue-bg); border-color: var(--accent); }
+.guideline-dpwg { background: #ecfdf5; border-color: #10b981; }
+.guideline .gl-source { font-weight: 600; font-size: 0.75rem; text-transform: uppercase; }
+.guideline .gl-drug { font-weight: 600; }
+
+/* PGx row highlighting */
+.row-actionable { background: var(--red-bg) !important; }
+.row-moderate { background: var(--amber-bg) !important; }
+
+/* ClinVar stars */
+.stars { color: #f59e0b; letter-spacing: 1px; }
+
+/* Percentile color coding */
+.pct-high { color: var(--red-text); font-weight: 700; }
+.pct-elevated { color: var(--amber-text); font-weight: 600; }
+.pct-normal { color: var(--dark); }
+.pct-low { color: var(--green-text); }
+
+/* GWAS category header */
+.cat-header { background: var(--header-bg); padding: 0.5rem 0.75rem; border-radius: 4px; margin: 1rem 0 0.5rem; font-weight: 600; font-size: 0.9rem; }
+
+/* Notice/alert boxes */
+.notice { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.85rem; }
+.notice-info { background: var(--blue-bg); color: var(--blue-text); border: 1px solid #bfdbfe; }
+.notice-amber { background: var(--amber-bg); color: var(--amber-text); border: 1px solid #fde68a; }
+
+/* Summary banner */
+.summary-banner { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-weight: 500; }
+.summary-green { background: var(--green-bg); color: var(--green-text); border: 1px solid #bbf7d0; }
+.summary-amber { background: var(--amber-bg); color: var(--amber-text); border: 1px solid #fde68a; }
+.summary-red { background: var(--red-bg); color: var(--red-text); border: 1px solid #fecaca; }
+
+/* Disclaimer */
+.disclaimers { margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid var(--border); }
+.disclaimers p { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.4rem; }
+
+/* Footer */
+.report-footer { text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.8rem; }
+
+/* Monospace for diplotypes/genotypes */
+.mono { font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace; font-size: 0.85em; }
+
+/* Print styles */
+@media print {
+  body { background: white; max-width: none; padding: 1rem; font-size: 11px; }
+  .toc { break-after: page; }
+  section { break-inside: avoid; }
+  h2 { break-after: avoid; }
+  details[open] summary ~ * { display: block; }
+  details { break-inside: avoid; }
+  details > summary { list-style: none; }
+  details > summary::marker { display: none; }
+  details > summary::-webkit-details-marker { display: none; }
+  details > *:not(summary) { display: block !important; }
+  a { color: var(--dark); }
+  .no-print { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="report-header">
+  <h1>genewizard.net</h1>
+  <p style="font-family: Georgia, serif; font-size: 1.1rem; margin-bottom: 0.5rem;">Genomic Analysis Report</p>
+  <p class="subtitle">Generated {{ generated_at }}</p>
+</div>
+
+<!-- Table of Contents -->
+<nav class="toc">
+  <h2>Contents</h2>
+  <ul>
+    <li><a href="#summary">Analysis Summary</a></li>
+    {% if ancestry %}<li><a href="#ancestry">Genetic Ancestry</a></li>{% endif %}
+    {% if carrier_status %}<li><a href="#carrier">Carrier Screening</a></li>{% endif %}
+    {% if pgx_metabolism or pgx_response %}<li><a href="#pgx">Pharmacogenomics</a></li>{% endif %}
+    {% if clinvar_counts %}<li><a href="#clinvar">ClinVar Annotations</a></li>{% endif %}
+    {% if prs_results or prs_status == 'computing' %}<li><a href="#prs">Polygenic Risk Scores</a></li>{% endif %}
+    {% if gwas_categories or gwas_status == 'computing' %}<li><a href="#gwas">GWAS Risk Scores</a></li>{% endif %}
+    {% if trait_increased or trait_moderate or trait_typical %}<li><a href="#traits">SNP Trait Associations</a></li>{% endif %}
+    {% if snpedia_count %}<li><a href="#snpedia">SNPedia Variants</a></li>{% endif %}
+  </ul>
+</nav>
+
+<!-- §1 Analysis Summary -->
+<section id="summary">
+  <h2>Analysis Summary</h2>
+  <table class="kv-table">
+    {% if analysis.filename %}<tr><td>File</td><td>{{ analysis.filename }}</td></tr>{% endif %}
+    {% if analysis.file_format %}<tr><td>Format</td><td>{{ analysis.file_format }}</td></tr>{% endif %}
+    {% if analysis.chip_type %}<tr><td>Chip Type</td><td>{{ analysis.chip_type }}</td></tr>{% endif %}
+    {% if analysis.variant_count %}<tr><td>Variants Read</td><td>{{ analysis.variant_count | commaformat }}</td></tr>{% endif %}
+    {% if analysis.genome_build %}<tr><td>Genome Build</td><td>{{ analysis.genome_build }}</td></tr>{% endif %}
+    {% if analysis.created_at %}<tr><td>Analyzed</td><td>{{ analysis.created_at }}</td></tr>{% endif %}
+    {% if analysis.pipeline_fast_seconds %}<tr><td>Pipeline Runtime</td><td>{{ analysis.pipeline_fast_seconds }}s</td></tr>{% endif %}
+    {% if analysis.is_imputed %}<tr><td>Imputed</td><td>Yes</td></tr>{% endif %}
+  </table>
+</section>
+
+<!-- §2 Genetic Ancestry -->
+{% if ancestry %}
+<section id="ancestry">
+  <h2>Genetic Ancestry</h2>
+  {% if ancestry_bars %}
+  {% for code, frac in ancestry_bars %}
+  <div class="ancestry-bar">
+    <span class="pop-name">{{ superpop_names.get(code, code) }}</span>
+    <div class="bar-track">
+      <div class="bar-fill" style="width: {{ (frac * 100) | round(1) }}%; background: {{ superpop_colors.get(code, '#888') }};"></div>
+    </div>
+    <span class="pop-pct">{{ (frac * 100) | round(1) }}%</span>
+  </div>
+  {% endfor %}
+  {% endif %}
+  <p style="font-size: 0.85rem; color: var(--muted); margin-top: 0.75rem;">
+    Estimated from {{ ancestry.n_markers_used | commaformat }} ancestry-informative markers
+    ({{ ancestry.coverage_quality | default('—') }} coverage).
+    {% if ancestry.is_admixed %}<span class="badge badge-blue">Admixed</span>{% endif %}
+  </p>
+</section>
+{% endif %}
+
+<!-- §3 Carrier Screening -->
+{% if carrier_status %}
+<section id="carrier">
+  <h2>Carrier Screening</h2>
+  <p style="font-size: 0.85rem; margin-bottom: 0.75rem;">
+    {{ carrier_status.n_genes_screened }} genes screened.
+    {% if carrier_status.n_affected_flags > 0 %}
+    <span class="badge badge-red">{{ carrier_status.n_affected_flags }} potential affected</span>
+    {% endif %}
+    {% if carrier_status.n_carrier_genes > 0 %}
+    <span class="badge badge-amber">{{ carrier_status.n_carrier_genes }} carrier</span>
+    {% endif %}
+    {% if carrier_status.n_carrier_genes == 0 and carrier_status.n_affected_flags == 0 %}
+    <span class="badge badge-green">No carrier variants detected</span>
+    {% endif %}
+  </p>
+  {% if carrier_status.results_json %}
+  <table>
+    <tr><th>Gene</th><th>Condition</th><th>Status</th><th>Inheritance</th><th>Severity</th></tr>
+    {% for gene, info in carrier_status.results_json.items() | sort(attribute='1.status') %}
+    <tr class="{% if info.status in ['likely_affected', 'potential_compound_het'] %}row-actionable{% elif info.status == 'carrier' %}row-moderate{% endif %}">
+      <td><strong>{{ gene }}</strong></td>
+      <td>{{ info.condition | default('—') }}</td>
+      <td>
+        {% if info.status == 'carrier' %}<span class="badge badge-amber">Carrier</span>
+        {% elif info.status == 'likely_affected' %}<span class="badge badge-red">Likely Affected</span>
+        {% elif info.status == 'potential_compound_het' %}<span class="badge badge-red">Potential Compound Het</span>
+        {% else %}<span class="badge badge-green">Not Detected</span>{% endif %}
+      </td>
+      <td>{{ info.inheritance | default('—') }}</td>
+      <td>{{ info.severity | default('—') }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% for gene, info in carrier_status.results_json.items() %}
+  {% if info.status != 'not_detected' and info.variants_detected %}
+  <details open>
+    <summary>{{ gene }} — Detected Variants</summary>
+    <div class="gene-detail">
+      {% if info.condition_description %}<p>{{ info.condition_description }}</p>{% endif %}
+      <table>
+        <tr><th>Variant</th><th>rsID</th><th>Genotype</th><th>Classification</th><th>HGVS</th></tr>
+        {% for v in info.variants_detected %}
+        <tr>
+          <td>{{ v.name | default('—') }}</td>
+          <td><span class="mono">{{ v.rsid }}</span></td>
+          <td><span class="mono">{{ v.genotype }}</span></td>
+          <td>{{ v.classification | default('—') }}</td>
+          <td><span class="mono">{{ v.hgvs_p | default('—') }}</span></td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% if info.carrier_frequencies %}
+      <p style="margin-top: 0.5rem;"><span class="label">Carrier frequencies:</span>
+        {% for pop, freq in info.carrier_frequencies.items() %}
+        {{ pop }}: {{ freq }}{% if not loop.last %}, {% endif %}
+        {% endfor %}
+      </p>
+      {% endif %}
+    </div>
+  </details>
+  {% endif %}
+  {% endfor %}
+  {% endif %}
+</section>
+{% endif %}
+
+<!-- §4 Pharmacogenomics -->
+{% if pgx_metabolism or pgx_response %}
+<section id="pgx">
+  <h2>Pharmacogenomics</h2>
+  <p style="font-size: 0.85rem; margin-bottom: 1rem;">{{ (pgx_metabolism | length) + (pgx_response | length) }} genes analyzed.</p>
+
+  {% macro pgx_summary_table(results, title) %}
+  {% if results %}
+  <h3>{{ title }}</h3>
+  <table>
+    <tr><th>Gene</th><th>Phenotype</th><th>Diplotype</th><th>Variants</th></tr>
+    {% for r in results %}
+    <tr class="{% if r._highlight == 'actionable' %}row-actionable{% elif r._highlight == 'moderate' %}row-moderate{% endif %}">
+      <td><strong>{{ r.gene }}</strong></td>
+      <td>{{ r.phenotype | default('—') }}</td>
+      <td><span class="mono">{{ r.diplotype | default('—') }}</span></td>
+      <td>{{ r.n_variants_tested }}/{{ r.n_variants_total }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+  {% endmacro %}
+
+  {{ pgx_summary_table(pgx_metabolism, "Drug Metabolism") }}
+  {{ pgx_summary_table(pgx_response, "Drug Response") }}
+
+  <h3>Gene Details</h3>
+  {% for r in (pgx_metabolism + pgx_response) %}
+  <details>
+    <summary>{{ r.gene }} — {{ r.phenotype | default('Unknown') }} ({{ r.diplotype | default('—') }})</summary>
+    <div class="gene-detail">
+      {% if r.gene_description %}<p>{{ r.gene_description }}</p>{% endif %}
+      {% if r.clinical_note %}<p><span class="label">Clinical note:</span> {{ r.clinical_note }}</p>{% endif %}
+      {% if r.activity_score is not none %}<p><span class="label">Activity score:</span> {{ r.activity_score }}</p>{% endif %}
+      <p><span class="label">Calling method:</span> {{ r.calling_method | default('—') }} · <span class="label">Confidence:</span> {{ r.confidence | default('—') }}</p>
+      <p><span class="label">Variant coverage:</span> {{ r.n_variants_tested }}/{{ r.n_variants_total }}</p>
+      {% if r.drugs_affected %}<p><span class="label">Drugs affected:</span> {{ r.drugs_affected }}</p>{% endif %}
+
+      {% if r.guidelines %}
+      <h3 style="margin-top: 0.75rem; font-size: 0.9rem;">Clinical Guidelines</h3>
+      {% for gl in r.guidelines.get('cpic', []) %}
+      <div class="guideline guideline-cpic">
+        <span class="gl-source">CPIC</span> · <span class="gl-drug">{{ gl.drug }}</span>
+        {% if gl.strength %} · <em>{{ gl.strength }}</em>{% endif %}
+        <br>{{ gl.recommendation }}
+      </div>
+      {% endfor %}
+      {% for gl in r.guidelines.get('dpwg', []) %}
+      <div class="guideline guideline-dpwg">
+        <span class="gl-source">DPWG</span> · <span class="gl-drug">{{ gl.drug }}</span>
+        <br>{{ gl.recommendation }}
+      </div>
+      {% endfor %}
+      {% endif %}
+
+      {% set gene_dvs = pgx_defining_variants.get(r.gene, {}) %}
+      {% if gene_dvs %}
+      <p style="margin-top: 0.5rem;"><span class="label">Defining variants:</span></p>
+      {% for allele, variants in gene_dvs.items() %}
+      <p style="margin-left: 1rem; font-size: 0.82rem;">
+        <strong>{{ allele }}:</strong>
+        {% for v in variants %}
+        <span class="mono">{{ v.rsid }}</span> ({{ v.variant_allele }}){% if not loop.last %}, {% endif %}
+        {% endfor %}
+      </p>
+      {% endfor %}
+      {% endif %}
+
+      {% set panel = pgx_star_allele_rsids.get(r.gene, []) %}
+      {% if panel and r.variant_genotypes %}
+      <p style="margin-top: 0.5rem;"><span class="label">Panel SNPs:</span></p>
+      <p style="margin-left: 1rem; font-size: 0.82rem;">
+        {% for rsid in panel[:30] %}
+        <span class="mono">{{ rsid }}</span>: {{ r.variant_genotypes.get(rsid, '—') }}{% if not loop.last %}, {% endif %}
+        {% endfor %}
+        {% if panel | length > 30 %} <em>…and {{ panel | length - 30 }} more</em>{% endif %}
+      </p>
+      {% endif %}
+    </div>
+  </details>
+  {% endfor %}
+</section>
+{% endif %}
+
+<!-- §5 ClinVar Annotations -->
+{% if clinvar_counts %}
+<section id="clinvar">
+  <h2>ClinVar Annotations</h2>
+  <p style="font-size: 0.85rem; margin-bottom: 0.75rem;">
+    {{ clinvar_total }} variants with ClinVar annotations.
+    {% for sig, cnt in clinvar_counts.items() %}
+    <span class="badge {% if sig in ['pathogenic', 'likely_pathogenic'] %}badge-red{% elif sig == 'risk_factor' %}badge-amber{% elif sig in ['benign', 'likely_benign'] %}badge-green{% else %}badge-grey{% endif %}">{{ sig | replace('_', ' ') | title }}: {{ cnt }}</span>
+    {% endfor %}
+  </p>
+  {% if clinvar_hits %}
+  <table>
+    <tr><th>rsID</th><th>Gene</th><th>Genotype</th><th>Classification</th><th>Conditions</th><th>Stars</th></tr>
+    {% for h in clinvar_hits %}
+    <tr class="{% if h.clinvar_significance in ['pathogenic', 'likely_pathogenic'] %}row-actionable{% elif h.clinvar_significance == 'risk_factor' %}row-moderate{% endif %}">
+      <td><span class="mono">{{ h.rsid }}</span></td>
+      <td>{{ h.gene | default('—') }}</td>
+      <td><span class="mono">{{ h.user_genotype }}</span></td>
+      <td><span class="badge {% if h.clinvar_significance in ['pathogenic', 'likely_pathogenic'] %}badge-red{% elif h.clinvar_significance == 'risk_factor' %}badge-amber{% elif h.clinvar_significance in ['benign', 'likely_benign'] %}badge-green{% else %}badge-grey{% endif %}">{{ h.clinvar_significance | replace('_', ' ') | title }}</span></td>
+      <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis;">{{ h.clinvar_conditions | default('—') }}</td>
+      <td><span class="stars">{{ '★' * (h.review_stars | default(0)) }}{{ '☆' * (4 - (h.review_stars | default(0))) }}</span></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% if clinvar_overflow > 0 %}
+  <p style="font-size: 0.85rem; color: var(--muted);">…and {{ clinvar_overflow }} more actionable variants not shown.</p>
+  {% endif %}
+  {% endif %}
+</section>
+{% endif %}
+
+<!-- §6 Polygenic Risk Scores -->
+{% if prs_results or prs_status == 'computing' %}
+<section id="prs">
+  <h2>Polygenic Risk Scores</h2>
+  {% if prs_status == 'computing' %}
+  <div class="notice notice-info">PRS scores are currently being computed. Download this report again later for complete results.</div>
+  {% elif prs_status == 'failed' %}
+  <div class="notice notice-amber">PRS scoring encountered an error.</div>
+  {% endif %}
+  {% if prs_results %}
+  <table>
+    <tr><th>Trait</th><th>PGS ID</th><th>Percentile</th><th>95% CI</th><th>Z-score</th><th>Absolute Risk</th><th>Pop. Risk</th><th>Coverage</th><th>Ancestry</th></tr>
+    {% for r in prs_results %}
+    <tr>
+      <td><strong>{{ r.trait_name }}</strong></td>
+      <td><span class="mono" style="font-size: 0.8rem;">{{ r.pgs_id }}</span></td>
+      <td class="{% if r.percentile >= 90 %}pct-high{% elif r.percentile >= 75 %}pct-elevated{% elif r.percentile <= 25 %}pct-low{% else %}pct-normal{% endif %}">{{ r.percentile }}%</td>
+      <td style="font-size: 0.8rem;">{% if r.percentile_lower is not none %}{{ r.percentile_lower }}–{{ r.percentile_upper }}%{% else %}—{% endif %}</td>
+      <td>{% if r.z_score is not none %}{{ r.z_score }}{% else %}—{% endif %}</td>
+      <td>{% if r.absolute_risk is not none %}{{ (r.absolute_risk * 100) | round(1) }}%{% else %}—{% endif %}</td>
+      <td>{% if r.population_risk is not none %}{{ (r.population_risk * 100) | round(1) }}%{% else %}—{% endif %}</td>
+      <td>{{ r.coverage_quality | default('—') }}</td>
+      <td>{{ r.ancestry_group_used | default('—') }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+</section>
+{% endif %}
+
+<!-- §7 GWAS Risk Scores -->
+{% if gwas_categories or gwas_status == 'computing' %}
+<section id="gwas">
+  <h2>GWAS Risk Scores</h2>
+  {% if gwas_status == 'computing' %}
+  <div class="notice notice-info">GWAS risk scores are currently being computed. Download this report again later for complete results.</div>
+  {% elif gwas_status == 'failed' %}
+  <div class="notice notice-amber">GWAS scoring encountered an error.</div>
+  {% endif %}
+  {% if gwas_categories %}
+  {% for category, scores in gwas_categories.items() %}
+  <div class="cat-header">{{ category | replace('_', ' ') | title }} ({{ scores | length }})</div>
+  <table>
+    <tr><th>Trait</th><th>Percentile</th><th>Variants</th><th>Ancestry</th><th>Citation</th></tr>
+    {% for s in scores %}
+    <tr>
+      <td><strong>{{ s.trait }}</strong></td>
+      <td class="{% if s.percentile >= 80 %}pct-high{% elif s.percentile >= 60 %}pct-elevated{% else %}pct-normal{% endif %}">{{ s.percentile | round(1) }}%</td>
+      <td>{{ s.n_variants_matched }}/{{ s.n_variants_total }}</td>
+      <td>{{ s.ancestry_group_used | default('—') }}</td>
+      <td style="font-size: 0.8rem;">{% if s.pmid %}PMID:{{ s.pmid }}{% else %}{{ s.citation | default('—') | truncate(40) }}{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endfor %}
+  {% endif %}
+</section>
+{% endif %}
+
+<!-- §8 SNP Trait Associations -->
+{% if trait_increased or trait_moderate or trait_typical %}
+<section id="traits">
+  <h2>SNP Trait Associations</h2>
+
+  {% macro trait_table(hits, level_name, badge_class) %}
+  {% if hits %}
+  <h3>{{ level_name }} <span class="badge {{ badge_class }}">{{ hits | length }}{% if level_name == 'Typical Risk' and typical_overflow > 0 %} of {{ (hits | length) + typical_overflow }}{% endif %}</span></h3>
+  <table>
+    <tr><th>rsID</th><th>Gene</th><th>Trait</th><th>Genotype</th><th>Effect</th><th>Evidence</th></tr>
+    {% for h in hits %}
+    <tr>
+      <td><span class="mono">{{ h.rsid }}</span></td>
+      <td>{{ h.gene | default('—') }}</td>
+      <td>{{ h.trait }}</td>
+      <td><span class="mono">{{ h.user_genotype }}</span></td>
+      <td style="max-width: 250px; font-size: 0.82rem;">{{ h.effect_description | default('—') | truncate(120) }}</td>
+      <td><span class="badge {% if h.evidence_level == 'high' %}badge-green{% elif h.evidence_level == 'medium' %}badge-blue{% else %}badge-grey{% endif %}">{{ h.evidence_level | default('—') }}</span></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+  {% endmacro %}
+
+  {{ trait_table(trait_increased, "Increased Risk", "badge-red") }}
+  {{ trait_table(trait_moderate, "Moderate Risk", "badge-amber") }}
+  {{ trait_table(trait_typical, "Typical Risk", "badge-grey") }}
+
+  {% if typical_overflow > 0 %}
+  <p style="font-size: 0.85rem; color: var(--muted);">…and {{ typical_overflow }} more typical-risk associations not shown.</p>
+  {% endif %}
+</section>
+{% endif %}
+
+<!-- §9 SNPedia Variants -->
+{% if snpedia_count %}
+<section id="snpedia">
+  <h2>SNPedia Variants</h2>
+  <p>{{ snpedia_count | commaformat }} of your variants match the SNPedia database.</p>
+</section>
+{% endif %}
+
+<!-- Disclaimers -->
+<div class="disclaimers">
+  <h2 style="border: none; margin-top: 0;">Important Disclaimers</h2>
+  <p><strong>This report is for informational and educational purposes only.</strong> It is not a medical diagnosis, clinical test, or substitute for professional medical advice.</p>
+  <p>The genetic associations shown are based on published research and curated databases. Many associations have small effect sizes and limited predictive value for any individual.</p>
+  <p>Polygenic risk scores reflect statistical risk relative to a reference population. They do not account for lifestyle, environmental, or non-genetic factors.</p>
+  <p>Pharmacogenomic results are derived from SNP-based genotyping, which may not detect all functional variants (e.g., copy number variations, structural variants). Star allele calls should be confirmed by clinical-grade testing before making prescribing decisions.</p>
+  <p>Carrier screening results test only a subset of known pathogenic variants. A "not detected" result does not eliminate carrier risk. Genetic counseling is recommended for family planning decisions.</p>
+  <p>ClinVar annotations reflect the current state of submitted variant classifications, which may change over time. A "pathogenic" classification does not mean you will develop the associated condition.</p>
+  <p>Raw genetic data was never stored. This report was generated from pre-computed analysis results.</p>
+  <p>Data sources include ClinVar (NCBI), PGS Catalog, CPIC, DPWG, gnomAD, SNPedia, and published GWAS studies.</p>
+</div>
+
+<!-- Footer -->
+<div class="report-footer">
+  <p>genewizard.net — {{ generated_at }}</p>
+</div>
+
+</body>
+</html>

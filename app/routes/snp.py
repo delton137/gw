@@ -98,7 +98,7 @@ async def get_snp(
         "in_database": snp is not None,
         "gene_info": gene_info,
         "trait_associations": [],
-        "prs_scores": [],
+
         # Enriched annotations
         "pathogenicity": None,
         "clinvar": None,
@@ -174,26 +174,6 @@ async def get_snp(
             for a in associations
         ]
 
-        # Get PRS scores this variant appears in
-        prs_result = await session.execute(
-            text("""
-                SELECT w.pgs_id, w.effect_allele, w.weight, s.trait_name
-                FROM prs_variant_weights w
-                JOIN prs_scores s ON w.pgs_id = s.pgs_id
-                WHERE w.rsid = :rsid
-            """),
-            {"rsid": rsid},
-        )
-
-        response["prs_scores"] = [
-            {
-                "pgs_id": row.pgs_id,
-                "trait_name": row.trait_name,
-                "effect_allele": row.effect_allele,
-                "weight": row.weight,
-            }
-            for row in prs_result
-        ]
 
     return response
 

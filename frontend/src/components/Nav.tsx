@@ -30,14 +30,14 @@ export default function Nav() {
 
         {/* Desktop links */}
         <div className="hidden sm:flex items-center gap-6 text-sm text-muted">
+          <Link href="/about" className="hover:text-foreground transition-colors">
+            About
+          </Link>
           <Link href="/snp" className="hover:text-foreground transition-colors">
             Browse SNPs
           </Link>
           <Link href="/demo" className="hover:text-foreground transition-colors">
             Demo
-          </Link>
-          <Link href="/about" className="hover:text-foreground transition-colors">
-            About
           </Link>
           <Show
             when="signed-in"
@@ -50,7 +50,7 @@ export default function Nav() {
                   href="/sign-up"
                   className="text-accent hover:text-accent-hover transition-colors"
                 >
-                  Get started
+                  Create Account
                 </Link>
               </>
             }
@@ -61,6 +61,9 @@ export default function Nav() {
             <Link href="/upload" className="hover:text-foreground transition-colors">
               Upload
             </Link>
+            <Link href="/donate" className="hover:text-foreground transition-colors">
+              Donate
+            </Link>
             <UserButton />
           </Show>
         </div>
@@ -69,20 +72,21 @@ export default function Nav() {
       {/* Mobile menu */}
       {open && (
         <div className="sm:hidden border-t border-border px-6 py-3 flex flex-col gap-3 text-sm text-muted">
+          <Link href="/about" className="hover:text-foreground" onClick={() => setOpen(false)}>About</Link>
           <Link href="/snp" className="hover:text-foreground" onClick={() => setOpen(false)}>Browse SNPs</Link>
           <Link href="/demo" className="hover:text-foreground" onClick={() => setOpen(false)}>Demo</Link>
-          <Link href="/about" className="hover:text-foreground" onClick={() => setOpen(false)}>About</Link>
           <Show
             when="signed-in"
             fallback={
               <>
                 <Link href="/sign-in" className="hover:text-foreground" onClick={() => setOpen(false)}>Sign in</Link>
-                <Link href="/sign-up" className="text-accent hover:text-accent-hover" onClick={() => setOpen(false)}>Get started</Link>
+                <Link href="/sign-up" className="text-accent hover:text-accent-hover" onClick={() => setOpen(false)}>Create Account</Link>
               </>
             }
           >
             <Link href="/dashboard" className="hover:text-foreground" onClick={() => setOpen(false)}>My Genome</Link>
             <Link href="/upload" className="hover:text-foreground" onClick={() => setOpen(false)}>Upload</Link>
+            <Link href="/donate" className="hover:text-foreground" onClick={() => setOpen(false)}>Donate</Link>
             <UserButton />
           </Show>
         </div>

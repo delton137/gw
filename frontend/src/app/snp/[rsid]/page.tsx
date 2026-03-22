@@ -93,10 +93,7 @@ interface SnpData {
     source_title: string | null;
     trait_prevalence: number | null;
   }[];
-  prs_scores: {
-    pgs_id: string;
-    trait_name: string;
-  }[];
+
   pathogenicity: {
     cadd_phred: number | null;
     sift: { category: string; score: number } | null;
@@ -151,8 +148,8 @@ export async function generateMetadata({
   return {
     title: `${rsid}${gene} — genewizard.net`,
     description: traits
-      ? `${rsid}${gene} is associated with ${traits}. View genetic variant details, important SNPs, and polygenic risk score memberships.`
-      : `View details for genetic variant ${rsid}${gene} including important SNPs and polygenic risk scores.`,
+      ? `${rsid}${gene} is associated with ${traits}. View genetic variant details and trait associations.`
+      : `View details for genetic variant ${rsid}${gene} including trait associations and clinical annotations.`,
   };
 }
 
@@ -296,23 +293,6 @@ export default async function SnpPage({
               </section>
             )}
 
-            {/* PRS memberships */}
-            {data.prs_scores.length > 0 && (
-              <section className="mb-12">
-                <h2 className="font-serif text-xl font-semibold mb-4">
-                  Included in Polygenic Scores
-                </h2>
-                <ul className="space-y-2">
-                  {data.prs_scores.map((prs) => (
-                    <li key={prs.pgs_id} className="text-sm">
-                      <span className="font-mono text-muted">{prs.pgs_id}</span>
-                      <span className="mx-2 text-border">&mdash;</span>
-                      {prs.trait_name}
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
 
             {/* Gene summary for ClinVar-only pages without trait associations */}
             {data.gene_info?.summary && data.trait_associations.length === 0 && (
@@ -331,7 +311,7 @@ export default async function SnpPage({
             )}
 
             {/* Empty state */}
-            {data.in_database && data.trait_associations.length === 0 && data.prs_scores.length === 0 && !data.gene_info?.summary && (
+            {data.in_database && data.trait_associations.length === 0 && !data.gene_info?.summary && (
               <p className="text-sm text-muted">
                 This variant is in our database but has no known associations or PRS memberships yet.
               </p>

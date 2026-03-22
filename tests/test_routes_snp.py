@@ -110,7 +110,6 @@ class TestGetSnp:
         assert data["gene"] == "APOE"
         assert len(data["trait_associations"]) == 1
         assert data["trait_associations"][0]["trait"] == "Alzheimer's Disease"
-        assert len(data["prs_scores"]) == 1
 
     def test_unknown_snp_returns_minimal(self, client):
         """Lookup an unknown SNP returns minimal response."""
@@ -130,7 +129,6 @@ class TestGetSnp:
         assert data["rsid"] == "rs999999999"
         assert data["in_database"] is False
         assert data["trait_associations"] == []
-        assert data["prs_scores"] == []
 
     def test_invalid_rsid_format(self, client):
         """Invalid rsid format returns 400."""

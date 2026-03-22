@@ -54,3 +54,5 @@ class PrsRow(TypedDict):
     population_risk: float | None
     risk_category: str | None
     prevalence_source: str | None
+    absolute_risk_lower: float | None
+    absolute_risk_upper: float | None

@@ -26,6 +26,8 @@ class AbsoluteRiskResult:
     population_risk: float     # baseline prevalence (0-1)
     relative_risk: float       # ratio: absolute_risk / population_risk
     risk_category: str         # human-readable category
+    absolute_risk_lower: float | None = None  # 95% CI lower bound (0-1)
+    absolute_risk_upper: float | None = None  # 95% CI upper bound (0-1)
 
 
 def _norm_cdf(x: float) -> float:
@@ -70,11 +72,25 @@ def auc_to_cohens_d(auc: float) -> float:
     return sqrt(2.0) * _norm_ppf(auc)
 
 
+def _bayes_risk(z: float, K: float, d: float) -> float | None:
+    """Compute P(case | PRS = z) using the Bayesian mixture model."""
+    mu_case = (1.0 - K) * d
+    mu_control = -K * d
+    pdf_case = _norm_pdf(z - mu_case)
+    pdf_control = _norm_pdf(z - mu_control)
+    denominator = K * pdf_case + (1.0 - K) * pdf_control
+    if denominator <= 0:
+        return None
+    return K * pdf_case / denominator
+
+
 def compute_absolute_risk(
     z_score: float,
     prevalence: float,
     auc: float | None = None,
     cohens_d: float | None = None,
+    z_score_lower: float | None = None,
+    z_score_upper: float | None = None,
 ) -> AbsoluteRiskResult | None:
     """Compute absolute disease risk for a user given their PRS z-score.
 
@@ -86,11 +102,19 @@ def compute_absolute_risk(
 
     P(case | z) = K * φ(z - (1-K)*d) / [K * φ(z - (1-K)*d) + (1-K) * φ(z + K*d)]
 
+    Model assumptions:
+    - PRS is approximately normally distributed in cases and controls
+    - Effect sizes are homogeneous across populations
+    - No gene-environment interactions are modeled
+    - Prevalence is population-average (not age/sex-stratified)
+
     Args:
         z_score: User's PRS z-score (standardized to reference population)
         prevalence: Population prevalence of the disease (0-1)
         auc: Reported AUC of the PRS (converted to Cohen's d)
         cohens_d: Direct Cohen's d (used if auc is None)
+        z_score_lower: Lower 95% CI bound on z-score (for risk CI)
+        z_score_upper: Upper 95% CI bound on z-score (for risk CI)
 
     Returns:
         AbsoluteRiskResult or None if inputs are insufficient.
@@ -111,20 +135,10 @@ def compute_absolute_risk(
 
     K = prevalence
 
-    # Case and control PRS means (population-centered)
-    mu_case = (1.0 - K) * d
-    mu_control = -K * d
-
-    # Bayes' theorem with normal PDFs
-    # P(case | z) = K * φ(z - μ_case) / [K * φ(z - μ_case) + (1-K) * φ(z - μ_control)]
-    pdf_case = _norm_pdf(z_score - mu_case)
-    pdf_control = _norm_pdf(z_score - mu_control)
-
-    denominator = K * pdf_case + (1.0 - K) * pdf_control
-    if denominator <= 0:
+    absolute_risk = _bayes_risk(z_score, K, d)
+    if absolute_risk is None:
         return None
 
-    absolute_risk = K * pdf_case / denominator
     relative_risk = absolute_risk / K
 
     # Categorize
@@ -137,9 +151,18 @@ def compute_absolute_risk(
     else:
         category = "reduced"
 
+    # Compute CI bounds if z-score CI available
+    risk_lower = None
+    risk_upper = None
+    if z_score_lower is not None and z_score_upper is not None:
+        risk_lower = _bayes_risk(z_score_lower, K, d)
+        risk_upper = _bayes_risk(z_score_upper, K, d)
+
     return AbsoluteRiskResult(
         absolute_risk=absolute_risk,
         population_risk=K,
         relative_risk=relative_risk,
         risk_category=category,
+        absolute_risk_lower=risk_lower,
+        absolute_risk_upper=risk_upper,
     )
