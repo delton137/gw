@@ -25,7 +25,7 @@ export default function Home() {
             Pioneering the future of whole genome interpretation
           </h1>
           <p className="text-sm sm:text-base text-muted leading-relaxed mb-6 sm:mb-8">
-            SNPedia hasn't been updated since 2019 and Promethease is broken, so we're building an alternative. To become a beta tester, upload a 23andme genotype file or whole genome sequence file. Your raw data is never stored, and you can delete your results from our server after you run and download reports. You'll get detailed information on your SNPs, pharmacogenomic alleles, and ClinVar annotations. 
+            SNPedia hasn't been updated since 2019 and Promethease is broken, so we're building an alternative. To become a beta tester, upload a 23andme genotype file or whole genome sequence file. You'll get detailed information on your SNPs, pharmacogenomic alleles, ClinVar annotations, and polygenic scores. 
           </p>
           <div className="flex justify-center sm:justify-start gap-4">
             <Link
