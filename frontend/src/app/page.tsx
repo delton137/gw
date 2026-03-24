@@ -24,15 +24,15 @@ export default function Home() {
           <h1 className="font-serif text-2xl sm:text-4xl font-semibold leading-tight mb-4 sm:mb-6">
             Pioneering the future of whole genome interpretation
           </h1>
-          <p className="text-base sm:text-lg text-muted leading-relaxed mb-6 sm:mb-8">
-            Become a beta tester today by uploading your 23andme genotype file or whole genome sequence file.
+          <p className="text-sm sm:text-base text-muted leading-relaxed mb-6 sm:mb-8">
+            SNPedia hasn't been updated since 2019 and Promethease is broken, so we're building an alternative. To become a beta tester, upload a 23andme genotype file or whole genome sequence file. Your raw data is never stored, and you can delete your results from our server after you run and download reports. You'll get detailed information on your SNPs, pharmacogenomic alleles, and ClinVar annotations. 
           </p>
           <div className="flex justify-center sm:justify-start gap-4">
             <Link
               href={isSignedIn ? "/upload" : "/sign-up"}
               className="inline-block rounded bg-accent text-white px-6 py-3 text-sm font-medium hover:bg-accent-hover transition-colors"
             >
-              {isSignedIn ? "Upload your genome" : "Get started"}
+              {isSignedIn ? "Upload your genotype file" : "Get started"}
             </Link>
             <Link
               href="/demo"

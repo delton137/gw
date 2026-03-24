@@ -5,14 +5,13 @@ export default function DonatePage() {
 
       <div className="space-y-6 text-sm text-foreground leading-relaxed">
         <p>
-          Gene Wizard is a free, independent project built and maintained by a single developer.
-          If you find it useful, please consider supporting its continued development.
+          If you found this service useful or are excited about what we are working on, please consider making a donation to support future work and offset server costs. 
         </p>
 
         <div className="border border-border bg-surface p-8 text-center">
           <h2 className="font-serif text-xl font-semibold mb-3">Buy Me a Coffee</h2>
           <p className="text-muted mb-6">
-            One-time or recurring contributions help cover server costs and fund new features.
+            
           </p>
           <a
             href="https://www.buymeacoffee.com/moreisdifferent"
@@ -20,7 +19,7 @@ export default function DonatePage() {
             rel="noopener noreferrer"
             className="inline-block bg-accent text-white px-6 py-2.5 text-sm font-medium hover:bg-accent-hover transition-colors"
           >
-            Buy me a coffee
+            Click here to make a one-time or reoccuring donation.
           </a>
         </div>
       </div>

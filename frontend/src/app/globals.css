@@ -2,7 +2,7 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #fafafa;
+  --color-background: #ffffff;
   --color-foreground: #1a1a1a;
   --color-accent: #2563eb;
   --color-accent-hover: #1d4ed8;

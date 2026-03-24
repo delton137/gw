@@ -50,7 +50,7 @@ export default function AboutPage() {
           .
         </p>
 
-        <h3 className="font-serif text-lg font-medium text-foreground pt-2">Human health</h3>
+        <h3 className="font-serif text-lg font-medium text-foreground pt-2">Human health and longevity</h3>
         <p>
           Learning about genetics is great, but at the end of the day most of us want to know how
           we can use genetics to live longer, healthier lives. It is my hope that the resources on
