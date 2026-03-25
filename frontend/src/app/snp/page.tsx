@@ -145,7 +145,7 @@ export default function SnpBrowsePage() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 pt-8 pb-16">
-      <h1 className="font-serif text-3xl font-semibold mb-2">Browse SNPs</h1>
+      <h1 className="font-serif text-3xl font-semibold mb-2">Browse SNP pages</h1>
       <p className="text-muted text-sm mb-10">
         Look up a variant by rsid, or explore our curated collection of important genetic variants.
       </p>
@@ -260,14 +260,32 @@ export default function SnpBrowsePage() {
       {!featuredLoading && featured.length > 0 && (
         <section>
           <h2 className="font-serif text-2xl font-semibold mb-2">Important SNPs</h2>
-          <p className="text-sm text-muted mb-8">
+          <p className="text-sm text-muted mb-4">
             {featured.length} curated variants with known health associations.
+          </p>
+
+          {/* Table of contents */}
+          <p className="text-sm mb-8 leading-relaxed">
+            {groupedFeatured.map(({ category }, i) => (
+              <span key={category}>
+                {i > 0 && <span className="text-border mx-1">·</span>}
+                <a
+                  href={`#cat-${category.toLowerCase().replace(/\s+/g, "-")}`}
+                  className="text-accent hover:underline"
+                >
+                  {category}
+                </a>
+              </span>
+            ))}
           </p>
 
           <div className="space-y-10">
             {groupedFeatured.map(({ category, snps }) => (
               <div key={category}>
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted mb-3">
+                <h3
+                  id={`cat-${category.toLowerCase().replace(/\s+/g, "-")}`}
+                  className="text-sm font-semibold uppercase tracking-wide text-muted mb-3"
+                >
                   {category}
                 </h3>
                 <div className="space-y-1">
