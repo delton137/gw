@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    database_url: str = "postgresql+asyncpg://genewizard:genewizard@localhost:5432/genewizard"
+    database_url: str = ""
     max_upload_size: int = 5 * 1024 * 1024 * 1024  # 5GB
     max_decompressed_size: int = 10 * 1024 * 1024 * 1024  # 10GB
     cors_origins_raw: str = "http://localhost:3000,https://genewizard.net,https://www.genewizard.net"
@@ -40,8 +40,10 @@ class Settings(BaseSettings):
     def normalize_database_url(self):
         """Railway provides postgres:// but asyncpg needs postgresql+asyncpg://"""
         url = self.database_url
+        if not url:
+            raise ValueError("DATABASE_URL must be set")
         if self.environment == "production" and "localhost" in url:
-            raise ValueError("DATABASE_URL must be set in production (not localhost default)")
+            raise ValueError("DATABASE_URL must not point to localhost in production")
         if url.startswith("postgres://"):
             self.database_url = url.replace("postgres://", "postgresql+asyncpg://", 1)
         elif url.startswith("postgresql://"):

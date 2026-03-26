@@ -35,7 +35,13 @@ async def get_analysis_status(
     user_id: str = Depends(get_current_user_id),
     session: AsyncSession = Depends(get_session),
 ):
-    """Poll analysis status."""
+    """Poll analysis status.
+
+    Uses get_current_user_id (not get_verified_user_id) because this endpoint
+    is keyed by analysis_id rather than user_id. Ownership is enforced by the
+    WHERE clause below — the query returns None if the analysis belongs to a
+    different user, resulting in a 404.
+    """
     result = await session.execute(
         select(Analysis).where(
             Analysis.id == str(analysis_id),

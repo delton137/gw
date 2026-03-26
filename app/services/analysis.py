@@ -265,6 +265,8 @@ async def _run_pipeline(
                         if (n.lower().endswith(".vcf") or n.lower().endswith(".vcf.gz"))
                         and not n.startswith("__MACOSX")
                         and not n.split("/")[-1].startswith(".")
+                        and ".." not in n
+                        and not os.path.isabs(n)
                     ]
                     if not vcf_names:
                         raise ParseError("No .vcf or .vcf.gz file found inside ZIP archive")

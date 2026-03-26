@@ -21,7 +21,7 @@ export default function DemoPrsPage() {
     <div className="mx-auto max-w-4xl px-6 pt-8 pb-16">
       <DemoBanner />
 
-      <h1 className="font-serif text-3xl font-semibold mb-8">Polygenic Risk Scores &mdash; EXPERIMENTAL &mdash; <span className="text-red-600">may have errors</span></h1>
+      <h1 className="font-serif text-3xl font-semibold mb-8">Polygenic Risk Scores &mdash; EXPERIMENTAL &mdash; <span className="text-red-600">currently has known issues!!</span></h1>
 
       {/* Ancestry panel */}
       <div className="border border-border p-5 mb-8">
