@@ -261,7 +261,7 @@ export default function SnpBrowsePage() {
         <section>
           <h2 className="font-serif text-2xl font-semibold mb-2">Important SNPs</h2>
           <p className="text-sm text-muted mb-4">
-            {featured.length} curated variants with known health associations.
+            {featured.length} curated variants with established health associations.
           </p>
 
           {/* Table of contents */}

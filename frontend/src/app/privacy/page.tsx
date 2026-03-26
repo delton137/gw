@@ -28,33 +28,8 @@ export default function PrivacyPolicy() {
           The file you upload is never stored, but your results are
         </h2>
         <p className="text-muted leading-relaxed mb-4">
-          When you upload a genotype file, it is parsed entirely in memory. Your
-          raw genetic data is never written to disk, never stored in a database,
-          and is discarded immediately after processing. However, results are saved to our 
-          database. Your results can be deleted at any time by clicking the "Delete All My Data"
-          button at the bottom of the <Link href="/dashboard" className="text-accent hover:underline">dashboard page</Link>.
-        </p>
-      </section>
-
-      <section className="py-10 border-t border-border">
-        <h2 className="font-serif text-2xl font-semibold mb-6">
-          Analysis Results We Store
-        </h2>
-        <p className="text-muted leading-relaxed mb-4">
-          After processing your upload, we store the following derived results
-          linked to your account so you can access them later:
-        </p>
-        <ul className="list-disc pl-6 text-muted leading-relaxed space-y-2 mb-4">
-          <li>Polygenic risk scores (PRS) with percentiles and confidence intervals</li>
-          <li>Pharmacogenomic (PGx) diplotypes, phenotypes, and drug guidelines</li>
-          <li>SNP-trait association matches</li>
-          <li>Carrier screening results</li>
-          <li>SNPedia variant matches</li>
-          <li>Estimated genetic ancestry</li>
-        </ul>
-        <p className="text-muted leading-relaxed">
-          These results are interpretive summaries, not raw genetic sequences.
-          They are stored until you choose to delete them.
+          When you upload a genotype file, it is parsed entirely in memory. The file you upload is never written to disk, and is discarded immediately after processing. However, your results are saved to our 
+          database, including your key SNPs, predicted pharmacogenomic phenotypes, and polygenic risk scores. Your results can be deleted at any time by clicking the "Delete All My Data" button at the bottom of the <Link href="/dashboard" className="text-accent hover:underline">dashboard page</Link>.
         </p>
       </section>
 
@@ -72,11 +47,7 @@ export default function PrivacyPolicy() {
           >
             Clerk
           </a>
-          , a third-party authentication provider. Clerk collects and manages
-          your email address, name, and authentication credentials. We do not
-          store passwords or authentication secrets directly. Please refer to
-          Clerk&apos;s privacy policy for details on how they handle your account
-          data.
+          , a third-party authentication provider. Clerk collects and manages your authentication credentials, which may include your email address, if you elect to provide it for account recovery. If you provide your email Gene Wizard is able to view it but we never share user's emails. 
         </p>
       </section>
 
@@ -85,9 +56,7 @@ export default function PrivacyPolicy() {
           Device &amp; Usage Information
         </h2>
         <p className="text-muted leading-relaxed mb-4">
-          We use a web analytics provider to collect anonymous usage data, including page
-          views and general device information. This data does not include any
-          genetic information and is used solely to understand how people use the
+          We use a web analytics provider to collect anonymous usage data, including page views and general device information. This data does not include any  genetic information and is used solely to understand how people use the
           service.
         </p>
         <p className="text-muted leading-relaxed">
@@ -117,7 +86,7 @@ export default function PrivacyPolicy() {
         </h2>
         <p className="text-muted leading-relaxed mb-4">
           We do not sell, share, or provide your genetic information or analysis
-          results to any third party. Period.
+          results to any third party. 
         </p>
         <p className="text-muted leading-relaxed mb-4">
           We use the following service providers to operate the Service:
@@ -130,15 +99,13 @@ export default function PrivacyPolicy() {
             <strong>Vercel</strong> &mdash; frontend hosting and analytics
           </li>
           <li>
-            <strong>Railway</strong> &mdash; backend hosting and database
+            <strong>Railway</strong> &mdash; backend hosting and database (HIPAA-compliant)
           </li>
         </ul>
         <p className="text-muted leading-relaxed">
           These providers process data only as necessary to deliver the Service
           and are contractually prohibited from using your data for their own
-          purposes. We may disclose information if required by law, but given
-          that we do not retain raw genetic data, we are unlikely to be able to
-          provide such data even if requested.
+          purposes. 
         </p>
       </section>
 
@@ -159,8 +126,7 @@ export default function PrivacyPolicy() {
         <p className="text-muted leading-relaxed">
           All data in transit is encrypted via HTTPS/TLS. Our backend is HIPAA compliant.
           Authentication is handled by Clerk with industry-standard security practices.
-          While no system is perfectly secure, we take reasonable measures to protect
-          your information and minimize the data we store in the first place.
+          While no system is perfectly secure, we strive to make our platform as secure as possible.
         </p>
       </section>
 
