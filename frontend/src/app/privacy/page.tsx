@@ -99,7 +99,7 @@ export default function PrivacyPolicy() {
             <strong>Vercel</strong> &mdash; frontend hosting and analytics
           </li>
           <li>
-            <strong>Railway</strong> &mdash; backend hosting and database (HIPAA-compliant)
+            <strong>Railway</strong> &mdash; backend hosting and database 
           </li>
         </ul>
         <p className="text-muted leading-relaxed">
@@ -124,9 +124,7 @@ export default function PrivacyPolicy() {
       <section className="py-10 border-t border-border">
         <h2 className="font-serif text-2xl font-semibold mb-6">Security</h2>
         <p className="text-muted leading-relaxed">
-          All data in transit is encrypted via HTTPS/TLS. Our backend is HIPAA compliant.
-          Authentication is handled by Clerk with industry-standard security practices.
-          While no system is perfectly secure, we strive to make our platform as secure as possible.
+          All data in transit is encrypted via HTTPS/TLS. Authentication is handled by Clerk with industry-standard security practices. While no system is perfectly secure, we strive to make our platform as secure as possible.
         </p>
       </section>
 
