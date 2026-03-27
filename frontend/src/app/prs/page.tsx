@@ -205,6 +205,17 @@ export default function PrsPage() {
       {/* PRS Results */}
       {prsData.prs_status === "ready" && prsData.results.length > 0 && (
         <div className="space-y-4">
+          {/* AD methodology note — shown when 2+ Alzheimer's/dementia scores are present */}
+          {prsData.results.filter((prs) =>
+            /alzheimer|dementia/i.test(prs.trait_name)
+          ).length >= 2 && (
+            <div className="border border-amber-200 bg-amber-50/40 p-4 text-sm">
+              <p className="font-medium text-amber-900 mb-1">Why do Alzheimer&apos;s scores vary?</p>
+              <p className="text-amber-800 text-xs leading-relaxed">
+                These scores were developed by different research groups using different sets of genetic variants and study populations. Scores that include APOE-region variants (a major genetic risk factor for Alzheimer&apos;s) tend to produce more extreme percentiles than genome-wide scores. The variation reflects genuine methodological differences between studies, not errors.
+              </p>
+            </div>
+          )}
           {prsData.results.map((prs) =>
             prs.ref_mean != null && prs.ref_std != null && prs.ref_std > 0 ? (
               <PrsDistributionChart

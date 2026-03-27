@@ -87,13 +87,17 @@ async def fetch_pgx_rows(
 
 async def fetch_prs_results(
     session: AsyncSession, analysis_id: str, user_id: str,
+    inferred_sex: str | None = None,
 ) -> list[PrsRow]:
     """Fetch PRS results with score metadata and compute absolute risk.
 
     Shared by the results endpoint and the PDF report endpoint.
+    When inferred_sex is provided ('male'/'female'), sex-specific PRS scores
+    that don't apply to this user are excluded (e.g., breast cancer for males).
     """
+    sex_filter = "AND (s.target_sex IS NULL OR s.target_sex = :inferred_sex)" if inferred_sex else ""
     rows = await session.execute(
-        text("""
+        text(f"""
             SELECT r.pgs_id, r.raw_score, r.percentile, r.z_score,
                    r.ref_mean, r.ref_std, r.ancestry_group_used,
                    r.n_variants_matched, r.n_variants_total, r.computed_at,
@@ -105,9 +109,10 @@ async def fetch_prs_results(
             JOIN prs_scores s ON r.pgs_id = s.pgs_id
             LEFT JOIN prs_trait_metadata m ON r.pgs_id = m.pgs_id
             WHERE r.analysis_id = :aid AND r.user_id = :uid
+            {sex_filter}
             ORDER BY r.percentile DESC
         """),
-        {"aid": analysis_id, "uid": user_id},
+        {"aid": analysis_id, "uid": user_id, "inferred_sex": inferred_sex},
     )
 
     result_list = []

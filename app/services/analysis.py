@@ -42,7 +42,7 @@ from app.models.user import Analysis, PrsResult, UserClinvarHit, UserSnpTraitHit
 from app.services.ancestry_estimator import estimate_ancestry
 from app.services.clinvar_matcher import match_clinvar
 from app.services.carrier_matcher import determine_carrier_status
-from app.services.parser import extract_vcf_header_meta, parse_genotype_file, detect_genome_build, ParseError
+from app.services.parser import extract_vcf_header_meta, infer_biological_sex, parse_genotype_file, detect_genome_build, ParseError
 from app.services.pgx_matcher import match_pgx
 from app.services.scorer import compute_prs
 from app.services.trait_matcher import match_traits
@@ -301,6 +301,11 @@ async def _run_pipeline(
         elapsed_parse = time.perf_counter() - t0
         log.info(f"[{analysis_id}] Parsed {len(user_df)} variants ({fmt}/{chip_version}) in {elapsed_parse:.2f}s")
         await _set_detail(analysis, session, f"Parsed {len(user_df):,} variants ({fmt} format)")
+
+        # Infer biological sex from chrX heterozygosity (used to filter sex-specific PRS scores)
+        analysis.inferred_sex = infer_biological_sex(user_df)
+        if analysis.inferred_sex:
+            log.info(f"[{analysis_id}] Inferred biological sex: {analysis.inferred_sex}")
 
         # Detect genome build (needed for VCF rsID lookup + position-based matching)
         genome_build = detect_genome_build(user_df)

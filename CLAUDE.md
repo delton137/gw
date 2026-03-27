@@ -10,7 +10,7 @@ genewizard.net analyzes raw genetic data from DTC genomics companies (23andMe, A
 
 - **Backend:** Python 3.12, FastAPI, SQLAlchemy 2.0 (async), asyncpg, Polars, asyncio background tasks
 - **Database:** PostgreSQL 16 (native, no Docker)
-- **Frontend:** Next.js 16 (App Router), TypeScript, TailwindCSS v4, Recharts
+- **Frontend:** Next.js 15 (App Router), TypeScript, TailwindCSS v4, Recharts
 - **Auth:** Clerk (@clerk/nextjs frontend, PyJWT + JWKS verification backend)
 - **PDF Reports:** ReportLab
 - **Deployment:** Railway via Nixpacks (backend), Vercel (frontend)
@@ -80,7 +80,7 @@ Raw file deleted after parsing. On failure: status `failed` with error_message.
 
 **ancestry_estimator.py** — MLE ancestry estimation on 128,097 AILs from 1000G Phase 3 (Aeon algorithm reimplemented in scipy). Estimates admixture fractions across 26 populations, aggregated to 5 superpopulations. Hardy-Weinberg genotype model with SLSQP optimization. Min 500 markers. See `docs/ancestry-estimation.md` for full details.
 
-**scorer.py** — PRS scoring with matched-variant reference distributions, mixture normalization for admixed users, 95% CI from missing-variant uncertainty. Prefers empirical percentiles from scored reference panel (sorted_scores in percentiles_json) when available, falls back to analytical HWE. Sanity check flags scores >5σ from reference mean.
+**scorer.py** — PRS scoring with matched-variant reference distributions, mixture normalization for admixed users, 95% CI from missing-variant uncertainty. Prefers empirical percentiles from scored reference panel (sorted_scores in percentiles_json) when available, falls back to analytical HWE. Sanity check flags scores >5σ from reference mean. Position-based rsid fallback handles both "." rsids (VCFs without annotation) and rsid version mismatches (user VCF uses different dbSNP rsids than PGS Catalog at the same position).
 
 **absolute_risk.py** — Converts PRS z-scores to disease probabilities via liability threshold model.
 
@@ -151,6 +151,7 @@ Raw file deleted after parsing. On failure: status `failed` with error_message.
 **/mysnps** — User-specific SNPedia variant matches, trait-based category grouping (geneCategories.ts: TRAIT_CATEGORIES overrides GENE_CATEGORIES)
 **/snp** — SNP search/discovery
 **/snp/[rsid]** — Public SNP pages (SSR for SEO): variant info, trait associations, ClinVar, PRS membership, PubMed links
+**/auth-redirect** — Post-login redirect: checks for existing results, sends to /dashboard or /upload
 **/sign-in, /sign-up** — Clerk authentication
 
 ### Key Components
@@ -236,4 +237,7 @@ npm run dev
 - `isal` (Intel ISA-L) for faster gzip decompression
 - Background tasks stored in a set to prevent GC
 - No arq/Redis — asyncio.create_task() in upload endpoint
-- Auth: Clerk frontend (@clerk/nextjs), PyJWT + JWKS backend (app/auth.py). Dev mode bypasses auth when no Clerk keys configured.
+- Auth: Clerk frontend (@clerk/nextjs v7), PyJWT + JWKS backend (app/auth.py). Dev mode bypasses auth when no Clerk keys configured.
+- Clerk middleware at `frontend/middleware.ts` (project root, NOT inside src/). Public routes: /, /sign-in, /sign-up, /auth-redirect, /privacy, /snp/*, /gene/*
+- `DATABASE_URL` is required (no default). Must be set in .env for local dev and Railway env vars for prod.
+- `frontend/next.config.ts` sets `outputFileTracingRoot` to the frontend dir to avoid workspace root confusion with the monorepo.

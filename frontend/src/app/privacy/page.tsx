@@ -10,7 +10,7 @@ export default function PrivacyPolicy() {
         <h1 className="font-serif text-4xl font-semibold leading-tight mb-6">
           Privacy Policy
         </h1>
-        <p className="text-sm text-muted">Last updated: February 28, 2025</p>
+        <p className="text-sm text-muted">Last updated: March 26, 2026</p>
       </section>
 
       <section className="py-10 border-t border-border">
@@ -118,6 +118,39 @@ export default function PrivacyPolicy() {
           permanently delete all of your data at any time from your dashboard.
           Deletion is immediate and irreversible &mdash; we do not retain backup
           copies of individual user data.
+        </p>
+      </section>
+
+      <section className="py-10 border-t border-border">
+        <h2 className="font-serif text-2xl font-semibold mb-6">Your Rights</h2>
+        <p className="text-muted leading-relaxed mb-4">
+          Under applicable privacy law, you have the right to:
+        </p>
+        <ul className="list-disc pl-6 text-muted leading-relaxed space-y-2 mb-4">
+          <li>
+            <strong>Access</strong> &mdash; request a copy of the personal information we hold about you
+          </li>
+          <li>
+            <strong>Correct</strong> &mdash; request correction of inaccurate information
+          </li>
+          <li>
+            <strong>Delete</strong> &mdash; permanently delete all your analysis results at any time from your{" "}
+            <Link href="/dashboard" className="text-accent hover:underline">dashboard</Link>
+          </li>
+          <li>
+            <strong>Withdraw consent</strong> &mdash; you may withdraw consent and delete your data at any time; withdrawal does not affect prior processing
+          </li>
+        </ul>
+        <p className="text-muted leading-relaxed">
+          To exercise your access or correction rights, contact us using the email below. If you believe your privacy rights have been violated, you may also file a complaint with the{" "}
+          <a
+            href="https://www.priv.gc.ca/en/report-a-concern/"
+            className="text-accent hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Office of the Privacy Commissioner of Canada
+          </a>.
         </p>
       </section>
 

@@ -53,9 +53,15 @@ def _augment_user_df_with_positions(
     weights_df: pl.DataFrame,
     genome_build: str,
 ) -> pl.DataFrame:
-    """For user variants with rsid='.', assign rsids from weights_df by position match.
+    """Assign weight rsids to user variants that don't match any weight rsid, by position.
 
-    This enables PRS scoring for VCF files where most variants lack rsIDs.
+    Handles two cases:
+    1. VCF files where rsid='.' (e.g., many WGS VCFs without rsID annotation)
+    2. VCFs where rsids differ from PGS Catalog rsids (e.g., different dbSNP version,
+       rsid merges/splits). Without this, rsid-annotated WGS files (e.g., Nebula Genomics
+       GRCh38) miss any PGS variant whose rsid doesn't exactly match the user's VCF
+       annotation, even though the variant is present at the correct position.
+
     The weights_df must contain 'chrom' and position columns ('w_position' for GRCh37,
     'w_position_grch38' for GRCh38).
     """
@@ -63,9 +69,10 @@ def _augment_user_df_with_positions(
     if pos_col not in weights_df.columns or "chrom" not in weights_df.columns:
         return user_df
 
-    # Check if there are any "." rsids worth fixing
-    dot_mask = user_df["rsid"] == "."
-    if not dot_mask.any():
+    # Find user variants not in the weight table (either "." or a different rsid)
+    weight_rsid_set = set(weights_df["rsid"].to_list())
+    needs_fix = ~user_df["rsid"].is_in(weight_rsid_set)
+    if not needs_fix.any():
         return user_df
 
     # Build position → rsid from weights (one rsid per position, drop nulls)
@@ -90,9 +97,13 @@ def _augment_user_df_with_positions(
         how="left",
     )
 
-    # Where rsid is "." AND we found a matching weight rsid, replace
+    # Replace rsid where: (1) user rsid not in weight table, AND (2) position match found.
+    # This preserves correct rsid matches and only fixes unmatched variants.
+    weight_rsids_list = list(weight_rsid_set)
     augmented = augmented.with_columns(
-        pl.when((pl.col("rsid") == ".") & pl.col("w_rsid").is_not_null())
+        pl.when(
+            ~pl.col("rsid").is_in(weight_rsids_list) & pl.col("w_rsid").is_not_null()
+        )
         .then(pl.col("w_rsid"))
         .otherwise(pl.col("rsid"))
         .alias("rsid")

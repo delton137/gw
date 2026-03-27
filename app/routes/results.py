@@ -80,7 +80,7 @@ async def get_prs_results(
     """Get PRS results for a user from their most recent completed analysis."""
 
     analysis = await get_latest_analysis(session, user_id)
-    result_list = await fetch_prs_results(session, str(analysis.id), user_id)
+    result_list = await fetch_prs_results(session, str(analysis.id), user_id, inferred_sex=analysis.inferred_sex)
 
     # Determine PRS computation status
     if analysis.status == "complete":

@@ -33,6 +33,7 @@ class Analysis(Base):
     status_detail: Mapped[str | None] = mapped_column(Text)  # human-readable progress message
     pipeline_fast_seconds: Mapped[float | None] = mapped_column(Float)
     is_imputed: Mapped[bool | None] = mapped_column(Boolean)
+    inferred_sex: Mapped[str | None] = mapped_column(String(10))  # "male" | "female" | null
 
     # Relationships to child tables (CASCADE handled at DB level)
     prs_results: Mapped[list["PrsResult"]] = relationship(back_populates="analysis", cascade="all, delete-orphan", passive_deletes=True)

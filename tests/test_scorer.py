@@ -731,8 +731,12 @@ class TestAugmentUserDfWithPositions:
         result37 = _augment_user_df_with_positions(user, weights, "GRCh37")
         assert result37["rsid"][0] == "."
 
-    def test_existing_rsids_preserved(self):
-        """Non-dot rsids should not be overwritten."""
+    def test_mismatched_rsid_replaced_by_position(self):
+        """User rsids not in the weight table should be replaced by position match.
+
+        This is the core fix for rsid-annotated WGS VCFs (e.g. Nebula GRCh38) where
+        the user's dbSNP rsids differ from PGS Catalog rsids at the same position.
+        """
         user = make_user_df([
             {"rsid": "rs99", "chrom": "1", "position": 100, "allele1": "A", "allele2": "G"},
         ])
@@ -742,7 +746,21 @@ class TestAugmentUserDfWithPositions:
         ])
 
         result = _augment_user_df_with_positions(user, weights, "GRCh37")
-        assert result["rsid"][0] == "rs99"
+        # rs99 is not in the weight table; rs1 is at the same position → replace
+        assert result["rsid"][0] == "rs1"
+
+    def test_correct_rsid_not_replaced(self):
+        """User rsids that already match a weight rsid should not be touched."""
+        user = make_user_df([
+            {"rsid": "rs1", "chrom": "1", "position": 100, "allele1": "A", "allele2": "G"},
+        ])
+        weights = make_weights_with_positions([
+            {"rsid": "rs1", "chrom": "1", "w_position": 100, "w_position_grch38": 150,
+             "effect_allele": "A", "weight": 0.5},
+        ])
+
+        result = _augment_user_df_with_positions(user, weights, "GRCh37")
+        assert result["rsid"][0] == "rs1"
 
     def test_no_dot_rsids_returns_unchanged(self):
         """If no '.' rsids exist, return user_df unchanged."""

@@ -8,6 +8,8 @@ This document describes the end-to-end process for adding a new PRS from the PGS
 - Local venv activated (`source .venv/bin/activate`)
 - `DATABASE_URL` set (local or Railway prod)
 
+> **Note on variant matching:** Gene Wizard matches PRS variants using rsid (primary) and position (fallback). The rsid fallback applies to any user variant whose rsid is not in the weight table — this handles both VCFs with `"."` rsids and VCFs where dbSNP rsids differ from PGS Catalog rsids at the same position (common with GRCh38 WGS). You do not need to do anything special when adding a new score — this is handled automatically at scoring time.
+
 ## Step 1: Choose a Score
 
 Browse the PGS Catalog. Prefer scores that:

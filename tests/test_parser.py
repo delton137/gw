@@ -8,6 +8,7 @@ from app.services.parser import (
     detect_chip_version,
     detect_format,
     extract_vcf_header_meta,
+    infer_biological_sex,
     parse_23andme,
     parse_ancestrydna,
     parse_cgi,
@@ -583,3 +584,53 @@ class TestMergeMultiVcfZip:
         # Only the beagle source header should be present
         assert "beagle" in content
         assert "different" not in content
+
+
+# ---------------------------------------------------------------------------
+# infer_biological_sex
+# ---------------------------------------------------------------------------
+
+def _make_sex_df(x_hom: int, x_het: int, y_count: int = 0) -> pl.DataFrame:
+    """Build a minimal DataFrame with chrX/Y variants for sex inference tests."""
+    rows = []
+    for i in range(x_hom):
+        rows.append({"rsid": f"rs_xh{i}", "chrom": "X", "position": i, "allele1": "A", "allele2": "A"})
+    for i in range(x_het):
+        rows.append({"rsid": f"rs_xv{i}", "chrom": "X", "position": 1000 + i, "allele1": "A", "allele2": "G"})
+    for i in range(y_count):
+        rows.append({"rsid": f"rs_y{i}", "chrom": "Y", "position": i, "allele1": "A", "allele2": "G"})
+    return pl.DataFrame(rows, schema={"rsid": pl.Utf8, "chrom": pl.Utf8, "position": pl.Int64, "allele1": pl.Utf8, "allele2": pl.Utf8})
+
+
+class TestInferBiologicalSex:
+    def test_male_low_het(self):
+        # 990 hom + 10 het on X → het rate 1% → male
+        df = _make_sex_df(x_hom=990, x_het=10)
+        assert infer_biological_sex(df) == "male"
+
+    def test_female_high_het(self):
+        # 750 hom + 250 het on X → het rate 25% → female
+        df = _make_sex_df(x_hom=750, x_het=250)
+        assert infer_biological_sex(df) == "female"
+
+    def test_ambiguous_no_y_returns_none(self):
+        # 850 hom + 150 het → 15% het rate (in ambiguous range), no Y variants
+        df = _make_sex_df(x_hom=850, x_het=150, y_count=0)
+        assert infer_biological_sex(df) is None
+
+    def test_ambiguous_with_y_returns_male(self):
+        # Ambiguous chrX, but Y variants present → male
+        df = _make_sex_df(x_hom=850, x_het=150, y_count=10)
+        assert infer_biological_sex(df) == "male"
+
+    def test_insufficient_x_variants_returns_none(self):
+        # Only 50 chrX variants — below minimum threshold
+        df = _make_sex_df(x_hom=50, x_het=0)
+        assert infer_biological_sex(df) is None
+
+    def test_no_x_variants_returns_none(self):
+        df = pl.DataFrame(
+            {"rsid": ["rs1"], "chrom": ["1"], "position": [100], "allele1": ["A"], "allele2": ["G"]},
+            schema={"rsid": pl.Utf8, "chrom": pl.Utf8, "position": pl.Int64, "allele1": pl.Utf8, "allele2": pl.Utf8},
+        )
+        assert infer_biological_sex(df) is None

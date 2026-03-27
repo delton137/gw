@@ -8,6 +8,7 @@ import os
 import stat
 
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
+from fastapi.responses import JSONResponse
 from fastapi.params import Form
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -91,6 +92,12 @@ async def _run_analysis_in_background(analysis_id: str, user_id: str, tmp_path: 
             log.info("Background analysis %s was cancelled", analysis_id)
         except Exception:
             log.exception("Background analysis failed for %s", analysis_id)
+
+
+@router.options("/upload/")
+async def upload_options():
+    """Handle CORS preflight for the upload endpoint."""
+    return JSONResponse(status_code=200, content={})
 
 
 @router.post("/upload/")

@@ -519,6 +519,35 @@ def validate_filename(filename: str) -> None:
         )
 
 
+def infer_biological_sex(user_df: pl.DataFrame) -> str | None:
+    """Infer biological sex from chrX heterozygosity and chrY variant presence.
+
+    Returns 'male', 'female', or None if ambiguous or insufficient data.
+
+    Method:
+    - Biological males (XY) have one X chromosome → chrX variants are almost entirely
+      homozygous (het rate < 10%, excluding pseudo-autosomal regions).
+    - Biological females (XX) show normal heterozygosity on chrX (~15–25%).
+    - chrY variant presence is used as a tiebreaker in the ambiguous range.
+
+    Requires at least 100 chrX variants to call; returns None otherwise.
+    """
+    x_vars = user_df.filter(pl.col("chrom") == "X")
+    if len(x_vars) < 100:
+        return None
+    het_count = x_vars.filter(pl.col("allele1") != pl.col("allele2")).height
+    het_rate = het_count / len(x_vars)
+    if het_rate < 0.10:
+        return "male"
+    if het_rate > 0.20:
+        return "female"
+    # Ambiguous range — use chrY presence as tiebreaker
+    y_vars = user_df.filter(pl.col("chrom") == "Y")
+    if y_vars.height > 5:
+        return "male"
+    return None
+
+
 def decompress_if_gzipped(data: bytes) -> str:
     """Decompress gzipped data or decode plain text bytes."""
     if data[:2] == b"\x1f\x8b":

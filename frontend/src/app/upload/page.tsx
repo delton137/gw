@@ -25,7 +25,7 @@ export default function UploadPage() {
   const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [termsChecked, setTermsChecked] = useState([false, false, false, false]);
+  const [termsChecked, setTermsChecked] = useState([false, false, false, false, false]);
 
   const allTermsAccepted = termsChecked.every(Boolean);
 
@@ -171,10 +171,11 @@ export default function UploadPage() {
         </p>
         <div className="space-y-3">
           {[
-            "I realize that most published papers about DNA variations explain only a small part of the heritability of a trait, and they also don\u2019t take into account how different variants may interact. In addition, published papers typically ignore environmental, dietary, microbial, medical history and lifestyle factors, any or all of which may well affect my true risk for any trait or disease.",
-            "I acknowledge that I am advised to confirm any significant finding discovered in part through the use of Gene Wizard by an independent, clinically validated test before taking any action on the finding.",
-            "I have read and understand the Privacy Policy of Gene Wizard, and I accept it.",
-            "I accept the risk of learning that I may be at high risk for a debilitating disease.",
+            "I understand that published research explains only part of genetic heritability, and does not account for how variants interact. Environmental, dietary, microbial, medical, and lifestyle factors may significantly affect my actual risk for any trait or disease.",
+            "I understand that I should confirm any significant finding through an independent, clinically validated test before taking any action.",
+            "I consent to Gene Wizard retaining my analysis results \u2014 including matched genetic variants, polygenic risk scores, pharmacogenomic phenotypes, and carrier screening status \u2014 linked to my account until I delete them. I understand I can permanently delete all my data at any time from my dashboard.",
+            "I understand that my results are processed and stored using US-based infrastructure (Clerk, Vercel, and Railway) and may be subject to US jurisdiction. I have read and agree to the Privacy Policy.",
+            "I accept the risk of learning that I may be at elevated genetic risk for a disease or health condition.",
           ].map((text, i) => (
             <label key={i} className="flex items-start gap-3 cursor-pointer group">
               <input
