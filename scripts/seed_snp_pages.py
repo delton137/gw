@@ -3763,7 +3763,7 @@ async def fetch_variant_info(rsid: str, client: httpx.AsyncClient) -> dict | Non
             params={
                 "q": rsid,
                 "fields": (
-                    "dbsnp.chrom,dbsnp.hg19,dbsnp.ref,dbsnp.alt,"
+                    "dbsnp.chrom,dbsnp.hg19,dbsnp.hg38,dbsnp.ref,dbsnp.alt,"
                     "dbsnp.gene.symbol,dbsnp.vartype,"
                     "gnomad_genome.af,"
                     "cadd.phred,cadd.consequence,cadd.sift,cadd.polyphen,"
@@ -3783,6 +3783,7 @@ async def fetch_variant_info(rsid: str, client: httpx.AsyncClient) -> dict | Non
 
         dbsnp = hit.get("dbsnp", {})
         hg19 = dbsnp.get("hg19", {})
+        hg38 = dbsnp.get("hg38", {})
         gene_info = dbsnp.get("gene")
 
         # Gene can be a list or a dict
@@ -3849,6 +3850,7 @@ async def fetch_variant_info(rsid: str, client: httpx.AsyncClient) -> dict | Non
         result = {
             "chrom": str(dbsnp.get("chrom", "")),
             "position": hg19.get("start"),
+            "position_grch38": hg38.get("start"),
             "ref_allele": dbsnp.get("ref"),
             "alt_allele": alt,
             "gene": gene,
@@ -3889,6 +3891,7 @@ async def upsert_snp(session: AsyncSession, rsid: str, data: dict) -> None:
         "rsid": rsid,
         "chrom": data["chrom"],
         "position": data["position"],
+        "position_grch38": data.get("position_grch38"),
         "ref_allele": data["ref_allele"],
         "alt_allele": data["alt_allele"],
         "gene": data["gene"],
@@ -3946,7 +3949,7 @@ async def insert_trait_association(
                       "effect_description", "effect_summary", "evidence_level",
                       "source_pmid", "source_title"):
             new_val = trait_data.get(field)
-            if new_val is not None and getattr(existing_row, field, None) != new_val:
+            if new_val is not None and new_val != "" and getattr(existing_row, field, None) != new_val:
                 setattr(existing_row, field, new_val)
         return False
 
