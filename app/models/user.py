@@ -71,6 +71,9 @@ class PrsResult(Base):
 
 class UserSnpTraitHit(Base):
     __tablename__ = "user_snp_trait_hits"
+    __table_args__ = (
+        Index("ix_user_snp_trait_user_analysis", "user_id", "analysis_id"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")

@@ -28,6 +28,11 @@ from app.routes._helpers import (
 
 router = APIRouter()
 
+# Module-level cache for static knowledge-base counts.
+# These only change when ingestion scripts run (never during a live session).
+_kb_total: int | None = None
+_snpedia_total: int | None = None
+
 
 @router.get("/results/analysis/{analysis_id}")
 async def get_analysis_status(
@@ -131,11 +136,14 @@ async def get_trait_hits(
     result = await session.execute(query)
     rows = result.all()
 
-    # Count total unique SNPs in knowledge base
-    kb_total_result = await session.execute(
-        text("SELECT COUNT(DISTINCT rsid) FROM snp_trait_associations")
-    )
-    kb_total = kb_total_result.scalar() or 0
+    # Count total unique SNPs in knowledge base (cached — static unless ingestion reruns)
+    global _kb_total
+    if _kb_total is None:
+        kb_total_result = await session.execute(
+            text("SELECT COUNT(DISTINCT rsid) FROM snp_trait_associations")
+        )
+        _kb_total = kb_total_result.scalar() or 0
+    kb_total = _kb_total
 
     # Count unique SNPs matched for this user (regardless of pagination)
     unique_matched_result = await session.execute(
@@ -298,9 +306,12 @@ async def get_user_variants(
     total_result = await session.execute(text(count_sql), count_params)
     total = total_result.scalar()
 
-    # Get total SNPedia coverage
-    snpedia_total_result = await session.execute(text("SELECT COUNT(*) FROM snpedia_snps"))
-    snpedia_total = snpedia_total_result.scalar()
+    # Get total SNPedia coverage (cached — static unless import script reruns)
+    global _snpedia_total
+    if _snpedia_total is None:
+        snpedia_total_result = await session.execute(text("SELECT COUNT(*) FROM snpedia_snps"))
+        _snpedia_total = snpedia_total_result.scalar()
+    snpedia_total = _snpedia_total
 
     # Get paginated variants
     query = select(UserVariant).where(
@@ -333,24 +344,28 @@ async def get_user_featured_snps(
 
     analysis = await get_latest_analysis(session, user_id)
 
-    # Get all featured SNP rsids (those with trait associations)
-    featured_result = await session.execute(
-        text("SELECT DISTINCT rsid FROM snp_trait_associations")
-    )
-    featured_rsids = {row.rsid for row in featured_result}
-
-    if not featured_rsids:
-        return {"snps": []}
-
-    # Get user's trait hits for featured SNPs (has genotype + risk level)
+    # Get user's trait hits for featured SNPs (those with trait associations) via JOIN
     hits_result = await session.execute(
-        select(UserSnpTraitHit).where(
+        select(UserSnpTraitHit)
+        .where(
             UserSnpTraitHit.analysis_id == analysis.id,
             UserSnpTraitHit.user_id == user_id,
-            UserSnpTraitHit.rsid.in_(featured_rsids),
+        )
+        .where(
+            select(SnpTraitAssociation.rsid)
+            .where(SnpTraitAssociation.rsid == UserSnpTraitHit.rsid)
+            .exists()
         )
     )
     hits = hits_result.scalars().all()
+
+    if not hits:
+        # Check if there are any trait associations at all before doing more work
+        has_any = await session.execute(
+            text("SELECT 1 FROM snp_trait_associations LIMIT 1")
+        )
+        if not has_any.scalar():
+            return {"snps": []}
 
     # Group hits by rsid
     hit_map: dict[str, dict] = {}
@@ -370,10 +385,15 @@ async def get_user_featured_snps(
 
     # Also check user_variants for featured SNPs the user has but maybe no trait hit
     uv_result = await session.execute(
-        select(UserVariant.rsid).where(
+        select(UserVariant.rsid)
+        .where(
             UserVariant.analysis_id == analysis.id,
             UserVariant.user_id == user_id,
-            UserVariant.rsid.in_(featured_rsids),
+        )
+        .where(
+            select(SnpTraitAssociation.rsid)
+            .where(SnpTraitAssociation.rsid == UserVariant.rsid)
+            .exists()
         )
     )
     user_featured_rsids = {row.rsid for row in uv_result}
