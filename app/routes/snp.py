@@ -220,3 +220,14 @@ async def search_snps(
             for s in snps
         ],
     }
+
+
+@router.get("/sitemap/entries")
+async def sitemap_entries(session: AsyncSession = Depends(get_session)):
+    """Return all SNP rsids and gene symbols for sitemap generation."""
+    snp_result = await session.execute(select(Snp.rsid))
+    gene_result = await session.execute(select(Gene.symbol))
+    return {
+        "snp_rsids": [r for (r,) in snp_result.all()],
+        "gene_symbols": [s for (s,) in gene_result.all()],
+    }

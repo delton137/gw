@@ -1,0 +1,21 @@
+{
+  "summary": "This gene-environment association study examined 422 individuals and found that CRHR1 genetic polymorphisms moderated the effects of childhood abuse on adult depression. Multiple SNPs showed significant interactions (rs110402, P=0.008), with a protective TCA haplotype in intron 1 demonstrating significant protective effects (P<0.001). Findings replicated in an independent sample of 199 ethnically distinct women.",
+  "classification": "association_study",
+  "has_original_associations": true,
+  "rsids_mentioned": [
+    "rs110402",
+    "rs7209436",
+    "rs242924",
+    "rs4792887",
+    "rs242940",
+    "rs173365",
+    "rs242948"
+  ],
+  "traits_studied": [
+    "Major depressive disorder",
+    "Depression",
+    "Childhood abuse exposure"
+  ],
+  "sample_size_approx": 621,
+  "study_design": "Gene-by-environment association study examining CRHR1 polymorphisms and childhood abuse interactions on adult depressive symptoms in 422 primary participants (97.4% African American, low SES) with replication in 199 women (87.7% Caucasian, middle-income)"
+}

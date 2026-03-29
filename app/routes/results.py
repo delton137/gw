@@ -300,8 +300,8 @@ async def get_user_variants(
     count_params = {"aid": str(analysis.id), "uid": user_id}
     count_sql = "SELECT COUNT(*) FROM user_variants WHERE analysis_id = :aid AND user_id = :uid"
     if search:
-        count_sql += r" AND rsid LIKE :search ESCAPE '\'"
-        escaped = search.replace("\\", "\\\\").replace("%", r"\%").replace("_", r"\_")
+        count_sql += r" AND rsid ILIKE :search ESCAPE '\'"
+        escaped = search.lower().replace("\\", "\\\\").replace("%", r"\%").replace("_", r"\_")
         count_params["search"] = f"{escaped}%"
     total_result = await session.execute(text(count_sql), count_params)
     total = total_result.scalar()
@@ -319,7 +319,7 @@ async def get_user_variants(
         UserVariant.user_id == user_id,
     )
     if search:
-        query = query.where(UserVariant.rsid.startswith(search))
+        query = query.where(UserVariant.rsid.ilike(f"{search.lower()}%"))
     query = query.order_by(UserVariant.rsid).offset(offset).limit(limit)
 
     result = await session.execute(query)
