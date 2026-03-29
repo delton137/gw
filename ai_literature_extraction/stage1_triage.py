@@ -437,12 +437,15 @@ def run(tag: str, limit: int | None = None, concurrency: int = CONCURRENCY, repr
             stats["total_cost"] += result.get("cost_usd", 0)
             duration_s = result.get("duration_ms", 0) / 1000
 
+            n_variants = len(result.get("variants_mentioned", []))
+            summary = result.get("summary", "")[:150]
             assoc_flag = "ASSOC" if has_assoc else "     "
             log.info(
                 f"[{n}/{len(dirs)}] {assoc_flag} {cls:<20s} "
-                f"{n_rsids:>3d} rsids  {duration_s:>5.1f}s  "
+                f"{n_rsids:>3d} rsids  {n_variants:>2d} variants  {duration_s:>5.1f}s  "
                 f"{title_short}"
             )
+            log.info(f"    {summary}")
 
             if n % 20 == 0:
                 elapsed = time.time() - t0

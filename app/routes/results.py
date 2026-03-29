@@ -16,7 +16,7 @@ from app.models.carrier_status import UserCarrierStatusResult
 from app.services.pgx_guidelines import match_guidelines
 from app.models.gwas import GwasPrsResult, GwasStudy
 from app.models.snp import Snp, SnpTraitAssociation
-from app.models.user import Analysis, UserClinvarHit, UserSnpTraitHit, UserVariant
+from app.models.user import Analysis, UserClinvarHit, UserGeneCoverage, UserGeneVariant, UserSnpTraitHit, UserVariant
 from app.routes._helpers import (
     attach_defining_variants,
     fetch_pgx_default_alleles,
@@ -568,4 +568,219 @@ async def get_gwas_results(
         "gwas_status": gwas_status,
         "total_scores": len(rows),
         "categories": dict(by_category),
+    }
+
+
+@router.get("/results/gene/{user_id}/{symbol}")
+async def get_user_gene_variants(
+    symbol: str,
+    user_id: str = Depends(get_verified_user_id),
+    session: AsyncSession = Depends(get_session),
+):
+    """Get all user variant data for a specific gene.
+
+    Aggregates trait hits, ClinVar hits, PGx results, and carrier status
+    for a single gene. Used by the gene page to show personalized data.
+    """
+    if len(symbol) > 50:
+        raise HTTPException(status_code=400, detail="Invalid gene symbol")
+
+    symbol_upper = symbol.upper()
+    analysis = await get_latest_analysis(session, user_id)
+    aid = str(analysis.id)
+
+    # 1a) All non-ref variants in this gene (from gene_variant_matcher)
+    gv_result = await session.execute(
+        text("""
+            SELECT rsid, chrom, position, user_genotype
+            FROM user_gene_variants
+            WHERE analysis_id = :aid AND user_id = :uid AND gene = :gene
+            ORDER BY position
+        """),
+        {"aid": aid, "uid": user_id, "gene": symbol_upper},
+    )
+    gv_rows = gv_result.all()
+    all_variants = [
+        {
+            "rsid": row.rsid,
+            "chrom": row.chrom,
+            "position": row.position,
+            "user_genotype": row.user_genotype,
+        }
+        for row in gv_rows
+    ]
+    # Build genotype map from gene variants + fallback to trait/clinvar hits
+    user_genotypes = {row.rsid: row.user_genotype for row in gv_rows if row.rsid}
+
+    # Also include genotypes from trait/clinvar hits (for analyses run before gene matching)
+    if not user_genotypes:
+        fallback_result = await session.execute(
+            text("""
+                SELECT DISTINCT ON (rsid) rsid, user_genotype
+                FROM (
+                    SELECT uth.rsid, uth.user_genotype
+                    FROM user_snp_trait_hits uth
+                    JOIN snps s ON uth.rsid = s.rsid
+                    WHERE uth.analysis_id = :aid AND uth.user_id = :uid
+                      AND s.gene = :gene
+                    UNION ALL
+                    SELECT uch.rsid, uch.user_genotype
+                    FROM user_clinvar_hits uch
+                    JOIN snps s ON uch.rsid = s.rsid
+                    WHERE uch.analysis_id = :aid AND uch.user_id = :uid
+                      AND s.gene = :gene
+                ) combined
+                ORDER BY rsid
+            """),
+            {"aid": aid, "uid": user_id, "gene": symbol_upper},
+        )
+        user_genotypes = {row.rsid: row.user_genotype for row in fallback_result}
+
+    # 1b) Gene coverage summary
+    cov_result = await session.execute(
+        select(UserGeneCoverage.total_variants_tested, UserGeneCoverage.non_reference_count)
+        .where(
+            UserGeneCoverage.analysis_id == analysis.id,
+            UserGeneCoverage.user_id == user_id,
+            UserGeneCoverage.gene == symbol_upper,
+        )
+    )
+    cov_row = cov_result.first()
+    gene_coverage = {
+        "total_variants_tested": cov_row.total_variants_tested if cov_row else 0,
+        "non_reference_count": cov_row.non_reference_count if cov_row else 0,
+    } if cov_row else None
+
+    # 2) Trait hits for this gene
+    trait_result = await session.execute(
+        select(
+            UserSnpTraitHit.rsid,
+            UserSnpTraitHit.user_genotype,
+            UserSnpTraitHit.trait,
+            UserSnpTraitHit.effect_description,
+            UserSnpTraitHit.risk_level,
+            UserSnpTraitHit.evidence_level,
+            SnpTraitAssociation.risk_allele,
+            SnpTraitAssociation.effect_summary,
+        )
+        .outerjoin(SnpTraitAssociation, UserSnpTraitHit.association_id == SnpTraitAssociation.id)
+        .where(
+            UserSnpTraitHit.analysis_id == analysis.id,
+            UserSnpTraitHit.user_id == user_id,
+            UserSnpTraitHit.rsid.in_(
+                select(Snp.rsid).where(Snp.gene == symbol_upper)
+            ),
+        )
+    )
+    trait_hits = [
+        {
+            "rsid": row.rsid,
+            "user_genotype": row.user_genotype,
+            "trait": row.trait,
+            "effect_description": row.effect_description,
+            "risk_level": row.risk_level,
+            "evidence_level": row.evidence_level,
+            "risk_allele": row.risk_allele,
+            "effect_summary": row.effect_summary,
+        }
+        for row in trait_result
+    ]
+
+    # 3) ClinVar hits for this gene
+    clinvar_result = await session.execute(
+        select(
+            UserClinvarHit.rsid,
+            UserClinvarHit.user_genotype,
+            Snp.clinvar_significance,
+            Snp.clinvar_conditions,
+            Snp.functional_class,
+        )
+        .join(Snp, UserClinvarHit.rsid == Snp.rsid)
+        .where(
+            UserClinvarHit.analysis_id == analysis.id,
+            UserClinvarHit.user_id == user_id,
+            Snp.gene == symbol_upper,
+            Snp.clinvar_significance.is_not(None),
+        )
+        .order_by(
+            text("""CASE clinvar_significance
+                WHEN 'pathogenic' THEN 0
+                WHEN 'likely_pathogenic' THEN 1
+                WHEN 'risk_factor' THEN 4
+                WHEN 'drug_response' THEN 6
+                WHEN 'uncertain_significance' THEN 9
+                WHEN 'likely_benign' THEN 12
+                WHEN 'benign' THEN 13
+                ELSE 7
+            END""")
+        )
+    )
+    clinvar_hits = [
+        {
+            "rsid": row.rsid,
+            "user_genotype": row.user_genotype,
+            "clinvar_significance": row.clinvar_significance,
+            "clinvar_conditions": row.clinvar_conditions,
+            "functional_class": row.functional_class,
+        }
+        for row in clinvar_result
+    ]
+
+    # 4) PGx result for this gene (if it's a pharmacogene)
+    pgx_result = await session.execute(
+        text("""
+            SELECT r.gene, r.diplotype, r.phenotype, r.activity_score,
+                   r.confidence, r.drugs_affected, r.clinical_note,
+                   r.variant_genotypes,
+                   g.description AS gene_description
+            FROM user_pgx_results r
+            LEFT JOIN pgx_gene_definitions g ON r.gene = g.gene
+            WHERE r.analysis_id = :aid AND r.user_id = :uid
+              AND r.gene = :gene
+        """),
+        {"aid": aid, "uid": user_id, "gene": symbol_upper},
+    )
+    pgx_row = pgx_result.mappings().first()
+    pgx = None
+    if pgx_row:
+        pgx = {
+            "gene": pgx_row["gene"],
+            "diplotype": pgx_row["diplotype"],
+            "phenotype": pgx_row["phenotype"],
+            "activity_score": pgx_row["activity_score"],
+            "confidence": pgx_row["confidence"],
+            "drugs_affected": pgx_row["drugs_affected"],
+            "clinical_note": pgx_row["clinical_note"],
+            "variant_genotypes": pgx_row["variant_genotypes"],
+            "gene_description": pgx_row["gene_description"],
+        }
+
+    # 5) Carrier status for this gene (if in carrier panel)
+    carrier = None
+    carrier_result = await session.execute(
+        select(UserCarrierStatusResult.results_json)
+        .where(
+            UserCarrierStatusResult.analysis_id == analysis.id,
+            UserCarrierStatusResult.user_id == user_id,
+        )
+    )
+    carrier_row = carrier_result.scalar_one_or_none()
+    if carrier_row:
+        gene_carrier = carrier_row.get(symbol_upper)
+        if gene_carrier:
+            carrier = gene_carrier
+
+    has_data = bool(user_genotypes or all_variants or trait_hits or clinvar_hits or pgx or carrier)
+
+    return {
+        "gene": symbol_upper,
+        "analysis_id": aid,
+        "has_data": has_data,
+        "user_genotypes": user_genotypes,
+        "all_variants": all_variants,
+        "gene_coverage": gene_coverage,
+        "trait_hits": trait_hits,
+        "clinvar_hits": clinvar_hits,
+        "pgx": pgx,
+        "carrier": carrier,
     }

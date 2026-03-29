@@ -40,6 +40,8 @@ class Analysis(Base):
     trait_hits: Mapped[list["UserSnpTraitHit"]] = relationship(back_populates="analysis", cascade="all, delete-orphan", passive_deletes=True)
     variants: Mapped[list["UserVariant"]] = relationship(back_populates="analysis", cascade="all, delete-orphan", passive_deletes=True)
     clinvar_hits: Mapped[list["UserClinvarHit"]] = relationship(back_populates="analysis", cascade="all, delete-orphan", passive_deletes=True)
+    gene_variants: Mapped[list["UserGeneVariant"]] = relationship(back_populates="analysis", cascade="all, delete-orphan", passive_deletes=True)
+    gene_coverage: Mapped[list["UserGeneCoverage"]] = relationship(back_populates="analysis", cascade="all, delete-orphan", passive_deletes=True)
 
 
 class PrsResult(Base):
@@ -120,3 +122,40 @@ class UserClinvarHit(Base):
     user_genotype: Mapped[str] = mapped_column(String(10))
 
     analysis: Mapped["Analysis"] = relationship(back_populates="clinvar_hits")
+
+
+class UserGeneVariant(Base):
+    """Non-reference user variants mapped to genes by genomic coordinates."""
+    __tablename__ = "user_gene_variants"
+    __table_args__ = (
+        Index("ix_user_gene_variants_user_analysis", "user_id", "analysis_id"),
+        Index("ix_user_gene_variants_user_analysis_gene", "user_id", "analysis_id", "gene"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(255), index=True)
+    analysis_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("analyses.id", ondelete="CASCADE"))
+    gene: Mapped[str] = mapped_column(String(50))
+    rsid: Mapped[str | None] = mapped_column(String(20))
+    chrom: Mapped[str | None] = mapped_column(String(5))
+    position: Mapped[int | None] = mapped_column(Integer)
+    user_genotype: Mapped[str] = mapped_column(String(10))
+
+    analysis: Mapped["Analysis"] = relationship(back_populates="gene_variants")
+
+
+class UserGeneCoverage(Base):
+    """Per-gene coverage summary: how many user positions fell in each gene."""
+    __tablename__ = "user_gene_coverage"
+    __table_args__ = (
+        Index("ix_user_gene_coverage_user_analysis_gene", "user_id", "analysis_id", "gene"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(255))
+    analysis_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("analyses.id", ondelete="CASCADE"))
+    gene: Mapped[str] = mapped_column(String(50))
+    total_variants_tested: Mapped[int] = mapped_column(Integer)
+    non_reference_count: Mapped[int] = mapped_column(Integer)
+
+    analysis: Mapped["Analysis"] = relationship(back_populates="gene_coverage")

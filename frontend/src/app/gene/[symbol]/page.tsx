@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { API_URL } from "@/lib/api";
+import UserGeneVariants from "./UserGeneVariants";
 
 interface ClinVarStats {
   total_variants: number | null;
@@ -285,6 +286,9 @@ export default async function GenePage({
                 <p className="text-sm leading-relaxed text-secondary">{data.summary}</p>
               </section>
             )}
+
+            {/* User's variants (client component — renders only for authenticated users) */}
+            <UserGeneVariants symbol={data.symbol} />
 
             {/* SNP Table */}
             <section className="mb-10">

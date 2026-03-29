@@ -38,9 +38,10 @@ from app.db import async_session_factory
 from app.models.carrier_status import UserCarrierStatusResult
 from app.models.prs import PrsScore, PrsReferenceDistribution
 from app.models.pgx import UserPgxResult
-from app.models.user import Analysis, PrsResult, UserClinvarHit, UserSnpTraitHit, UserVariant
+from app.models.user import Analysis, PrsResult, UserClinvarHit, UserGeneCoverage, UserGeneVariant, UserSnpTraitHit, UserVariant
 from app.services.ancestry_estimator import estimate_ancestry
 from app.services.clinvar_matcher import match_clinvar
+from app.services.gene_variant_matcher import match_gene_variants
 from app.services.carrier_matcher import determine_carrier_status
 from app.services.parser import extract_vcf_header_meta, infer_biological_sex, parse_genotype_file, detect_genome_build, ParseError
 from app.services.pgx_matcher import match_pgx
@@ -477,20 +478,26 @@ async def _run_pipeline(
             async with async_session_factory() as s:
                 return await match_pgx(user_df_full, s, genome_build=genome_build, is_vcf=is_vcf)
 
+        async def _run_gene_variants():
+            async with async_session_factory() as s:
+                return await match_gene_variants(user_df_full, s, genome_build=genome_build or "GRCh37")
+
         # CPU-only tasks run in threads
-        trait_hits, clinvar_hits, pgx_results, carrier_results = (
+        trait_hits, clinvar_hits, pgx_results, carrier_results, gene_match_result = (
             await asyncio.gather(
                 _run_traits(),
                 _run_clinvar(),
                 _run_pgx(),
                 asyncio.to_thread(determine_carrier_status, user_df_full, genome_build=genome_build, is_vcf=is_vcf),
+                _run_gene_variants(),
             )
         )
 
         elapsed_match = time.perf_counter() - t0_match
         log.info(
             f"[{analysis_id}] Parallel matching complete in {elapsed_match:.2f}s — "
-            f"traits={len(trait_hits)}, clinvar={len(clinvar_hits)}, pgx={len(pgx_results)}"
+            f"traits={len(trait_hits)}, clinvar={len(clinvar_hits)}, pgx={len(pgx_results)}, "
+            f"gene_variants={len(gene_match_result.hits)}"
         )
 
         # ----- Store results (sequential DB writes using main session) -----
@@ -558,6 +565,36 @@ async def _run_pipeline(
             f"[{analysis_id}] Carrier status: {len(carrier_results)} genes screened, "
             f"{n_carrier} carrier, {n_affected} affected/compound-het"
         )
+
+        # Store gene variant hits
+        for i in range(0, len(gene_match_result.hits), 5000):
+            batch = gene_match_result.hits[i : i + 5000]
+            session.add_all([
+                UserGeneVariant(
+                    user_id=user_id,
+                    analysis_id=analysis_id,
+                    gene=hit.gene,
+                    rsid=hit.rsid,
+                    chrom=hit.chrom,
+                    position=hit.position,
+                    user_genotype=hit.user_genotype,
+                )
+                for hit in batch
+            ])
+
+        # Store per-gene coverage summaries
+        for i in range(0, len(gene_match_result.coverage), 5000):
+            batch = gene_match_result.coverage[i : i + 5000]
+            session.add_all([
+                UserGeneCoverage(
+                    user_id=user_id,
+                    analysis_id=analysis_id,
+                    gene=cov.gene,
+                    total_variants_tested=cov.total_variants_tested,
+                    non_reference_count=cov.non_reference_count,
+                )
+                for cov in batch
+            ])
 
         # =================================================================
         # STEP 3: Commit fast results — frontend can redirect to dashboard
